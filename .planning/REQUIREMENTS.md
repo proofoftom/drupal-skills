@@ -1,0 +1,123 @@
+# Requirements: Drupal Skills
+
+**Defined:** 2026-03-05
+**Core Value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
+
+## v1 Requirements
+
+Requirements for initial release. Each maps to roadmap phases.
+
+### Skill Creation
+
+- [ ] **SKIL-01**: Each skill follows SKILL.md anatomy (YAML frontmatter, <500 line body, references/ subdirectory)
+- [ ] **SKIL-02**: Each skill uses decision-guide format (decision trees, not reference docs)
+- [ ] **SKIL-03**: Each skill includes "wrong way" callouts for patterns Claude commonly generates incorrectly
+- [ ] **SKIL-04**: Each skill produces complete file ecosystems (PHP classes paired with required YAML files)
+- [ ] **SKIL-05**: Each skill shows D10 annotation syntax with D11 PHP attribute syntax alongside
+- [ ] **SKIL-06**: Each skill directory is self-contained and works independently when installed to ~/.claude/skills/
+- [ ] **SKIL-07**: Each skill includes advisory cross-references to related skills that degrade gracefully
+
+### Wave 1 — Foundations
+
+- [ ] **FOUN-01**: drupal-module-scaffold skill covers module creation, .info.yml, PSR-4 namespaces, .module file patterns
+- [ ] **FOUN-02**: drupal-routing-controllers skill covers routes, controllers, services, DI, with menus reference file
+- [ ] **FOUN-03**: drupal-entities-fields skill covers content/config entities, base fields, entity handlers, custom fields, with files/images reference file
+
+### Wave 2 — Core Workflow
+
+- [ ] **CORE-01**: drupal-forms-api skill covers Form API lifecycle, form altering, submit handlers, validation
+- [ ] **CORE-02**: drupal-plugins-blocks skill covers block plugins, custom plugin types, plugin discovery
+- [ ] **CORE-03**: drupal-config-storage skill covers Config API, State API, TempStore, config schemas, with i18n reference file
+- [ ] **CORE-04**: drupal-access-security skill covers permissions, access handlers, route access, CSRF/XSS prevention
+
+### Wave 3 — Presentation and Quality
+
+- [ ] **PRES-01**: drupal-theming skill covers render arrays, Twig templates, theme hooks, preprocess functions, with JS/Ajax reference file
+- [ ] **PRES-02**: drupal-caching skill covers cache tags, contexts, max-age, lazy builders, cache invalidation
+- [ ] **PRES-03**: drupal-testing skill covers PHPUnit test types, kernel tests, functional tests, browser tests
+- [ ] **PRES-04**: drupal-database-api skill covers database abstraction layer, schema API, dynamic queries
+
+### Wave 4 — Specialized Patterns
+
+- [ ] **SPEC-01**: drupal-views-dev skill covers hook_views_data, Views field/filter/sort plugins, Views integration
+- [ ] **SPEC-02**: drupal-batch-queue-cron skill covers Batch API, queue workers, cron hooks, with logging/mail/tokens reference file
+
+### Eval and Optimization
+
+- [ ] **EVAL-01**: Each skill passes skill-creator eval loop (with-skill vs baseline comparison shows improvement)
+- [ ] **EVAL-02**: Eval prompts grounded in os-knowledge-garden project tasks
+- [ ] **EVAL-03**: Trigger descriptions optimized holistically across all 13 skills to prevent overlap
+- [ ] **EVAL-04**: Multi-skill interaction testing with cross-domain prompts produces coherent output
+
+### Packaging and Distribution
+
+- [ ] **PACK-01**: skills/ folder in repo contains all 13 skill directories ready for GitHub publishing
+- [ ] **PACK-02**: install.sh script copies/symlinks skills to ~/.claude/skills/
+- [ ] **PACK-03**: Repository README documents skill inventory, installation, and usage
+
+## v2 Requirements
+
+### Extended Coverage
+
+- **EXT-01**: Migration API skill (not in source book)
+- **EXT-02**: Drush command development skill
+- **EXT-03**: Contrib module integration patterns (Views, Commerce, Paragraphs)
+
+### Advanced Eval
+
+- **ADV-01**: Automated regression testing for skill updates
+- **ADV-02**: Community-contributed eval prompts
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Migration API skill | Not in source book, would require external sources |
+| Contrib module patterns | Stale quickly, not in book's scope |
+| Drupal installation/setup | Not module development |
+| Drush command catalog | Runtime tooling, not module code |
+| Composer management | Package management, not module code |
+| Exhaustive form element reference | Covered by api.drupal.org |
+| Full Twig syntax reference | Covered by Twig docs |
+| D11-only skills without D10 baseline | Book is D10, D11 is additive |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| SKIL-01 | Phase 1 | Pending |
+| SKIL-02 | Phase 1 | Pending |
+| SKIL-03 | Phase 1 | Pending |
+| SKIL-04 | Phase 1 | Pending |
+| SKIL-05 | Phase 1 | Pending |
+| SKIL-06 | Phase 1 | Pending |
+| SKIL-07 | Phase 1 | Pending |
+| FOUN-01 | Phase 1 | Pending |
+| FOUN-02 | Phase 1 | Pending |
+| FOUN-03 | Phase 1 | Pending |
+| CORE-01 | Phase 2 | Pending |
+| CORE-02 | Phase 2 | Pending |
+| CORE-03 | Phase 2 | Pending |
+| CORE-04 | Phase 2 | Pending |
+| PRES-01 | Phase 3 | Pending |
+| PRES-02 | Phase 3 | Pending |
+| PRES-03 | Phase 3 | Pending |
+| PRES-04 | Phase 3 | Pending |
+| SPEC-01 | Phase 4 | Pending |
+| SPEC-02 | Phase 4 | Pending |
+| EVAL-01 | Phase 5 | Pending |
+| EVAL-02 | Phase 5 | Pending |
+| EVAL-03 | Phase 5 | Pending |
+| EVAL-04 | Phase 5 | Pending |
+| PACK-01 | Phase 5 | Pending |
+| PACK-02 | Phase 5 | Pending |
+| PACK-03 | Phase 5 | Pending |
+
+**Coverage:**
+- v1 requirements: 27 total
+- Mapped to phases: 27
+- Unmapped: 0
+
+---
+*Requirements defined: 2026-03-05*
+*Last updated: 2026-03-05 after initial definition*
