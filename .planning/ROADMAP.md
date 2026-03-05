@@ -30,12 +30,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. drupal-entities-fields skill generates content and config entity classes with all required annotations/attributes and base field definitions when Claude is asked to create an entity
   4. All three skills follow SKILL.md anatomy (frontmatter, sub-500-line body, references/ subdirectory), use decision-guide format, include wrong-way callouts, produce complete file ecosystems (PHP + YAML), show D10/D11 dual syntax, work independently when installed, and include cross-references
   5. Each skill passes skill-creator eval loop showing measurable improvement over Claude's baseline
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md -- Create skills directory structure and drupal-module-scaffold skill (establishes template pattern)
+- [ ] 01-02-PLAN.md -- Create drupal-routing-controllers skill with menus reference
+- [ ] 01-03-PLAN.md -- Create drupal-entities-fields skill with files-images reference
 
 ### Phase 2: Core Workflow
 **Goal**: Developers can use Claude to build forms, block plugins, config/state management, and access control -- the daily-use patterns that compose with foundational skills
@@ -105,7 +105,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundations | 0/3 | Not started | - |
+| 1. Foundations | 0/3 | Planning complete | - |
 | 2. Core Workflow | 0/2 | Not started | - |
 | 3. Presentation and Quality | 0/2 | Not started | - |
 | 4. Specialized Patterns | 0/1 | Not started | - |
