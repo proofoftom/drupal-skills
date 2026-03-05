@@ -12,7 +12,7 @@ This project delivers 13 Claude Code skills for Drupal module development in 5 p
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundations** - Build 3 foundational skills (scaffold, routing, entities) and establish skill template patterns
+- [x] **Phase 1: Foundations** - Build 3 foundational skills (scaffold, routing, entities) and establish skill template patterns (completed 2026-03-05)
 - [ ] **Phase 2: Core Workflow** - Build 4 daily-use skills (forms, blocks, config, access) that depend on foundations
 - [ ] **Phase 3: Presentation and Quality** - Build 4 skills (theming, caching, testing, database) covering output and verification
 - [ ] **Phase 4: Specialized Patterns** - Build 2 advanced skills (views, batch/queue/cron) for less-common workflows
@@ -30,7 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. drupal-entities-fields skill generates content and config entity classes with all required annotations/attributes and base field definitions when Claude is asked to create an entity
   4. All three skills follow SKILL.md anatomy (frontmatter, sub-500-line body, references/ subdirectory), use decision-guide format, include wrong-way callouts, produce complete file ecosystems (PHP + YAML), show D10/D11 dual syntax, work independently when installed, and include cross-references
   5. Each skill passes skill-creator eval loop showing measurable improvement over Claude's baseline
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 01-01-PLAN.md -- Create skills directory structure and drupal-module-scaffold skill (establishes template pattern)
@@ -105,7 +105,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundations | 0/3 | Planning complete | - |
+| 1. Foundations | 3/3 | Complete   | 2026-03-05 |
 | 2. Core Workflow | 0/2 | Not started | - |
 | 3. Presentation and Quality | 0/2 | Not started | - |
 | 4. Specialized Patterns | 0/1 | Not started | - |

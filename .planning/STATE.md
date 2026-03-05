@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-03-05T23:37:02.583Z"
+stopped_at: Completed 01-03-PLAN.md
+last_updated: "2026-03-05T23:43:49.046Z"
 last_activity: 2026-03-05 -- Completed 01-01 (drupal-module-scaffold)
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 3
   percent: 33
 ---
 
@@ -50,6 +50,7 @@ Progress: [███░░░░░░░] 33%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01 P03 | 4min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -63,6 +64,8 @@ Recent decisions affecting current work:
 - [Roadmap]: Eval and packaging combined into single final phase (coarse granularity)
 - [Phase 01]: Used hello_world module from book as primary scaffold example for consistency with source material
 - [Phase 01]: Included 5 wrong-way callouts (exceeding min 3) and 3 cross-references (exceeding min 2) for thorough coverage
+- [Phase 01]: Used progressive disclosure (references/files-images.md) to keep entities skill at 499 lines despite large Entity API surface
+- [Phase 01]: Included 6 wrong-way callouts for entity mistakes (mixed syntax, @Translation in attributes, missing schema, missing config_export, hand-rolled routes/forms)
 
 ### Pending Todos
 
@@ -76,6 +79,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-05T23:37:02.582Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-03-05T23:43:49.045Z
+Stopped at: Completed 01-03-PLAN.md
 Resume file: None
