@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-03-05T23:43:49.046Z"
-last_activity: 2026-03-05 -- Completed 01-01 (drupal-module-scaffold)
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-03-05T23:44:53.231Z"
+last_activity: 2026-03-05 -- Completed 01-02 (drupal-routing-controllers)
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 3
   completed_plans: 3
-  percent: 33
+  percent: 67
 ---
 
 # Project State
@@ -26,24 +26,24 @@ See: .planning/PROJECT.md (updated 2026-03-05)
 ## Current Position
 
 Phase: 1 of 5 (Foundations)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: Executing
-Last activity: 2026-03-05 -- Completed 01-01 (drupal-module-scaffold)
+Last activity: 2026-03-05 -- Completed 01-02 (drupal-routing-controllers)
 
-Progress: [███░░░░░░░] 33%
+Progress: [██████░░░░] 67%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 3min
-- Total execution time: 0.05 hours
+- Total plans completed: 2
+- Average duration: 3.5min
+- Total execution time: 0.12 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Foundations | 1/3 | 3min | 3min |
+| 1. Foundations | 2/3 | 7min | 3.5min |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -64,6 +64,8 @@ Recent decisions affecting current work:
 - [Roadmap]: Eval and packaging combined into single final phase (coarse granularity)
 - [Phase 01]: Used hello_world module from book as primary scaffold example for consistency with source material
 - [Phase 01]: Included 5 wrong-way callouts (exceeding min 3) and 3 cross-references (exceeding min 2) for thorough coverage
+- [Phase 01]: Used distinct greeting module example in routing skill to avoid duplication with scaffold skill's hello_world
+- [Phase 01]: Included 5 wrong-way callouts for routing mistakes (hook_menu, hardcoded access, plain strings, static DI, container injection)
 - [Phase 01]: Used progressive disclosure (references/files-images.md) to keep entities skill at 499 lines despite large Entity API surface
 - [Phase 01]: Included 6 wrong-way callouts for entity mistakes (mixed syntax, @Translation in attributes, missing schema, missing config_export, hand-rolled routes/forms)
 
@@ -79,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-05T23:43:49.045Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-03-05T23:44:53.230Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None

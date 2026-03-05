@@ -20,7 +20,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Wave 1 — Foundations
 
 - [x] **FOUN-01**: drupal-module-scaffold skill covers module creation, .info.yml, PSR-4 namespaces, .module file patterns
-- [ ] **FOUN-02**: drupal-routing-controllers skill covers routes, controllers, services, DI, with menus reference file
+- [x] **FOUN-02**: drupal-routing-controllers skill covers routes, controllers, services, DI, with menus reference file
 - [x] **FOUN-03**: drupal-entities-fields skill covers content/config entities, base fields, entity handlers, custom fields, with files/images reference file
 
 ### Wave 2 — Core Workflow
@@ -93,7 +93,7 @@ Requirements for initial release. Each maps to roadmap phases.
 | SKIL-06 | Phase 1 | Complete |
 | SKIL-07 | Phase 1 | Complete |
 | FOUN-01 | Phase 1 | Complete |
-| FOUN-02 | Phase 1 | Pending |
+| FOUN-02 | Phase 1 | Complete |
 | FOUN-03 | Phase 1 | Complete |
 | CORE-01 | Phase 2 | Pending |
 | CORE-02 | Phase 2 | Pending |
