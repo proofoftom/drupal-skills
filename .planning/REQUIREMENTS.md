@@ -9,17 +9,17 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Skill Creation
 
-- [ ] **SKIL-01**: Each skill follows SKILL.md anatomy (YAML frontmatter, <500 line body, references/ subdirectory)
-- [ ] **SKIL-02**: Each skill uses decision-guide format (decision trees, not reference docs)
-- [ ] **SKIL-03**: Each skill includes "wrong way" callouts for patterns Claude commonly generates incorrectly
-- [ ] **SKIL-04**: Each skill produces complete file ecosystems (PHP classes paired with required YAML files)
-- [ ] **SKIL-05**: Each skill shows D10 annotation syntax with D11 PHP attribute syntax alongside
-- [ ] **SKIL-06**: Each skill directory is self-contained and works independently when installed to ~/.claude/skills/
-- [ ] **SKIL-07**: Each skill includes advisory cross-references to related skills that degrade gracefully
+- [x] **SKIL-01**: Each skill follows SKILL.md anatomy (YAML frontmatter, <500 line body, references/ subdirectory)
+- [x] **SKIL-02**: Each skill uses decision-guide format (decision trees, not reference docs)
+- [x] **SKIL-03**: Each skill includes "wrong way" callouts for patterns Claude commonly generates incorrectly
+- [x] **SKIL-04**: Each skill produces complete file ecosystems (PHP classes paired with required YAML files)
+- [x] **SKIL-05**: Each skill shows D10 annotation syntax with D11 PHP attribute syntax alongside
+- [x] **SKIL-06**: Each skill directory is self-contained and works independently when installed to ~/.claude/skills/
+- [x] **SKIL-07**: Each skill includes advisory cross-references to related skills that degrade gracefully
 
 ### Wave 1 — Foundations
 
-- [ ] **FOUN-01**: drupal-module-scaffold skill covers module creation, .info.yml, PSR-4 namespaces, .module file patterns
+- [x] **FOUN-01**: drupal-module-scaffold skill covers module creation, .info.yml, PSR-4 namespaces, .module file patterns
 - [ ] **FOUN-02**: drupal-routing-controllers skill covers routes, controllers, services, DI, with menus reference file
 - [ ] **FOUN-03**: drupal-entities-fields skill covers content/config entities, base fields, entity handlers, custom fields, with files/images reference file
 
@@ -85,14 +85,14 @@ Requirements for initial release. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SKIL-01 | Phase 1 | Pending |
-| SKIL-02 | Phase 1 | Pending |
-| SKIL-03 | Phase 1 | Pending |
-| SKIL-04 | Phase 1 | Pending |
-| SKIL-05 | Phase 1 | Pending |
-| SKIL-06 | Phase 1 | Pending |
-| SKIL-07 | Phase 1 | Pending |
-| FOUN-01 | Phase 1 | Pending |
+| SKIL-01 | Phase 1 | Complete |
+| SKIL-02 | Phase 1 | Complete |
+| SKIL-03 | Phase 1 | Complete |
+| SKIL-04 | Phase 1 | Complete |
+| SKIL-05 | Phase 1 | Complete |
+| SKIL-06 | Phase 1 | Complete |
+| SKIL-07 | Phase 1 | Complete |
+| FOUN-01 | Phase 1 | Complete |
 | FOUN-02 | Phase 1 | Pending |
 | FOUN-03 | Phase 1 | Pending |
 | CORE-01 | Phase 2 | Pending |
