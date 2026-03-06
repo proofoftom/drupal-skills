@@ -14,8 +14,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundations** - Build 3 foundational skills (scaffold, routing, entities) and establish skill template patterns (completed 2026-03-05)
 - [x] **Phase 2: Core Workflow** - Build 4 daily-use skills (forms, blocks, config, access) that depend on foundations (completed 2026-03-06)
-- [ ] **Phase 3: Presentation and Quality** - Build 4 skills (theming, caching, testing, database) covering output and verification
-- [ ] **Phase 4: Specialized Patterns** - Build 2 advanced skills (views, batch/queue/cron) for less-common workflows
+- [x] **Phase 3: Presentation and Quality** - Build 4 skills (theming, caching, testing, database) covering output and verification (completed 2026-03-06)
+- [x] **Phase 4: Specialized Patterns** - Build 2 advanced skills (views, batch/queue/cron) for less-common workflows (completed 2026-03-06)
 - [ ] **Phase 5: Eval, Optimization, and Packaging** - Optimize trigger descriptions holistically, run multi-skill eval, package for distribution
 
 ## Phase Details
@@ -50,10 +50,10 @@ Plans:
 **Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 02-01-PLAN.md -- Create drupal-forms-api skill (Form API lifecycle, form altering, ConfigFormBase)
-- [ ] 02-02-PLAN.md -- Create drupal-config-storage skill with i18n reference (Config API, State API, TempStore)
-- [ ] 02-03-PLAN.md -- Create drupal-plugins-blocks skill (block plugins, custom plugin types, D10/D11 dual syntax)
-- [ ] 02-04-PLAN.md -- Create drupal-access-security skill (permissions, access handlers, CSRF/XSS prevention)
+- [x] 02-01-PLAN.md -- Create drupal-forms-api skill (Form API lifecycle, form altering, ConfigFormBase)
+- [x] 02-02-PLAN.md -- Create drupal-config-storage skill with i18n reference (Config API, State API, TempStore)
+- [x] 02-03-PLAN.md -- Create drupal-plugins-blocks skill (block plugins, custom plugin types, D10/D11 dual syntax)
+- [x] 02-04-PLAN.md -- Create drupal-access-security skill (permissions, access handlers, CSRF/XSS prevention)
 
 ### Phase 3: Presentation and Quality
 **Goal**: Developers can use Claude to build themed output, apply caching correctly, write tests, and use the database API -- completing the full module development workflow
@@ -65,13 +65,13 @@ Plans:
   3. drupal-testing skill produces correct PHPUnit test classes (unit, kernel, functional, browser) with appropriate base classes and assertions when Claude is asked to write tests
   4. drupal-database-api skill generates correct dynamic queries, schema definitions, and database abstraction patterns when Claude is asked to work with the database directly
   5. All four skills satisfy SKIL-01 through SKIL-07 quality standards and pass skill-creator eval
-**Plans:** 2/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 03-01-PLAN.md -- Create drupal-theming skill with js-ajax reference (render arrays, Twig templates, hook_theme, preprocess, libraries)
-- [ ] 03-02-PLAN.md -- Create drupal-caching skill (cache tags, contexts, max-age, lazy builders, two-tier page caching)
-- [ ] 03-03-PLAN.md -- Create drupal-database-api skill (Schema API, dynamic/static queries, update hooks)
-- [ ] 03-04-PLAN.md -- Create drupal-testing skill (Unit, Kernel, Functional, FunctionalJavascript test types)
+- [x] 03-01-PLAN.md -- Create drupal-theming skill with js-ajax reference (render arrays, Twig templates, hook_theme, preprocess, libraries)
+- [x] 03-02-PLAN.md -- Create drupal-caching skill (cache tags, contexts, max-age, lazy builders, two-tier page caching)
+- [x] 03-03-PLAN.md -- Create drupal-database-api skill (Schema API, dynamic/static queries, update hooks)
+- [x] 03-04-PLAN.md -- Create drupal-testing skill (Unit, Kernel, Functional, FunctionalJavascript test types)
 
 ### Phase 4: Specialized Patterns
 **Goal**: Developers can use Claude to build Views integrations and batch/queue/cron workflows -- completing the full 13-skill coverage of the book
@@ -81,11 +81,11 @@ Plans:
   1. drupal-views-dev skill produces correct hook_views_data implementations and Views field/filter/sort plugins when Claude is asked to integrate with Views
   2. drupal-batch-queue-cron skill generates correct Batch API operations, queue worker plugins, and cron hook implementations when Claude is asked about background processing
   3. Both skills satisfy SKIL-01 through SKIL-07 quality standards and pass skill-creator eval
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 04-01-PLAN.md -- Create drupal-views-dev skill (hook_views_data, Views field/filter/sort plugins, EntityViewsData)
-- [ ] 04-02-PLAN.md -- Create drupal-batch-queue-cron skill with logging-mail-tokens reference (Batch API, QueueWorker, hook_cron, Lock API)
+- [x] 04-01-PLAN.md -- Create drupal-views-dev skill (hook_views_data, Views field/filter/sort plugins, EntityViewsData)
+- [x] 04-02-PLAN.md -- Create drupal-batch-queue-cron skill with logging-mail-tokens reference (Batch API, QueueWorker, hook_cron, Lock API)
 
 ### Phase 5: Eval, Optimization, and Packaging
 **Goal**: All 13 skills work coherently together with optimized trigger descriptions and are packaged for installation and distribution
@@ -112,6 +112,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Foundations | 3/3 | Complete    | 2026-03-05 |
 | 2. Core Workflow | 4/4 | Complete   | 2026-03-06 |
-| 3. Presentation and Quality | 2/4 | In Progress|  |
-| 4. Specialized Patterns | 0/2 | Not started | - |
+| 3. Presentation and Quality | 4/4 | Complete | 2026-03-06 |
+| 4. Specialized Patterns | 2/2 | Complete | 2026-03-06 |
 | 5. Eval, Optimization, and Packaging | 0/2 | Not started | - |
