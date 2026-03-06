@@ -81,10 +81,11 @@ Plans:
   1. drupal-views-dev skill produces correct hook_views_data implementations and Views field/filter/sort plugins when Claude is asked to integrate with Views
   2. drupal-batch-queue-cron skill generates correct Batch API operations, queue worker plugins, and cron hook implementations when Claude is asked about background processing
   3. Both skills satisfy SKIL-01 through SKIL-07 quality standards and pass skill-creator eval
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 04-01: TBD
+- [ ] 04-01-PLAN.md -- Create drupal-views-dev skill (hook_views_data, Views field/filter/sort plugins, EntityViewsData)
+- [ ] 04-02-PLAN.md -- Create drupal-batch-queue-cron skill with logging-mail-tokens reference (Batch API, QueueWorker, hook_cron, Lock API)
 
 ### Phase 5: Eval, Optimization, and Packaging
 **Goal**: All 13 skills work coherently together with optimized trigger descriptions and are packaged for installation and distribution
@@ -112,5 +113,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 1. Foundations | 3/3 | Complete    | 2026-03-05 |
 | 2. Core Workflow | 4/4 | Complete   | 2026-03-06 |
 | 3. Presentation and Quality | 2/4 | In Progress|  |
-| 4. Specialized Patterns | 0/1 | Not started | - |
+| 4. Specialized Patterns | 0/2 | Not started | - |
 | 5. Eval, Optimization, and Packaging | 0/2 | Not started | - |
