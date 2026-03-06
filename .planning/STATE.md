@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-03-06T06:22:33.203Z"
+stopped_at: "Completed 06-04-PLAN.md tasks 1-2, paused at Task 3 checkpoint:human-verify"
+last_updated: "2026-03-06T06:34:28.647Z"
 last_activity: 2026-03-06 -- Completed 05-01 (eval-trigger-optimization)
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 19
-  completed_plans: 18
+  completed_plans: 19
   percent: 100
 ---
 
@@ -66,6 +66,7 @@ Progress: [██████████] 100%
 | Phase 06 P01 | 2min | 2 tasks | 6 files |
 | Phase 06 P02 | 10min | 2 tasks | 14 files |
 | Phase 06 P03 | 9min | 2 tasks | 10 files |
+| Phase 06 P04 | 8 | 3 tasks | 22 files |
 
 ## Accumulated Context
 
@@ -117,6 +118,9 @@ Recent decisions affecting current work:
 - [Phase 06]: All 4 ddev eval instances ran in parallel for batch 2 (caching + testing); no memory issues
 - [Phase 06]: Baseline caching code omits #cache entirely — skill's core value is ensuring the golden rule is followed
 - [Phase 06]: Baseline testing code uses BrowserTestBase — skill decision tree is key differentiator for test level choice
+- [Phase 06]: Graded 8 eval runs directly (no subagents) — transcripts + output file reading gave identical quality grading faster
+- [Phase 06]: drupal-caching shows strongest skill impact (+62% delta) — baseline omits #cache entirely, skill's golden rule is key differentiator
+- [Phase 06]: Entities assertions 8+9 marked NOT RUN (null passed) — infrastructure fix needed for heredoc escaping + Drush entity:updates
 
 ### Roadmap Evolution
 
@@ -134,6 +138,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T06:22:33.201Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-03-06T06:34:28.645Z
+Stopped at: Completed 06-04-PLAN.md tasks 1-2, paused at Task 3 checkpoint:human-verify
 Resume file: None
