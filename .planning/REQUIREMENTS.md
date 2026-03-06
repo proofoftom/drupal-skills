@@ -57,8 +57,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Live Eval Loop
 
-- [ ] **LIVE-01**: Each of the 4 skills under test (scaffold, entities, caching, testing) has evals.json with functional assertions
-- [ ] **LIVE-02**: Setup/teardown scripts manage isolated ddev Drupal environments for eval runs
+- [x] **LIVE-01**: Each of the 4 skills under test (scaffold, entities, caching, testing) has evals.json with functional assertions
+- [x] **LIVE-02**: Setup/teardown scripts manage isolated ddev Drupal environments for eval runs
 - [ ] **LIVE-03**: All 8 eval runs (4 skills x with/without skill) produce outputs and transcripts via Sonnet 4.6 subagents against live Drupal instances
 - [ ] **LIVE-04**: Graded benchmarks and HTML viewers show with-skill pass rates higher than without-skill, with analysis summary
 

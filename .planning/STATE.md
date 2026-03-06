@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-06T03:54:54.008Z"
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-03-06T05:16:56.202Z"
 last_activity: 2026-03-06 -- Completed 05-01 (eval-trigger-optimization)
 progress:
-  total_phases: 5
+  total_phases: 6
   completed_phases: 5
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 19
+  completed_plans: 16
   percent: 100
 ---
 
@@ -63,6 +63,7 @@ Progress: [██████████] 100%
 | Phase 04 P02 | 3min | 2 tasks | 2 files |
 | Phase 05 P02 | 1min | 2 tasks | 2 files |
 | Phase 05 P01 | 7min | 2 tasks | 15 files |
+| Phase 06 P01 | 2min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,11 @@ Recent decisions affecting current work:
 - [Phase 05]: Used expected-behavior eval methodology documenting known Claude blind spots vs skill corrections
 - [Phase 05]: Added negative triggers to 11 of 13 skills to prevent cross-domain over-triggering
 - [Phase 05]: Made core skills pushy with Use WHENEVER to combat under-triggering (scaffold, caching, theming)
+- [Phase 06]: Used sed INSERT (1a) not substitute in setup script because .ddev/config.yaml has no existing name: field
+
+### Roadmap Evolution
+
+- Phase 6 added: Live Eval Loop — run 4 representative skills through real eval infrastructure with Sonnet 4.6 subagents against live Drupal instances
 
 ### Pending Todos
 
@@ -122,6 +128,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T03:51:22.232Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-03-06T05:16:56.200Z
+Stopped at: Completed 06-01-PLAN.md
 Resume file: None
