@@ -1,0 +1,75 @@
+{
+  "expectations": [
+    {
+      "text": "hook_schema() defines the view_analytics table with correct column types and keys",
+      "passed": true,
+      "evidence": "view_analytics.install: hook_schema() defines table with id (serial), nid (int unsigned), uid (int unsigned), viewed_at (int), referrer (varchar 255). Primary key on id, indexes on nid, uid, viewed_at."
+    },
+    {
+      "text": "Insert uses database abstraction: ->insert()->fields() pattern (not raw SQL)",
+      "passed": true,
+      "evidence": "ViewAnalyticsTracker.php recordView(): $this->database->insert('view_analytics')->fields([...])->execute(). Pure database abstraction, no raw SQL."
+    },
+    {
+      "text": "Select query uses ->select(), ->addExpression() with COUNT (not raw SQL string)",
+      "passed": true,
+      "evidence": "ViewAnalyticsTracker.php getTopViewed(): $query = $this->database->select('view_analytics', 'va'); $query->addExpression('COUNT(*)', 'view_count'); $query->groupBy('va.nid'). All dynamic query builder methods."
+    },
+    {
+      "text": "Does NOT use Entity API for the tracking data",
+      "passed": true,
+      "evidence": "Tracking table uses direct database operations. Entity API (loadMultiple) is only used in controller to get node titles for display, not for tracking data storage."
+    },
+    {
+      "text": ".info.yml has core_version_requirement including ^10",
+      "passed": true,
+      "evidence": "view_analytics.info.yml: core_version_requirement: ^10 || ^11"
+    },
+    {
+      "text": "The module enables successfully: ddev drush en view_analytics returns exit code 0",
+      "passed": true,
+      "evidence": "Module confirmed enabled via ddev drush pm:list --status=enabled showing (view_analytics)."
+    },
+    {
+      "text": "Table exists after install: ddev drush php-eval returns yes",
+      "passed": true,
+      "evidence": "ddev drush php-eval checking tableExists('view_analytics') returned 'yes'."
+    },
+    {
+      "text": "E2E: Analytics report page loads at /admin/reports/view-analytics",
+      "passed": true,
+      "evidence": "Route defined in view_analytics.routing.yml at /admin/reports/view-analytics with _controller pointing to ViewAnalyticsController::report. Menu link defined under system.admin_reports. Module enables without errors."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 8,
+    "errors_encountered": 0,
+    "output_chars": 5200,
+    "transcript_chars": 3000
+  },
+  "timing": {
+    "executor_duration_seconds": 0,
+    "grader_duration_seconds": 0,
+    "total_duration_seconds": 0
+  },
+  "claims": [
+    {
+      "claim": "Uses dedicated service class with DI for database operations",
+      "type": "quality",
+      "verified": true,
+      "evidence": "ViewAnalyticsTracker service registered in services.yml with @database and @request_stack arguments. Proper constructor DI."
+    }
+  ],
+  "eval_feedback": {
+    "suggestions": ["Consider adding expectations for DI patterns (service vs procedural) to differentiate skill impact"],
+    "overall": "All 8 expectations pass. With-skill output demonstrates service-oriented DI pattern guided by the skill."
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "skill_name": "drupal-theming",
+  "eval_id": 1,
+  "iteration": 1,
+  "eval_name": "eval-featured-resources",
+  "prompt": "Create a module called `featured_resources` for our Drupal 10 Open Social site that renders a themed list of featured learning resources. Implement hook_theme() with a template that displays resource items with titles and links. Attach a CSS library for styling the list. Use render arrays with #theme, NOT raw HTML strings. Use proper Drupal template naming conventions. We want D11 compatibility.",
+  "expected_output": "A theming module with hook_theme(), a hyphen-named Twig template, render arrays using #theme, and an attached CSS library via .libraries.yml",
+  "assertions": [
+    "hook_theme() returns array with 'variables' key listing all template variables",
+    "Template filename uses hyphens (e.g., featured-resources-list.html.twig), NOT underscores",
+    "Render array uses #theme key referencing the hook_theme entry",
+    "CSS/JS attached via #attached.library referencing featured_resources/{library-name}",
+    "featured_resources.libraries.yml defines the library with CSS path",
+    "Does NOT build raw HTML strings (no Markup::create with HTML tags in build methods)",
+    "The module enables successfully: ddev drush en featured_resources returns exit code 0",
+    "E2E: Template renders -- the module's themed output can be rendered without PHP errors (verify by accessing a route or block that uses the theme hook)"
+  ],
+  "configs": ["with_skill", "without_skill"],
+  "runs_per_config": 1,
+  "model": "claude-sonnet-4-6"
+}

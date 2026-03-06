@@ -1,0 +1,5 @@
+featured_resources:
+  version: 1.x
+  css:
+    component:
+      css/featured_resources.css: {}

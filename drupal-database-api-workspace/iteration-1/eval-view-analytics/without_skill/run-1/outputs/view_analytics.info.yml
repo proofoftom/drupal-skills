@@ -1,0 +1,8 @@
+name: View Analytics
+type: module
+description: 'Tracks content views in a custom database table.'
+core_version_requirement: ^10 || ^11
+package: Custom
+
+dependencies:
+  - drupal:node

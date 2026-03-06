@@ -1,0 +1,44 @@
+{#
+/**
+ * @file
+ * Template for the featured resources list.
+ *
+ * Available variables:
+ * - resources: List of resource items. Each item contains:
+ *   - title: The resource title (string).
+ *   - url: The resource URL (string).
+ *   - description: A brief description (string).
+ *   - type: Resource type label, e.g. Article, Video, Guide (string).
+ * - heading: Optional heading text for the block.
+ * - attributes: HTML attributes for the wrapper element.
+ */
+#}
+<div{{ attributes.addClass('featured-resources') }}>
+  {% if heading %}
+    <h2 class="featured-resources__heading">{{ heading }}</h2>
+  {% endif %}
+
+  {% if resources %}
+    <ul class="featured-resources__list">
+      {% for resource in resources %}
+        <li class="featured-resources__item">
+          <span class="featured-resources__type featured-resources__type--{{ resource.type|lower }}">
+            {{- resource.type -}}
+          </span>
+          <h3 class="featured-resources__title">
+            <a href="{{ resource.url }}"
+               class="featured-resources__link"
+               rel="noopener noreferrer">
+              {{- resource.title -}}
+            </a>
+          </h3>
+          {% if resource.description %}
+            <p class="featured-resources__description">{{ resource.description }}</p>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="featured-resources__empty">{{ 'No featured resources available.'|t }}</p>
+  {% endif %}
+</div>

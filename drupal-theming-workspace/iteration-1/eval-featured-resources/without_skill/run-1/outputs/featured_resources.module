@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Featured Resources module hooks.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function featured_resources_theme(): array {
+  return [
+    'featured_resources_list' => [
+      'variables' => [
+        'resources' => [],
+        'heading' => NULL,
+        'attributes' => [],
+      ],
+    ],
+  ];
+}

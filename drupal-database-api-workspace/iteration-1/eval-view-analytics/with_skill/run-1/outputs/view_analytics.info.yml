@@ -1,0 +1,5 @@
+name: 'View Analytics'
+type: module
+description: 'Tracks content views in a custom database table and provides an analytics report.'
+core_version_requirement: ^10 || ^11
+package: 'Open Social AI'

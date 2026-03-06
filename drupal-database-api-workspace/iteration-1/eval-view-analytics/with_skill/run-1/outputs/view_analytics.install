@@ -1,0 +1,56 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the View Analytics module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function view_analytics_schema(): array {
+  $schema['view_analytics'] = [
+    'description' => 'Stores node view events for analytics.',
+    'fields' => [
+      'id' => [
+        'description' => 'Primary identifier.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'nid' => [
+        'description' => 'The node ID that was viewed.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'description' => 'The user ID of the viewer (0 for anonymous).',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'viewed_at' => [
+        'description' => 'Unix timestamp when the node was viewed.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'referrer' => [
+        'description' => 'The HTTP referrer URL at time of view.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'nid' => ['nid'],
+      'uid' => ['uid'],
+      'viewed_at' => ['viewed_at'],
+    ],
+  ];
+
+  return $schema;
+}

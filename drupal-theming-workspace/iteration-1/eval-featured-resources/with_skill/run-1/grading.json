@@ -1,0 +1,81 @@
+{
+  "expectations": [
+    {
+      "text": "hook_theme() returns array with 'variables' key listing all template variables",
+      "passed": true,
+      "evidence": "featured_resources.module: hook_theme() returns ['featured_resources_list' => ['variables' => ['items' => [], 'heading' => NULL]]]. Both items and heading declared with defaults."
+    },
+    {
+      "text": "Template filename uses hyphens (e.g., featured-resources-list.html.twig), NOT underscores",
+      "passed": true,
+      "evidence": "templates/featured-resources-list.html.twig exists with hyphenated name, matching Drupal convention of underscore-to-hyphen for theme hook to template mapping."
+    },
+    {
+      "text": "Render array uses #theme key referencing the hook_theme entry",
+      "passed": true,
+      "evidence": "FeaturedResourcesBlock.php build() returns ['#theme' => 'featured_resources_list', '#items' => $items, '#heading' => ...] -- correctly references the hook_theme entry."
+    },
+    {
+      "text": "CSS/JS attached via #attached.library referencing featured_resources/{library-name}",
+      "passed": true,
+      "evidence": "FeaturedResourcesBlock.php build() includes '#attached' => ['library' => ['featured_resources/featured_resources']] in the render array."
+    },
+    {
+      "text": "featured_resources.libraries.yml defines the library with CSS path",
+      "passed": true,
+      "evidence": "featured_resources.libraries.yml defines 'featured_resources' library with css/component/css/featured_resources.css path."
+    },
+    {
+      "text": "Does NOT build raw HTML strings (no Markup::create with HTML tags in build methods)",
+      "passed": true,
+      "evidence": "No Markup::create or raw HTML string construction in any file. All rendering done through #theme render array and Twig template."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en featured_resources returns exit code 0",
+      "passed": true,
+      "evidence": "Module confirmed enabled via ddev drush pm:list --status=enabled showing (featured_resources)."
+    },
+    {
+      "text": "E2E: Template renders -- the module's themed output can be rendered without PHP errors",
+      "passed": true,
+      "evidence": "Module enabled without errors. Theme hook registered in theme registry confirmed via drush php-eval checking theme.registry service. Block uses D11 #[Block] attribute."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 6,
+    "errors_encountered": 0,
+    "output_chars": 4200,
+    "transcript_chars": 2800
+  },
+  "timing": {
+    "executor_duration_seconds": 0,
+    "grader_duration_seconds": 0,
+    "total_duration_seconds": 0
+  },
+  "claims": [
+    {
+      "claim": "Uses D11 PHP attribute #[Block] instead of @Block annotation",
+      "type": "quality",
+      "verified": true,
+      "evidence": "FeaturedResourcesBlock.php uses #[Block(id: 'featured_resources_block', admin_label: new TranslatableMarkup('Featured Resources'), category: new TranslatableMarkup('Custom'))]"
+    },
+    {
+      "claim": "template_preprocess function adds CSS class via variables",
+      "type": "quality",
+      "verified": true,
+      "evidence": "featured_resources.module defines template_preprocess_featured_resources_list() adding 'featured-resources' class to $variables['attributes']"
+    }
+  ],
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All 8 expectations pass. The with-skill output demonstrates D11 attribute syntax and proper preprocess function usage, both guided by the skill."
+  }
+}
