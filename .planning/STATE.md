@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-03-06T05:47:13.759Z"
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-03-06T06:22:33.203Z"
 last_activity: 2026-03-06 -- Completed 05-01 (eval-trigger-optimization)
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 19
-  completed_plans: 17
+  completed_plans: 18
   percent: 100
 ---
 
@@ -65,6 +65,7 @@ Progress: [██████████] 100%
 | Phase 05 P01 | 7min | 2 tasks | 15 files |
 | Phase 06 P01 | 2min | 2 tasks | 6 files |
 | Phase 06 P02 | 10min | 2 tasks | 14 files |
+| Phase 06 P03 | 9min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,9 @@ Recent decisions affecting current work:
 - [Phase 05]: Made core skills pushy with Use WHENEVER to combat under-triggering (scaffold, caching, theming)
 - [Phase 06]: Used sed INSERT (1a) not substitute in setup script because .ddev/config.yaml has no existing name: field
 - [Phase 06]: Ran all 4 ddev eval instances in parallel — scaffold 7/7 pass, entities 7/7 runnable pass vs baselines 4/7
+- [Phase 06]: All 4 ddev eval instances ran in parallel for batch 2 (caching + testing); no memory issues
+- [Phase 06]: Baseline caching code omits #cache entirely — skill's core value is ensuring the golden rule is followed
+- [Phase 06]: Baseline testing code uses BrowserTestBase — skill decision tree is key differentiator for test level choice
 
 ### Roadmap Evolution
 
@@ -130,6 +134,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T05:47:13.757Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-03-06T06:22:33.201Z
+Stopped at: Completed 06-03-PLAN.md
 Resume file: None
