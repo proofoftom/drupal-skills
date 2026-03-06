@@ -107,7 +107,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -136,3 +136,20 @@ Plans:
 - [x] 06-03-PLAN.md -- Run batch 2 eval subagents (caching + testing)
 - [x] 06-04-PLAN.md -- Grade, aggregate benchmarks, generate HTML viewers, analyze results
 - [x] 06-05-PLAN.md -- Re-run entities (corrected prompt) + testing evals with Sonnet 4.6, re-grade, update analysis
+
+### Phase 7: Full Eval-Optimize Loop
+
+**Goal:** Create evals for all remaining 9 skills, fix phase 6 infrastructure gaps (CLAUDECODE env var for nested sessions, 1-agent-per-skill parallelization), then run iterative eval-optimize loop on all 13 skills until skill deltas stabilize — proving measurable value across the full skill set
+**Requirements**: TBD
+**Depends on:** Phase 6
+**Success Criteria** (what must be TRUE):
+  1. All 13 skills have evals.json with functional assertions grounded in os-knowledge-garden tasks
+  2. Eval infrastructure handles nested `claude -p` sessions cleanly (CLAUDECODE env var fix baked in)
+  3. Eval runner parallelizes with 1 agent per skill (not multiple skills per agent)
+  4. All 13 skills have graded benchmarks showing with-skill vs without-skill delta
+  5. Skills with weak deltas have been iterated on (assertions tightened, skill content improved) and re-evaluated
+  6. Final analysis covers all 13 skills with stabilized results
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 7 to break down)

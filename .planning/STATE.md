@@ -130,6 +130,7 @@ Recent decisions affecting current work:
 ### Roadmap Evolution
 
 - Phase 6 added: Live Eval Loop — run 4 representative skills through real eval infrastructure with Sonnet 4.6 subagents against live Drupal instances
+- Phase 7 added: Full Eval-Optimize Loop — evals for remaining 9 skills, fix phase 6 gaps (CLAUDECODE env var, parallelization), iterate on all 13 skills
 
 ### Pending Todos
 
