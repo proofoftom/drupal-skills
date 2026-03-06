@@ -65,7 +65,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Full Eval-Optimize Loop
 
 - [ ] **FULL-01**: All 13 skills have evals.json with functional assertions grounded in os-knowledge-garden tasks
-- [ ] **FULL-02**: Eval infrastructure handles nested claude sessions cleanly (CLAUDECODE env var fix baked into setup script)
+- [x] **FULL-02**: Eval infrastructure handles nested claude sessions cleanly (CLAUDECODE env var fix baked into setup script)
 - [ ] **FULL-03**: Eval runs use 1-agent-per-skill parallelization with Sonnet 4.6 via headless claude -p
 - [ ] **FULL-04**: All 13 skills have graded benchmarks showing with-skill vs without-skill delta
 - [ ] **FULL-05**: Skills with weak deltas have been analyzed and iterated on (assertions tightened or skill content improved) where feasible
