@@ -7,14 +7,14 @@
       "expected_output": "Controller extending ControllerBase with create() factory, DI services, JsonResponse, route with _permission",
       "files": [],
       "expectations": [
-        "Controller class extends ControllerBase (not bare ContainerInjectionInterface)",
-        "Controller has static create() method accepting ContainerInterface",
-        "Constructor uses typed service parameters with DI (not \\Drupal::service() calls in methods)",
-        "Route YAML uses _controller key with fully qualified class name",
-        "Route has _permission or _access requirement (not unprotected)",
-        ".info.yml has core_version_requirement including ^10 and ^11",
+        "Controller does NOT use \\Drupal::service() static calls anywhere -- all services injected via constructor DI",
+        "Constructor parameters are typed with interface types (e.g., ConfigFactoryInterface, ModuleHandlerInterface) and stored as private or protected properties (not public)",
+        "Route file uses _controller for the JSON endpoint route (not _form which is for form routes only)",
+        "Controller method returns a JsonResponse object (not a render array or plain string) for the API endpoint",
+        "If error handling exists, controller returns error Response objects (not throwing uncaught exceptions to the user)",
+        ".info.yml has core_version_requirement with both ^10 and ^11 (not just ^10, not core: 8.x)",
         "The module enables successfully: ddev drush en api_status_endpoint returns exit code 0",
-        "The API endpoint returns JSON: navigate to /api/system/status (as admin via drush uli) and verify page contains site name or module count data (not a 404 page)"
+        "E2E: The API endpoint returns JSON -- navigate to /api/system/status as admin and verify page contains JSON data (site name or module count)"
       ]
     }
   ]

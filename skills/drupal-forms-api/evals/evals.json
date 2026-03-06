@@ -7,14 +7,16 @@
       "expected_output": "ConfigFormBase with getEditableConfigNames, config schema, route with _form key",
       "files": [],
       "expectations": [
-        "Form class extends ConfigFormBase (not FormBase)",
-        "Form class implements getEditableConfigNames() returning array with config name",
-        "submitForm() uses $this->config() to save settings (not \\Drupal::configFactory())",
-        "Route YAML uses _form key (not _controller) for the settings route",
-        "config/schema/{module}.schema.yml file exists with typed entries",
-        "Schema types include integer or float types for numeric fields",
+        "Form class extends ConfigFormBase (not FormBase or ControllerBase) for the settings form",
+        "Form implements getEditableConfigNames() returning an array with the config object name",
+        "Config schema file exists at config/schema/search_settings.schema.yml with typed entries for each field",
+        "Schema uses appropriate types: 'integer' for numeric fields like result_limit and cache_ttl (not 'string' for everything)",
+        "If validation exists, it uses $form_state->setErrorByName() (not throwing exceptions or using drupal_set_message)",
+        "buildForm() calls parent::buildForm($form, $form_state) to get automatic submit button",
+        "submitForm() calls parent::submitForm($form, $form_state) for automatic status message",
+        "submitForm() uses $this->config() to get editable config (not \\Drupal::configFactory()->getEditable())",
         "The module enables successfully: ddev drush en search_settings returns exit code 0",
-        "Settings form renders: navigate to /admin/config/search/search-settings (as admin) and verify form fields are present (page contains 'Similarity' or 'similarity_threshold')"
+        "E2E: Settings form renders -- navigate to /admin/config/search/search-settings as admin and verify form fields are present"
       ]
     }
   ]
