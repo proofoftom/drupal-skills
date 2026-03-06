@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Entity class file exists at src/Entity/KnowledgeResource.php",
+      "passed": true,
+      "evidence": "File exists at outputs/src/Entity/KnowledgeResource.php (148 lines)"
+    },
+    {
+      "text": "Entity class has either #[ContentEntityType] attribute (D11) or @ContentEntityType annotation (D10)",
+      "passed": true,
+      "evidence": "Line 13: @ContentEntityType annotation with id = \"knowledge_resource\", label = @Translation(\"Knowledge Resource\")"
+    },
+    {
+      "text": "baseFieldDefinitions() calls parent::baseFieldDefinitions() first",
+      "passed": true,
+      "evidence": "Line 61: $fields = parent::baseFieldDefinitions($entity_type);"
+    },
+    {
+      "text": "related_topic field uses setSetting('target_type', 'node')",
+      "passed": true,
+      "evidence": "Line 66: ->setSetting('target_type', 'node')"
+    },
+    {
+      "text": "resource_type field defines allowed_values with article, research_paper, tool, documentation",
+      "passed": true,
+      "evidence": "Lines 111-116: allowed_values array with 'article' => 'Article', 'research_paper' => 'Research Paper', 'tool' => 'Tool', 'documentation' => 'Documentation'"
+    },
+    {
+      "text": "Entity handlers include form, list_builder, access handler, and route_provider declarations",
+      "passed": true,
+      "evidence": "Annotation handlers: list_builder = KnowledgeResourceListBuilder, form = {default, add, edit, delete = KnowledgeResourceDeleteForm}, access = KnowledgeResourceAccessControlHandler, route_provider = {html = AdminHtmlRouteProvider}"
+    },
+    {
+      "text": "The module enables successfully: ddev drush en knowledge_resource returns exit code 0",
+      "passed": true,
+      "evidence": "Transcript: ddev drush en knowledge_resource -y -> Module knowledge_resource has been installed. (Permissions)"
+    },
+    {
+      "text": "Entity type is installed: running ddev drush php-eval hasDefinition check outputs 'installed'",
+      "passed": true,
+      "evidence": "Transcript: ddev drush php-eval outputs 'installed'"
+    },
+    {
+      "text": "An entity can be created: running ddev drush php-eval create + save outputs an id without error",
+      "passed": true,
+      "evidence": "Transcript: ddev drush php-eval outputs 'id:1'"
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0
+  }
+}
