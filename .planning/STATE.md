@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-03-06T00:55:30.565Z"
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-06T00:55:47.915Z"
 last_activity: 2026-03-06 -- Completed 03-02 (drupal-caching)
 progress:
   total_phases: 5
@@ -56,6 +56,7 @@ Progress: [███████░░░] 73%
 | Phase 02 P03 | 3min | 2 tasks | 2 files |
 | Phase 02 P04 | 3min | 2 tasks | 2 files |
 | Phase 03 P02 | 3min | 2 tasks | 2 files |
+| Phase 03 P01 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Included 7 wrong-way callouts for caching mistakes (omitting #cache, max-age 0 bubbling, anonymous cache, non-scalar lazy args, missing parent merge, bin clearing, anonymous max-age assumption)
 - [Phase 03]: Added drupal-entities-fields as fourth cross-reference in caching skill for entity cache tag patterns
 - [Phase 03]: Used generic my_module examples in caching skill to avoid overlap with hello_world
+- [Phase 03]: Included 4 wrong-way callouts in theming SKILL.md (raw HTML, missing variables, template naming, inline scripts) plus 3 in js-ajax.md
+- [Phase 03]: Used render array decision tree as primary organizational approach for theming skill
+- [Phase 03]: Covered both jQuery and vanilla JS patterns in js-ajax.md for modern Drupal flexibility
 
 ### Pending Todos
 
@@ -100,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T00:55:29.274Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-03-06T00:55:47.913Z
+Stopped at: Completed 03-01-PLAN.md
 Resume file: None
