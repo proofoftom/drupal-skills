@@ -7,13 +7,13 @@
       "expected_output": "A Views integration module with hook_views_data() including group key, hook_schema() for the table, and a custom filter plugin extending FilterPluginBase or InOperator in the correct PSR-4 path",
       "files": [],
       "expectations": [
-        "hook_views_data() defines table with 'group' key",
-        "Custom filter plugin placed in src/Plugin/views/filter/ directory",
-        "Filter extends FilterPluginBase or InOperator",
-        "hook_views_data() includes correct field definitions with title and help text",
-        "hook_schema() defines the resource_links table",
-        "The module enables successfully: ddev drush en resource_directory returns exit code 0",
-        "E2E: Views integration registered -- after enabling views module, navigate to /admin/structure/views and verify Views admin is accessible (the resource_directory data should be available for new views)"
+        "hook_views_data() used for the custom table (NOT hook_views_data() for entity data -- entities use views_data handler class in annotation)",
+        "Views data definition includes 'group' key with human-readable group name (missing group = 'Broken handler' error in Views UI)",
+        "If a computed/virtual field plugin exists, its query() method has an empty body (virtual fields MUST NOT add SQL)",
+        "Custom filter plugin extends FilterPluginBase or InOperator (NOT a generic Plugin class)",
+        "Filter plugin in correct PSR-4 path: src/Plugin/views/filter/ (lowercase 'views', NOT 'Views')",
+        "hook_views_data() includes 'table' key with 'group', and field definitions with 'title' and 'help'",
+        "The module enables successfully: ddev drush en resource_directory returns exit code 0"
       ]
     }
   ]

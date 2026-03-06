@@ -7,13 +7,14 @@
       "expected_output": "A cron+queue module with hook_cron() that adds items to a queue (not processing directly), a QueueWorker plugin with cron.time setting and error handling in processItem(), placed in the correct PSR-4 path",
       "files": [],
       "expectations": [
-        "hook_cron() adds items to queue (calls createItem, does NOT process directly)",
-        "QueueWorker plugin has annotation/attribute with cron time setting (cron.time or cron = {\"time\" = ...})",
-        "processItem() handles the actual processing logic",
-        "Queue worker has try/catch or error handling in processItem",
+        "hook_cron() only discovers work and adds items to queue via \\Drupal::queue('content_indexer')->createItem() -- does NOT process heavy work directly in hook_cron()",
+        "Queue name in hook_cron createItem matches the QueueWorker plugin ID exactly",
+        "QueueWorker plugin annotation/attribute includes cron time setting: cron = {\"time\" = 30} or cron: {time: 30} or similar (without this, items never auto-process during cron)",
+        "processItem() contains try/catch error handling -- distinguishes between retryable errors (RequeueException) and fatal errors",
+        "Does NOT use \\Drupal::queue() static call inside processItem() -- the queue worker receives items automatically",
         "QueueWorker placed in correct PSR-4 path: src/Plugin/QueueWorker/",
         "The module enables successfully: ddev drush en content_indexer returns exit code 0",
-        "E2E: Cron runs without error -- run ddev drush cron and verify exit code 0 (queue worker processes without fatal errors)"
+        "E2E: Cron runs without error -- ddev drush cron returns exit code 0"
       ]
     }
   ]
