@@ -33,7 +33,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Wave 3 — Presentation and Quality
 
 - [ ] **PRES-01**: drupal-theming skill covers render arrays, Twig templates, theme hooks, preprocess functions, with JS/Ajax reference file
-- [ ] **PRES-02**: drupal-caching skill covers cache tags, contexts, max-age, lazy builders, cache invalidation
+- [x] **PRES-02**: drupal-caching skill covers cache tags, contexts, max-age, lazy builders, cache invalidation
 - [ ] **PRES-03**: drupal-testing skill covers PHPUnit test types, kernel tests, functional tests, browser tests
 - [ ] **PRES-04**: drupal-database-api skill covers database abstraction layer, schema API, dynamic queries
 
@@ -100,7 +100,7 @@ Requirements for initial release. Each maps to roadmap phases.
 | CORE-03 | Phase 2 | Complete |
 | CORE-04 | Phase 2 | Complete |
 | PRES-01 | Phase 3 | Pending |
-| PRES-02 | Phase 3 | Pending |
+| PRES-02 | Phase 3 | Complete |
 | PRES-03 | Phase 3 | Pending |
 | PRES-04 | Phase 3 | Pending |
 | SPEC-01 | Phase 4 | Pending |
