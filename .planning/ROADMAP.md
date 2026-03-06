@@ -65,11 +65,13 @@ Plans:
   3. drupal-testing skill produces correct PHPUnit test classes (unit, kernel, functional, browser) with appropriate base classes and assertions when Claude is asked to write tests
   4. drupal-database-api skill generates correct dynamic queries, schema definitions, and database abstraction patterns when Claude is asked to work with the database directly
   5. All four skills satisfy SKIL-01 through SKIL-07 quality standards and pass skill-creator eval
-**Plans**: TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md -- Create drupal-theming skill with js-ajax reference (render arrays, Twig templates, hook_theme, preprocess, libraries)
+- [ ] 03-02-PLAN.md -- Create drupal-caching skill (cache tags, contexts, max-age, lazy builders, two-tier page caching)
+- [ ] 03-03-PLAN.md -- Create drupal-database-api skill (Schema API, dynamic/static queries, update hooks)
+- [ ] 03-04-PLAN.md -- Create drupal-testing skill (Unit, Kernel, Functional, FunctionalJavascript test types)
 
 ### Phase 4: Specialized Patterns
 **Goal**: Developers can use Claude to build Views integrations and batch/queue/cron workflows -- completing the full 13-skill coverage of the book
@@ -109,6 +111,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Foundations | 3/3 | Complete    | 2026-03-05 |
 | 2. Core Workflow | 4/4 | Complete   | 2026-03-06 |
-| 3. Presentation and Quality | 0/2 | Not started | - |
+| 3. Presentation and Quality | 0/4 | Not started | - |
 | 4. Specialized Patterns | 0/1 | Not started | - |
 | 5. Eval, Optimization, and Packaging | 0/2 | Not started | - |
