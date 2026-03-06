@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Presentation and Quality** - Build 4 skills (theming, caching, testing, database) covering output and verification (completed 2026-03-06)
 - [x] **Phase 4: Specialized Patterns** - Build 2 advanced skills (views, batch/queue/cron) for less-common workflows (completed 2026-03-06)
 - [x] **Phase 5: Eval, Optimization, and Packaging** - Optimize trigger descriptions holistically, run multi-skill eval, package for distribution (completed 2026-03-06)
-- [x] **Phase 6: Live Eval Loop** - Run 4 representative skills through real functional eval with Sonnet 4.6 subagents against live Drupal instances (completed 2026-03-06)
+- [ ] **Phase 6: Live Eval Loop** - Run 4 representative skills through real functional eval with Sonnet 4.6 subagents against live Drupal instances
 
 ## Phase Details
 
@@ -128,10 +128,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
   3. All 8 eval runs (4 skills x with/without skill) produce outputs and transcripts in correct workspace directory structure
   4. Graded benchmarks show with-skill pass rates higher than without-skill for at least 3 of 4 skills
   5. HTML eval viewers and analysis summary are available for human review
-**Plans:** 4/4 plans complete
+**Plans:** 4/5 plans complete
 
 Plans:
-- [ ] 06-01-PLAN.md -- Create eval infrastructure (evals.json files + setup/teardown scripts)
-- [ ] 06-02-PLAN.md -- Run batch 1 eval subagents (scaffold + entities)
-- [ ] 06-03-PLAN.md -- Run batch 2 eval subagents (caching + testing)
-- [ ] 06-04-PLAN.md -- Grade, aggregate benchmarks, generate HTML viewers, analyze results
+- [x] 06-01-PLAN.md -- Create eval infrastructure (evals.json files + setup/teardown scripts)
+- [x] 06-02-PLAN.md -- Run batch 1 eval subagents (scaffold + entities)
+- [x] 06-03-PLAN.md -- Run batch 2 eval subagents (caching + testing)
+- [x] 06-04-PLAN.md -- Grade, aggregate benchmarks, generate HTML viewers, analyze results
+- [ ] 06-05-PLAN.md -- Re-run entities (corrected prompt) + testing evals with Sonnet 4.6, re-grade, update analysis
