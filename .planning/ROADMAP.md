@@ -97,11 +97,11 @@ Plans:
   3. Eval prompts grounded in os-knowledge-garden project tasks show measurable improvement for all 13 skills
   4. skills/ folder contains all 13 complete skill directories and install.sh copies them to ~/.claude/skills/ correctly
   5. Repository README documents the full skill inventory, installation instructions, and usage examples
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md -- Eval prompts, trigger description optimization, and eval results for all 13 skills
+- [ ] 05-02-PLAN.md -- Create install.sh and README.md for packaging and distribution
 
 ## Progress
 
