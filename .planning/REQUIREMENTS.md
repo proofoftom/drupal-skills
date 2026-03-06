@@ -27,7 +27,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **CORE-01**: drupal-forms-api skill covers Form API lifecycle, form altering, submit handlers, validation
 - [ ] **CORE-02**: drupal-plugins-blocks skill covers block plugins, custom plugin types, plugin discovery
-- [ ] **CORE-03**: drupal-config-storage skill covers Config API, State API, TempStore, config schemas, with i18n reference file
+- [x] **CORE-03**: drupal-config-storage skill covers Config API, State API, TempStore, config schemas, with i18n reference file
 - [ ] **CORE-04**: drupal-access-security skill covers permissions, access handlers, route access, CSRF/XSS prevention
 
 ### Wave 3 — Presentation and Quality
@@ -97,7 +97,7 @@ Requirements for initial release. Each maps to roadmap phases.
 | FOUN-03 | Phase 1 | Complete |
 | CORE-01 | Phase 2 | Complete |
 | CORE-02 | Phase 2 | Pending |
-| CORE-03 | Phase 2 | Pending |
+| CORE-03 | Phase 2 | Complete |
 | CORE-04 | Phase 2 | Pending |
 | PRES-01 | Phase 3 | Pending |
 | PRES-02 | Phase 3 | Pending |
