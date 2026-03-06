@@ -1,0 +1,21 @@
+{
+  "skill_name": "drupal-caching",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have a block plugin on our Open Social Drupal 10 site that displays nodes related to the currently viewed page, filtered by the current user's group membership. The block loads specific node entities and renders their titles as links. Right now the block has no caching and it's hurting performance. Add proper cache tags and contexts to the block's build() method. The block should invalidate when any of the displayed nodes are updated, and it should vary by the current route (so different pages show different related content) and by user (so group filtering works per-user). Put this in a module called related_content_block. Do NOT use max-age: 0.",
+      "expected_output": "A block plugin with correct cache metadata - tags for each displayed node, route and user contexts, and NO max-age: 0",
+      "files": [],
+      "expectations": [
+        "Block class implements build() returning a render array",
+        "Render array includes #cache key with 'tags' array",
+        "Cache tags include node-specific tags (e.g., 'node:ID' pattern for displayed nodes)",
+        "Cache contexts include 'route' or 'route.name'",
+        "Cache contexts include 'user' or 'user.permissions' or 'user.roles'",
+        "Code does NOT contain 'max-age' => 0 or '#max-age' => 0",
+        "Block class implements getCacheContexts() or getCacheTags() methods, or sets cache metadata in build()",
+        "The module enables successfully: ddev drush en related_content_block returns exit code 0"
+      ]
+    }
+  ]
+}

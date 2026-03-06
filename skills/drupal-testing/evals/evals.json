@@ -1,0 +1,21 @@
+{
+  "skill_name": "drupal-testing",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a kernel test for the social_ai_indexing module that verifies its content indexing service works correctly. The test should: install the node module and social_ai_indexing module, create test node entities of type 'topic' (Open Social's content type), and verify the service can be loaded from the container. Use the correct test base class - this is testing a service, not a browser interaction. Our site runs Drupal 10 with Open Social.",
+      "expected_output": "A kernel test extending KernelTestBase with correct module installation, entity schema setup, and service testing",
+      "files": [],
+      "expectations": [
+        "Test class extends KernelTestBase (NOT BrowserTestBase or WebDriverTestBase)",
+        "Test class has protected static $modules array listing required modules",
+        "$modules includes 'node' and 'social_ai_indexing'",
+        "setUp() calls parent::setUp()",
+        "setUp() calls $this->installEntitySchema('node') or similar entity schema installation",
+        "Test has @group annotation",
+        "Test uses $this->container->get() or \\Drupal::service() to load the service under test",
+        "Test uses proper assertion methods ($this->assertNotNull, $this->assertEquals, etc.)"
+      ]
+    }
+  ]
+}
