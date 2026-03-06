@@ -128,11 +128,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
   3. All 8 eval runs (4 skills x with/without skill) produce outputs and transcripts in correct workspace directory structure
   4. Graded benchmarks show with-skill pass rates higher than without-skill for at least 3 of 4 skills
   5. HTML eval viewers and analysis summary are available for human review
-**Plans:** 4/5 plans complete
+**Plans:** 5/5 plans complete
 
 Plans:
 - [x] 06-01-PLAN.md -- Create eval infrastructure (evals.json files + setup/teardown scripts)
 - [x] 06-02-PLAN.md -- Run batch 1 eval subagents (scaffold + entities)
 - [x] 06-03-PLAN.md -- Run batch 2 eval subagents (caching + testing)
 - [x] 06-04-PLAN.md -- Grade, aggregate benchmarks, generate HTML viewers, analyze results
-- [ ] 06-05-PLAN.md -- Re-run entities (corrected prompt) + testing evals with Sonnet 4.6, re-grade, update analysis
+- [x] 06-05-PLAN.md -- Re-run entities (corrected prompt) + testing evals with Sonnet 4.6, re-grade, update analysis
