@@ -1,0 +1,13 @@
+site_announcements_baseline.settings:
+  type: config_object
+  label: 'Site Announcements Baseline settings'
+  mapping:
+    announcement_text:
+      type: string
+      label: 'Announcement text'
+    display_enabled:
+      type: boolean
+      label: 'Display enabled'
+    max_display_count:
+      type: integer
+      label: 'Maximum display count'

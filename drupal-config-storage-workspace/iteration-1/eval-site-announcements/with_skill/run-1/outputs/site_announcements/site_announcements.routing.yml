@@ -1,0 +1,7 @@
+site_announcements.settings:
+  path: '/admin/config/system/announcements'
+  defaults:
+    _form: '\Drupal\site_announcements\Form\AnnouncementsSettingsForm'
+    _title: 'Site Announcements Settings'
+  requirements:
+    _permission: 'administer site announcements'
