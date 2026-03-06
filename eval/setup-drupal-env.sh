@@ -11,13 +11,21 @@
 #
 set -euo pipefail
 
+# Fix for nested Claude sessions: unset CLAUDECODE to allow headless
+# claude -p to run from within a Claude Code agent session.
+# See: Phase 6 lesson -- env -u CLAUDECODE is required for nested sessions.
+unset CLAUDECODE 2>/dev/null || true
+
 NAME="${1:?Usage: setup-drupal-env.sh <unique-name>}"
 SOURCE_DIR="$(cd "$(dirname "$0")/../os-knowledge-garden" && pwd)"
 TARGET_DIR="/tmp/os-kg-${NAME}"
 
 if [ -d "$TARGET_DIR" ]; then
-  echo "Target directory already exists: $TARGET_DIR" >&2
-  exit 1
+  echo "Cleaning up stale environment: $TARGET_DIR" >&2
+  # Delete ddev project if it exists (auto-confirm)
+  (yes | ddev delete -O "os-kg-${NAME}" 2>/dev/null) || true
+  # Use docker to remove root-owned files (e.g., Qdrant storage from Docker volumes)
+  docker run --rm -v /tmp:/tmp alpine rm -rf "/tmp/os-kg-${NAME}" 2>/dev/null || rm -rf "$TARGET_DIR"
 fi
 
 cp -a "$SOURCE_DIR" "$TARGET_DIR"
