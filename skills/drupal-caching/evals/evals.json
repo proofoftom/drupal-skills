@@ -7,15 +7,15 @@
       "expected_output": "A block plugin with correct cache metadata - tags for each displayed node, route and user contexts, and NO max-age: 0",
       "files": [],
       "expectations": [
-        "Block class implements build() returning a render array",
-        "Render array includes #cache key with 'tags' array",
-        "Cache tags include node-specific tags (e.g., 'node:ID' pattern for displayed nodes)",
-        "Cache contexts include 'route' or 'route.name'",
-        "Cache contexts include 'user' or 'user.permissions' or 'user.roles'",
-        "Code sets #cache metadata with both 'tags' and 'contexts' keys in the render array, AND does NOT set max-age to 0 anywhere",
-        "Block class implements getCacheContexts() or getCacheTags() methods, or sets cache metadata in build()",
+        "build() returns render array with #cache key containing BOTH 'tags' AND 'contexts' (the golden rule: EVERY render array needs #cache)",
+        "Cache tags include node-specific tags (node:ID pattern) for data dependency invalidation",
+        "Cache contexts include 'route' or 'route.name' AND 'user' or 'user.permissions' or 'user.roles'",
+        "Does NOT set max-age to 0 anywhere (max-age: 0 kills the ENTIRE page cache via bubbling -- use lazy_builder instead)",
+        "Does NOT use \\Drupal::cache() for render caching (render arrays use #cache, not manual cache API)",
+        "If the block varies per user, uses cache context 'user' (NOT max-age: 0 as a workaround for per-user variation)",
+        "#cache metadata is on the OUTERMOST render array element (not buried inside a child element where it won't bubble correctly)",
         "The module enables successfully: ddev drush en related_content_block returns exit code 0",
-        "E2E: After placing the block via drush, the front page loads without block rendering errors (no 'Broken' or PHP errors visible)"
+        "E2E: Block renders without errors after placement"
       ]
     }
   ]

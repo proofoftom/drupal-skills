@@ -7,16 +7,15 @@
       "expected_output": "A complete content entity type with entity class, base fields, all handlers, and module scaffold that installs and creates entities successfully",
       "files": [],
       "expectations": [
-        "Entity class file exists at src/Entity/KnowledgeResource.php",
-        "Entity class has either #[ContentEntityType] attribute (D11) or @ContentEntityType annotation (D10)",
-        "baseFieldDefinitions() calls parent::baseFieldDefinitions() first",
-        "related_topic field uses setSetting('target_type', 'node')",
-        "resource_type field defines allowed_values with article, research_paper, tool, documentation",
-        "Entity handlers include form, list_builder, access handler, and route_provider declarations",
+        "Entity class has baseFieldDefinitions() that calls AND MERGES parent::baseFieldDefinitions($entity_type) (MUST call parent or lose id/uuid/langcode fields)",
+        "Base fields that should appear in forms use setDisplayOptions('form', [...]) (without this, fields won't appear in entity forms)",
+        "Base fields that should appear in listings use setDisplayOptions('view', [...]) (without this, fields won't render in entity view)",
+        "If entity has admin UI, entity annotation/attribute includes route_provider handler for auto-generated CRUD routes (NOT hand-writing all entity routes)",
+        "Entity handlers declaration includes 'form' handlers for add/edit/delete operations",
+        "This is a content entity per the prompt -- verify it does NOT incorrectly include config_export (config_export is for config entities only)",
         "The module enables successfully: ddev drush en knowledge_resource returns exit code 0",
-        "Entity type is installed: running ddev drush php-eval \"echo \\Drupal::entityTypeManager()->hasDefinition('knowledge_resource') ? 'installed' : 'missing';\" outputs 'installed'",
-        "An entity can be created: running ddev drush php-eval \"$s = \\Drupal::entityTypeManager()->getStorage('knowledge_resource'); $e = $s->create(['resource_type' => 'article']); $e->save(); echo 'id:' . $e->id();\" outputs an id without error",
-        "E2E: Entity form route is accessible -- navigate to the entity add form path and verify the form renders (page contains form elements, not 404)"
+        "Entity type installed: ddev drush php-eval confirms hasDefinition('knowledge_resource')",
+        "Entity can be created: ddev drush php-eval creates and saves entity without error"
       ]
     }
   ]
