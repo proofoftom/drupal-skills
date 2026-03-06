@@ -13,7 +13,7 @@ This project delivers 13 Claude Code skills for Drupal module development in 5 p
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundations** - Build 3 foundational skills (scaffold, routing, entities) and establish skill template patterns (completed 2026-03-05)
-- [ ] **Phase 2: Core Workflow** - Build 4 daily-use skills (forms, blocks, config, access) that depend on foundations
+- [x] **Phase 2: Core Workflow** - Build 4 daily-use skills (forms, blocks, config, access) that depend on foundations (completed 2026-03-06)
 - [ ] **Phase 3: Presentation and Quality** - Build 4 skills (theming, caching, testing, database) covering output and verification
 - [ ] **Phase 4: Specialized Patterns** - Build 2 advanced skills (views, batch/queue/cron) for less-common workflows
 - [ ] **Phase 5: Eval, Optimization, and Packaging** - Optimize trigger descriptions holistically, run multi-skill eval, package for distribution
@@ -47,7 +47,7 @@ Plans:
   3. drupal-config-storage skill produces correct Config API, State API, and TempStore patterns with config schemas when Claude is asked to store or manage configuration
   4. drupal-access-security skill generates correct permission definitions, access handlers, route access checks, and CSRF/XSS prevention when Claude is asked about access control
   5. All four skills satisfy SKIL-01 through SKIL-07 quality standards and pass skill-creator eval
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 02-01-PLAN.md -- Create drupal-forms-api skill (Form API lifecycle, form altering, ConfigFormBase)
@@ -108,7 +108,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundations | 3/3 | Complete    | 2026-03-05 |
-| 2. Core Workflow | 0/4 | Not started | - |
+| 2. Core Workflow | 4/4 | Complete   | 2026-03-06 |
 | 3. Presentation and Quality | 0/2 | Not started | - |
 | 4. Specialized Patterns | 0/1 | Not started | - |
 | 5. Eval, Optimization, and Packaging | 0/2 | Not started | - |
