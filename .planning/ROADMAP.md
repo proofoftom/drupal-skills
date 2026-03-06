@@ -17,6 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Presentation and Quality** - Build 4 skills (theming, caching, testing, database) covering output and verification (completed 2026-03-06)
 - [x] **Phase 4: Specialized Patterns** - Build 2 advanced skills (views, batch/queue/cron) for less-common workflows (completed 2026-03-06)
 - [x] **Phase 5: Eval, Optimization, and Packaging** - Optimize trigger descriptions holistically, run multi-skill eval, package for distribution (completed 2026-03-06)
+- [ ] **Phase 6: Live Eval Loop** - Run 4 representative skills through real functional eval with Sonnet 4.6 subagents against live Drupal instances
 
 ## Phase Details
 
@@ -106,7 +107,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -115,3 +116,22 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 3. Presentation and Quality | 4/4 | Complete | 2026-03-06 |
 | 4. Specialized Patterns | 2/2 | Complete | 2026-03-06 |
 | 5. Eval, Optimization, and Packaging | 2/2 | Complete   | 2026-03-06 |
+
+### Phase 6: Live Eval Loop
+
+**Goal:** Run 4 representative skills (scaffold, entities, caching, testing) through real functional evaluation with Sonnet 4.6 subagents against live Drupal ddev instances, producing graded benchmarks and HTML viewers that prove skills make a measurable difference
+**Requirements**: LIVE-01, LIVE-02, LIVE-03, LIVE-04
+**Depends on:** Phase 5
+**Success Criteria** (what must be TRUE):
+  1. Each of the 4 skills under test has evals.json with functional assertions grounded in os-knowledge-garden tasks
+  2. Setup/teardown scripts manage isolated ddev Drupal environments for eval runs
+  3. All 8 eval runs (4 skills x with/without skill) produce outputs and transcripts in correct workspace directory structure
+  4. Graded benchmarks show with-skill pass rates higher than without-skill for at least 3 of 4 skills
+  5. HTML eval viewers and analysis summary are available for human review
+**Plans:** 4 plans
+
+Plans:
+- [ ] 06-01-PLAN.md -- Create eval infrastructure (evals.json files + setup/teardown scripts)
+- [ ] 06-02-PLAN.md -- Run batch 1 eval subagents (scaffold + entities)
+- [ ] 06-03-PLAN.md -- Run batch 2 eval subagents (caching + testing)
+- [ ] 06-04-PLAN.md -- Grade, aggregate benchmarks, generate HTML viewers, analyze results

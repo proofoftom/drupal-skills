@@ -55,6 +55,13 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **PACK-02**: install.sh script copies/symlinks skills to ~/.claude/skills/
 - [x] **PACK-03**: Repository README documents skill inventory, installation, and usage
 
+### Live Eval Loop
+
+- [ ] **LIVE-01**: Each of the 4 skills under test (scaffold, entities, caching, testing) has evals.json with functional assertions
+- [ ] **LIVE-02**: Setup/teardown scripts manage isolated ddev Drupal environments for eval runs
+- [ ] **LIVE-03**: All 8 eval runs (4 skills x with/without skill) produce outputs and transcripts via Sonnet 4.6 subagents against live Drupal instances
+- [ ] **LIVE-04**: Graded benchmarks and HTML viewers show with-skill pass rates higher than without-skill, with analysis summary
+
 ## v2 Requirements
 
 ### Extended Coverage
@@ -112,12 +119,17 @@ Requirements for initial release. Each maps to roadmap phases.
 | PACK-01 | Phase 5 | Complete |
 | PACK-02 | Phase 5 | Complete |
 | PACK-03 | Phase 5 | Complete |
+| LIVE-01 | Phase 6 | Planned |
+| LIVE-02 | Phase 6 | Planned |
+| LIVE-03 | Phase 6 | Planned |
+| LIVE-04 | Phase 6 | Planned |
 
 **Coverage:**
-- v1 requirements: 27 total
-- Mapped to phases: 27
+- v1 requirements: 27 total (complete)
+- Phase 6 requirements: 4 total (planned)
+- Mapped to phases: 31
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-05*
-*Last updated: 2026-03-05 after initial definition*
+*Last updated: 2026-03-05 after Phase 6 planning*
