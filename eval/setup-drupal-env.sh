@@ -29,8 +29,9 @@ ddev config \
   --docroot=web \
   --php-version=8.3
 
-# Start ddev (creates containers before composer create)
-ddev start
+# Start ddev — serialized via flock to prevent ddev-router conflicts
+# when multiple parallel setups run simultaneously.
+(flock -x 200; ddev start) 200>/tmp/ddev-start.lock
 
 # Create fresh Drupal 10 project (downloads from packagist inside container)
 ddev composer create drupal/recommended-project
