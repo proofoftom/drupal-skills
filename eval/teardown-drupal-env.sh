@@ -10,7 +10,7 @@
 set -euo pipefail
 
 NAME="${1:?Usage: teardown-drupal-env.sh <unique-name>}"
-TARGET_DIR="/tmp/d10-${NAME}"
+TARGET_DIR="/tmp/os-kg-${NAME}"
 
 if [ ! -d "$TARGET_DIR" ]; then
   echo "Directory not found: $TARGET_DIR" >&2

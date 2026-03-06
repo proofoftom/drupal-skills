@@ -1,51 +1,40 @@
 #!/usr/bin/env bash
 #
-# Sets up an isolated fresh Drupal 10 environment for skill eval.
+# Sets up an isolated Drupal environment for skill eval using os-knowledge-garden.
 #
 # Usage: ./eval/setup-drupal-env.sh <unique-name>
 # Example: ./eval/setup-drupal-env.sh scaffold-with
 #
 # Outputs the ddev project directory path on success.
-# Docroot is web/ (standard drupal/recommended-project layout).
+# Docroot is html/ (os-knowledge-garden layout).
 # The caller is responsible for teardown via teardown-drupal-env.sh
 #
 set -euo pipefail
 
 NAME="${1:?Usage: setup-drupal-env.sh <unique-name>}"
-TARGET_DIR="/tmp/d10-${NAME}"
+SOURCE_DIR="$(cd "$(dirname "$0")/../os-knowledge-garden" && pwd)"
+TARGET_DIR="/tmp/os-kg-${NAME}"
 
 if [ -d "$TARGET_DIR" ]; then
   echo "Target directory already exists: $TARGET_DIR" >&2
   exit 1
 fi
 
-mkdir -p "$TARGET_DIR"
+cp -a "$SOURCE_DIR" "$TARGET_DIR"
 cd "$TARGET_DIR"
 
-# Configure ddev for a fresh Drupal 10 project
-ddev config \
-  --project-name="d10-${NAME}" \
-  --project-type=drupal10 \
-  --docroot=web \
-  --php-version=8.3
+# Give ddev a unique project name.
+# NOTE: os-knowledge-garden/.ddev/config.yaml has NO name: field.
+# We INSERT it at line 1 (after line 1 means as line 2, but sed 1a inserts after line 1).
+# Using sed substitute would silently fail since there is no existing name: line to match.
+sed -i "1a name: os-kg-${NAME}" .ddev/config.yaml
 
 # Start ddev — serialized via flock to prevent ddev-router conflicts
 # when multiple parallel setups run simultaneously.
 (flock -x 200; ddev start) 200>/tmp/ddev-start.lock
 
-# Create fresh Drupal 10 project (downloads from packagist inside container)
-ddev composer create drupal/recommended-project
-
-# Add drush (included in recommended-project but ensure it's present)
-ddev composer require drush/drush --no-update
-ddev composer update drush/drush --with-dependencies
-
-# Install Drupal with minimal profile (fast — no demo content)
-ddev drush site:install minimal \
-  --account-name=admin \
-  --account-pass=admin \
-  --site-name="Eval ${NAME}" \
-  -y
+# Install Drupal with cascadia demo (lighter than full --demo=all)
+bash scripts/install.sh --demo=cascadia
 
 # Output the working directory
 echo "$TARGET_DIR"
