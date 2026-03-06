@@ -62,6 +62,15 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **LIVE-03**: All 8 eval runs (4 skills x with/without skill) produce outputs and transcripts via Sonnet 4.6 subagents against live Drupal instances
 - [x] **LIVE-04**: Graded benchmarks and HTML viewers show with-skill pass rates higher than without-skill, with analysis summary
 
+### Full Eval-Optimize Loop
+
+- [ ] **FULL-01**: All 13 skills have evals.json with functional assertions grounded in os-knowledge-garden tasks
+- [ ] **FULL-02**: Eval infrastructure handles nested claude sessions cleanly (CLAUDECODE env var fix baked into setup script)
+- [ ] **FULL-03**: Eval runs use 1-agent-per-skill parallelization with Sonnet 4.6 via headless claude -p
+- [ ] **FULL-04**: All 13 skills have graded benchmarks showing with-skill vs without-skill delta
+- [ ] **FULL-05**: Skills with weak deltas have been analyzed and iterated on (assertions tightened or skill content improved) where feasible
+- [ ] **FULL-06**: Final analysis covers all 13 skills with stabilized results, tier classifications, and overall verdict
+
 ## v2 Requirements
 
 ### Extended Coverage
@@ -119,17 +128,24 @@ Requirements for initial release. Each maps to roadmap phases.
 | PACK-01 | Phase 5 | Complete |
 | PACK-02 | Phase 5 | Complete |
 | PACK-03 | Phase 5 | Complete |
-| LIVE-01 | Phase 6 | Planned |
-| LIVE-02 | Phase 6 | Planned |
-| LIVE-03 | Phase 6 | Planned |
-| LIVE-04 | Phase 6 | Planned |
+| LIVE-01 | Phase 6 | Complete |
+| LIVE-02 | Phase 6 | Complete |
+| LIVE-03 | Phase 6 | Complete |
+| LIVE-04 | Phase 6 | Complete |
+| FULL-01 | Phase 7 | Planned |
+| FULL-02 | Phase 7 | Planned |
+| FULL-03 | Phase 7 | Planned |
+| FULL-04 | Phase 7 | Planned |
+| FULL-05 | Phase 7 | Planned |
+| FULL-06 | Phase 7 | Planned |
 
 **Coverage:**
 - v1 requirements: 27 total (complete)
-- Phase 6 requirements: 4 total (planned)
-- Mapped to phases: 31
+- Phase 6 requirements: 4 total (complete)
+- Phase 7 requirements: 6 total (planned)
+- Mapped to phases: 37
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-05*
-*Last updated: 2026-03-05 after Phase 6 planning*
+*Last updated: 2026-03-06 after Phase 7 planning*

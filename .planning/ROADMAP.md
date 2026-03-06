@@ -17,7 +17,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Presentation and Quality** - Build 4 skills (theming, caching, testing, database) covering output and verification (completed 2026-03-06)
 - [x] **Phase 4: Specialized Patterns** - Build 2 advanced skills (views, batch/queue/cron) for less-common workflows (completed 2026-03-06)
 - [x] **Phase 5: Eval, Optimization, and Packaging** - Optimize trigger descriptions holistically, run multi-skill eval, package for distribution (completed 2026-03-06)
-- [ ] **Phase 6: Live Eval Loop** - Run 4 representative skills through real functional eval with Sonnet 4.6 subagents against live Drupal instances
+- [x] **Phase 6: Live Eval Loop** - Run 4 representative skills through real functional eval with Sonnet 4.6 subagents against live Drupal instances (completed 2026-03-06)
+- [ ] **Phase 7: Full Eval-Optimize Loop** - Evals for remaining 9 skills, infrastructure fixes, iterative eval-optimize loop on all 13 skills
 
 ## Phase Details
 
@@ -101,8 +102,8 @@ Plans:
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 05-01-PLAN.md -- Eval prompts, trigger description optimization, and eval results for all 13 skills
-- [ ] 05-02-PLAN.md -- Create install.sh and README.md for packaging and distribution
+- [x] 05-01-PLAN.md -- Eval prompts, trigger description optimization, and eval results for all 13 skills
+- [x] 05-02-PLAN.md -- Create install.sh and README.md for packaging and distribution
 
 ## Progress
 
@@ -116,6 +117,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 3. Presentation and Quality | 4/4 | Complete | 2026-03-06 |
 | 4. Specialized Patterns | 2/2 | Complete | 2026-03-06 |
 | 5. Eval, Optimization, and Packaging | 2/2 | Complete   | 2026-03-06 |
+| 6. Live Eval Loop | 5/5 | Complete | 2026-03-06 |
+| 7. Full Eval-Optimize Loop | 0/5 | Planned | - |
 
 ### Phase 6: Live Eval Loop
 
@@ -139,8 +142,8 @@ Plans:
 
 ### Phase 7: Full Eval-Optimize Loop
 
-**Goal:** Create evals for all remaining 9 skills, fix phase 6 infrastructure gaps (CLAUDECODE env var for nested sessions, 1-agent-per-skill parallelization), then run iterative eval-optimize loop on all 13 skills until skill deltas stabilize — proving measurable value across the full skill set
-**Requirements**: TBD
+**Goal:** Create evals for all remaining 9 skills, fix phase 6 infrastructure gaps (CLAUDECODE env var for nested sessions, 1-agent-per-skill parallelization), then run iterative eval-optimize loop on all 13 skills until skill deltas stabilize -- proving measurable value across the full skill set
+**Requirements**: FULL-01, FULL-02, FULL-03, FULL-04, FULL-05, FULL-06
 **Depends on:** Phase 6
 **Success Criteria** (what must be TRUE):
   1. All 13 skills have evals.json with functional assertions grounded in os-knowledge-garden tasks
@@ -149,7 +152,11 @@ Plans:
   4. All 13 skills have graded benchmarks showing with-skill vs without-skill delta
   5. Skills with weak deltas have been iterated on (assertions tightened, skill content improved) and re-evaluated
   6. Final analysis covers all 13 skills with stabilized results
-**Plans:** 0 plans
+**Plans:** 5 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 7 to break down)
+- [ ] 07-01-PLAN.md -- Create evals.json for 9 remaining skills + bake CLAUDECODE fix into setup script
+- [ ] 07-02-PLAN.md -- Run eval batch 1: forms-api, plugins-blocks, config-storage (highest expected delta)
+- [ ] 07-03-PLAN.md -- Run eval batch 2: routing-controllers, access-security, theming
+- [ ] 07-04-PLAN.md -- Run eval batch 3: database-api, views-dev, batch-queue-cron
+- [ ] 07-05-PLAN.md -- Analyze all 13 skills, iterate on weak deltas, produce final analysis
