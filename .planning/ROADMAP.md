@@ -128,7 +128,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
   3. All 8 eval runs (4 skills x with/without skill) produce outputs and transcripts in correct workspace directory structure
   4. Graded benchmarks show with-skill pass rates higher than without-skill for at least 3 of 4 skills
   5. HTML eval viewers and analysis summary are available for human review
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 - [ ] 06-01-PLAN.md -- Create eval infrastructure (evals.json files + setup/teardown scripts)
