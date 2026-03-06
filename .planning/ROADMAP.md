@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Specialized Patterns** - Build 2 advanced skills (views, batch/queue/cron) for less-common workflows (completed 2026-03-06)
 - [x] **Phase 5: Eval, Optimization, and Packaging** - Optimize trigger descriptions holistically, run multi-skill eval, package for distribution (completed 2026-03-06)
 - [x] **Phase 6: Live Eval Loop** - Run 4 representative skills through real functional eval with Sonnet 4.6 subagents against live Drupal instances (completed 2026-03-06)
-- [ ] **Phase 7: Full Eval-Optimize Loop** - Evals for remaining 9 skills, infrastructure fixes, iterative eval-optimize loop on all 13 skills
+- [ ] **Phase 7: Full Eval-Optimize Loop** - E2E eval infrastructure + evals for all 13 skills with 3-tier assertions, iterative eval-optimize loop
 
 ## Phase Details
 
@@ -118,7 +118,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 4. Specialized Patterns | 2/2 | Complete | 2026-03-06 |
 | 5. Eval, Optimization, and Packaging | 2/2 | Complete   | 2026-03-06 |
 | 6. Live Eval Loop | 5/5 | Complete | 2026-03-06 |
-| 7. Full Eval-Optimize Loop | 0/5 | Planned | - |
+| 7. Full Eval-Optimize Loop | 0/7 | Planned | - |
 
 ### Phase 6: Live Eval Loop
 
@@ -142,21 +142,23 @@ Plans:
 
 ### Phase 7: Full Eval-Optimize Loop
 
-**Goal:** Create evals for all remaining 9 skills, fix phase 6 infrastructure gaps (CLAUDECODE env var for nested sessions, 1-agent-per-skill parallelization), then run iterative eval-optimize loop on all 13 skills until skill deltas stabilize -- proving measurable value across the full skill set
+**Goal:** Add E2E verification tier (agent-browser), create evals for all 13 skills with 3-tier assertions (static + runtime + E2E), run iterative eval-optimize loop on all 13 skills until deltas stabilize -- proving measurable value across the full skill set
 **Requirements**: FULL-01, FULL-02, FULL-03, FULL-04, FULL-05, FULL-06
 **Depends on:** Phase 6
 **Success Criteria** (what must be TRUE):
-  1. All 13 skills have evals.json with functional assertions grounded in os-knowledge-garden tasks
+  1. All 13 skills have evals.json with 3-tier assertions (static, runtime, E2E)
   2. Eval infrastructure handles nested `claude -p` sessions cleanly (CLAUDECODE env var fix baked in)
-  3. Eval runner parallelizes with 1 agent per skill (not multiple skills per agent)
+  3. Eval runs use 1 agent per skill with Sonnet 4.6 via headless claude -p
   4. All 13 skills have graded benchmarks showing with-skill vs without-skill delta
   5. Skills with weak deltas have been iterated on (assertions tightened, skill content improved) and re-evaluated
-  6. Final analysis covers all 13 skills with stabilized results
-**Plans:** 5 plans
+  6. Final analysis covers all 13 skills with stabilized results, tier classifications, and overall verdict
+**Plans:** 7 plans
 
 Plans:
-- [ ] 07-01-PLAN.md -- Create evals.json for 9 remaining skills + bake CLAUDECODE fix into setup script
-- [ ] 07-02-PLAN.md -- Run eval batch 1: forms-api, plugins-blocks, config-storage (highest expected delta)
-- [ ] 07-03-PLAN.md -- Run eval batch 2: routing-controllers, access-security, theming
-- [ ] 07-04-PLAN.md -- Run eval batch 3: database-api, views-dev, batch-queue-cron
-- [ ] 07-05-PLAN.md -- Analyze all 13 skills, iterate on weak deltas, produce final analysis
+- [ ] 07-01-PLAN.md -- Install agent-browser, create E2E grading helpers, bake CLAUDECODE fix into setup
+- [ ] 07-02-PLAN.md -- Author evals.json for routing, forms, blocks, config, access (5 new skills, 3-tier assertions)
+- [ ] 07-03-PLAN.md -- Author evals.json for theming, database, views, batch-queue + upgrade 4 existing evals with E2E
+- [ ] 07-04-PLAN.md -- Run eval batch 1: routing, forms, blocks, config, access (5 skills)
+- [ ] 07-05-PLAN.md -- Run eval batch 2: theming, database, views, batch-queue (4 new skills)
+- [ ] 07-06-PLAN.md -- Re-run 4 existing skills with upgraded E2E assertions (iteration-2)
+- [ ] 07-07-PLAN.md -- Analyze all 13 skills, iterate on weak deltas, produce final report + human review
