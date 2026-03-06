@@ -12,9 +12,10 @@
         "Cache tags include node-specific tags (e.g., 'node:ID' pattern for displayed nodes)",
         "Cache contexts include 'route' or 'route.name'",
         "Cache contexts include 'user' or 'user.permissions' or 'user.roles'",
-        "Code does NOT contain 'max-age' => 0 or '#max-age' => 0",
+        "Code sets #cache metadata with both 'tags' and 'contexts' keys in the render array, AND does NOT set max-age to 0 anywhere",
         "Block class implements getCacheContexts() or getCacheTags() methods, or sets cache metadata in build()",
-        "The module enables successfully: ddev drush en related_content_block returns exit code 0"
+        "The module enables successfully: ddev drush en related_content_block returns exit code 0",
+        "E2E: After placing the block via drush, the front page loads without block rendering errors (no 'Broken' or PHP errors visible)"
       ]
     }
   ]

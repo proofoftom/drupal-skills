@@ -8,12 +8,13 @@
       "files": [],
       "expectations": [
         "event_analytics.info.yml contains 'type: module'",
-        "event_analytics.info.yml contains 'core_version_requirement' with '^10 || ^11' or '^10' (NOT 'core: 8.x')",
+        "event_analytics.info.yml contains 'core_version_requirement' that includes BOTH ^10 AND ^11 (e.g., '^10 || ^11') since the prompt requests D11 compatibility (just '^10' alone is insufficient, 'core: 8.x' is wrong)",
         "event_analytics.info.yml contains 'package: Events'",
         "event_analytics.info.yml lists 'node' as a dependency using 'drupal:node' format",
         "A .module file exists with 'declare(strict_types=1)'",
         "The module enables successfully: ddev drush en event_analytics returns exit code 0",
-        "No PHP syntax errors: ddev drush php-eval \"echo 'ok';\" returns 'ok' after enabling"
+        "No PHP syntax errors: ddev drush php-eval \"echo 'ok';\" returns 'ok' after enabling",
+        "E2E: Module appears in the module list -- navigate to /admin/modules and verify 'event_analytics' or 'Event Analytics' appears on the page"
       ]
     }
   ]
