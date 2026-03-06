@@ -1,0 +1,21 @@
+{
+  "skill_name": "drupal-database-api",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a module called `view_analytics` for our Drupal 10 Open Social site that tracks content views in a custom database table. The table should store: nid (int), uid (int), viewed_at (int, timestamp), and referrer (varchar 255). Write the hook_schema() for the table, a function to record a view, and a page at /admin/reports/view-analytics that shows the top 10 most viewed nodes using an aggregation query. Use Drupal's database abstraction layer, NOT raw SQL. This is tracking data, NOT entity data -- do NOT use the Entity API. We want D11 compatibility.",
+      "expected_output": "A database module with hook_schema(), insert via database abstraction, aggregation query with COUNT, and an admin report page -- no Entity API, no raw SQL",
+      "files": [],
+      "expectations": [
+        "hook_schema() defines the view_analytics table with correct column types and keys",
+        "Insert uses database abstraction: ->insert()->fields() pattern (not raw SQL)",
+        "Select query uses ->select(), ->addExpression() with COUNT (not raw SQL string)",
+        "Does NOT use Entity API for the tracking data",
+        ".info.yml has core_version_requirement including ^10",
+        "The module enables successfully: ddev drush en view_analytics returns exit code 0",
+        "Table exists after install: ddev drush php-eval \"echo \\Drupal::database()->schema()->tableExists('view_analytics') ? 'yes' : 'no';\" returns \"yes\"",
+        "E2E: Analytics report page loads -- navigate to /admin/reports/view-analytics as admin and verify page does not show 404 or error"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "skill_name": "drupal-views-dev",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a module called `resource_directory` for our Drupal 10 Open Social site. It should expose a custom database table (resource_links with columns: id, title, url, category, created) to Views via hook_views_data(). Add a custom Views filter plugin that lets users filter resources by category using a dropdown. Place the filter in the correct PSR-4 path. Include a 'group' key in the Views data definition. We want D11 compatibility.",
+      "expected_output": "A Views integration module with hook_views_data() including group key, hook_schema() for the table, and a custom filter plugin extending FilterPluginBase or InOperator in the correct PSR-4 path",
+      "files": [],
+      "expectations": [
+        "hook_views_data() defines table with 'group' key",
+        "Custom filter plugin placed in src/Plugin/views/filter/ directory",
+        "Filter extends FilterPluginBase or InOperator",
+        "hook_views_data() includes correct field definitions with title and help text",
+        "hook_schema() defines the resource_links table",
+        "The module enables successfully: ddev drush en resource_directory returns exit code 0",
+        "E2E: Views integration registered -- after enabling views module, navigate to /admin/structure/views and verify Views admin is accessible (the resource_directory data should be available for new views)"
+      ]
+    }
+  ]
+}
