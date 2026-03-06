@@ -1,0 +1,90 @@
+{
+  "expectations": [
+    {
+      "text": "Test class extends KernelTestBase (NOT BrowserTestBase or WebDriverTestBase)",
+      "passed": false,
+      "evidence": "Output file SocialAiIndexingServiceTest.php line 6: 'use Drupal\\Tests\\BrowserTestBase;' and line 13: 'class SocialAiIndexingServiceTest extends BrowserTestBase' — wrong base class. BrowserTestBase installs a full Drupal site and is 10-100x slower than KernelTestBase for service testing."
+    },
+    {
+      "text": "Test class has protected static $modules array listing required modules",
+      "passed": true,
+      "evidence": "Output file SocialAiIndexingServiceTest.php lines 18-21: 'protected static $modules = [node, social_ai_indexing]' — array is present, though incomplete (missing system, user, field, text, filter)."
+    },
+    {
+      "text": "$modules includes 'node' and 'social_ai_indexing'",
+      "passed": true,
+      "evidence": "Output file SocialAiIndexingServiceTest.php line 19: 'node' is present. Line 20: 'social_ai_indexing' is present. Both required modules listed."
+    },
+    {
+      "text": "setUp() calls parent::setUp()",
+      "passed": false,
+      "evidence": "Output file SocialAiIndexingServiceTest.php has no setUp() method defined. The class has only testServiceIsAccessible() and testTopicNodeCreation() methods. Without setUp(), there is no parent::setUp() call and no entity schema installation."
+    },
+    {
+      "text": "setUp() calls $this->installEntitySchema('node') or similar entity schema installation",
+      "passed": false,
+      "evidence": "Output file SocialAiIndexingServiceTest.php has no setUp() method and therefore no installEntitySchema() call. In a KernelTestBase context this would cause 'Table not found' errors when node entities are queried."
+    },
+    {
+      "text": "Test has @group annotation",
+      "passed": true,
+      "evidence": "Output file SocialAiIndexingServiceTest.php lines 9-11 (PHPDoc): '@group social_ai_indexing_test' annotation is present."
+    },
+    {
+      "text": "Test uses $this->container->get() or \\Drupal::service() to load the service under test",
+      "passed": true,
+      "evidence": "Output file SocialAiIndexingServiceTest.php line 27: '$service = \\Drupal::service(social_ai_indexing.indexer)' — uses static facade. While container injection ($this->container->get()) is preferred in Kernel tests, the assertion accepts either form and \\Drupal::service() is listed as acceptable."
+    },
+    {
+      "text": "Test uses proper assertion methods ($this->assertNotNull, $this->assertEquals, etc.)",
+      "passed": true,
+      "evidence": "Output file SocialAiIndexingServiceTest.php line 28: '$this->assertNotNull($service, ...)' and line 43: '$this->assertEquals(topic, $loaded->getType())' — proper PHPUnit assertion methods used."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 3,
+    "total": 8,
+    "pass_rate": 0.625
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 6,
+    "errors_encountered": 0,
+    "output_chars": 1100,
+    "transcript_chars": 2800
+  },
+  "timing": {
+    "executor_duration_seconds": 0,
+    "grader_duration_seconds": 0,
+    "total_duration_seconds": 0
+  },
+  "claims": [
+    {
+      "claim": "Wrong base class (BrowserTestBase) would cause 10-100x performance penalty",
+      "type": "quality",
+      "verified": true,
+      "evidence": "BrowserTestBase installs a full Drupal site with HTTP server; KernelTestBase only bootstraps the kernel. The transcript documents this as a critical failure mode."
+    },
+    {
+      "claim": "Missing setUp() means no entity schema and no parent bootstrap in Kernel context",
+      "type": "quality",
+      "verified": true,
+      "evidence": "BrowserTestBase provides its own setUp() with full site install, so the absence of explicit setUp() would not fail in BrowserTestBase — but if this test were corrected to KernelTestBase, the missing setUp() would be fatal."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": ["BrowserTestBase with @group annotation in Kernel namespace path could cause test runner confusion"],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "The file is placed in a Kernel/ directory namespace but extends BrowserTestBase. This mismatch (Kernel namespace, Browser base class) is itself a quality issue worth catching. Consider adding an assertion: 'test namespace matches base class type (Kernel namespace → KernelTestBase, Functional namespace → BrowserTestBase)'."
+      }
+    ],
+    "overall": "Three failures clearly demonstrate the skill's value: wrong base class, no setUp(), no installEntitySchema(). These are the skill's three main teaching points for service testing. The @group annotation being correct (even without skill) is expected since it's common Drupal developer knowledge."
+  }
+}

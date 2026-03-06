@@ -1,0 +1,22 @@
+{
+  "skill_name": "drupal-entities-fields",
+  "eval_id": 1,
+  "iteration": 1,
+  "eval_name": "eval-entity-enrollment",
+  "prompt": "I'm building an event registration system on our Open Social Drupal 10 site. Create a custom content entity type called EventEnrollment for tracking event enrollments. It should have base fields for: event reference (entity_reference to node), user reference (entity_reference to user), enrollment status (list_string with allowed values: pending, confirmed, cancelled), and enrollment date (created timestamp). Include all necessary handlers - forms, list builder, access handler, and route provider. Put it in a module called event_enrollment.",
+  "expected_output": "A complete content entity type with entity class, base fields, all handlers, and module scaffold that installs and creates entities successfully",
+  "assertions": [
+    "Entity class file exists at src/Entity/EventEnrollment.php",
+    "Entity class has either #[ContentEntityType] attribute (D11) or @ContentEntityType annotation (D10)",
+    "baseFieldDefinitions() calls parent::baseFieldDefinitions() first",
+    "event_reference field uses setSetting('target_type', 'node')",
+    "status field defines allowed_values with pending, confirmed, cancelled",
+    "Entity handlers include form, list_builder, and access handler declarations",
+    "The module enables successfully: ddev drush en event_enrollment returns exit code 0",
+    "Entity install succeeds: ddev drush entity:updates shows no pending updates or completes without error",
+    "An entity can be created: ddev drush php-eval creates an EventEnrollment entity and saves it without error"
+  ],
+  "configs": ["with_skill", "without_skill"],
+  "runs_per_config": 1,
+  "model": "claude-sonnet-4-6"
+}

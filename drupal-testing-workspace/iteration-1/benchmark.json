@@ -1,0 +1,183 @@
+{
+  "metadata": {
+    "skill_name": "drupal-testing",
+    "skill_path": "/home/proofoftom/Code/drupal-skills/skills/drupal-testing",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-03-06T06:30:14Z",
+    "evals_run": [
+      1
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 0,
+        "tokens": 2000,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Test class extends KernelTestBase (NOT BrowserTestBase or WebDriverTestBase)",
+          "passed": true,
+          "evidence": "Output file SocialAiIndexingServiceTest.php line 5: 'use Drupal\\KernelTests\\KernelTestBase;' and line 17: 'class SocialAiIndexingServiceTest extends KernelTestBase' \u2014 correct base class for service testing."
+        },
+        {
+          "text": "Test class has protected static $modules array listing required modules",
+          "passed": true,
+          "evidence": "Output file SocialAiIndexingServiceTest.php lines 22-31: 'protected static $modules = [system, user, node, field, text, filter, social_ai_indexing, social_ai_indexing_test]' \u2014 comprehensive module list including all dependencies."
+        },
+        {
+          "text": "$modules includes 'node' and 'social_ai_indexing'",
+          "passed": true,
+          "evidence": "Output file SocialAiIndexingServiceTest.php line 25: 'node' is present. Line 29: 'social_ai_indexing' is present. Both required modules are in the $modules array."
+        },
+        {
+          "text": "setUp() calls parent::setUp()",
+          "passed": true,
+          "evidence": "Output file SocialAiIndexingServiceTest.php line 37: 'protected function setUp(): void' defined. Line 38: 'parent::setUp();' is the first statement in the setUp() method \u2014 correct ordering as the skill prescribes."
+        },
+        {
+          "text": "setUp() calls $this->installEntitySchema('node') or similar entity schema installation",
+          "passed": true,
+          "evidence": "Output file SocialAiIndexingServiceTest.php line 41: '$this->installEntitySchema(user)' and line 42: '$this->installEntitySchema(node)' \u2014 both required entity schemas installed in setUp()."
+        },
+        {
+          "text": "Test has @group annotation",
+          "passed": true,
+          "evidence": "Output file SocialAiIndexingServiceTest.php lines 12-15 (PHPDoc): '@group social_ai_indexing_test' annotation is present."
+        },
+        {
+          "text": "Test uses $this->container->get() or \\Drupal::service() to load the service under test",
+          "passed": true,
+          "evidence": "Output file SocialAiIndexingServiceTest.php line 58: '$service = $this->container->get(social_ai_indexing.indexer)' \u2014 uses container injection (preferred in Kernel tests) rather than static facade."
+        },
+        {
+          "text": "Test uses proper assertion methods ($this->assertNotNull, $this->assertEquals, etc.)",
+          "passed": true,
+          "evidence": "Output file SocialAiIndexingServiceTest.php line 59: '$this->assertNotNull($service, ...)' and lines 74-75: '$this->assertNotNull($loaded_node, ...)' and '$this->assertEquals(topic, $loaded_node->getType(), ...)' \u2014 proper PHPUnit assertion methods used."
+        }
+      ],
+      "notes": [
+        "social_ai_indexing module is fictional \u2014 test cannot actually run against a real service"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.625,
+        "passed": 5,
+        "failed": 3,
+        "total": 8,
+        "time_seconds": 0,
+        "tokens": 1100,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Test class extends KernelTestBase (NOT BrowserTestBase or WebDriverTestBase)",
+          "passed": false,
+          "evidence": "Output file SocialAiIndexingServiceTest.php line 6: 'use Drupal\\Tests\\BrowserTestBase;' and line 13: 'class SocialAiIndexingServiceTest extends BrowserTestBase' \u2014 wrong base class. BrowserTestBase installs a full Drupal site and is 10-100x slower than KernelTestBase for service testing."
+        },
+        {
+          "text": "Test class has protected static $modules array listing required modules",
+          "passed": true,
+          "evidence": "Output file SocialAiIndexingServiceTest.php lines 18-21: 'protected static $modules = [node, social_ai_indexing]' \u2014 array is present, though incomplete (missing system, user, field, text, filter)."
+        },
+        {
+          "text": "$modules includes 'node' and 'social_ai_indexing'",
+          "passed": true,
+          "evidence": "Output file SocialAiIndexingServiceTest.php line 19: 'node' is present. Line 20: 'social_ai_indexing' is present. Both required modules listed."
+        },
+        {
+          "text": "setUp() calls parent::setUp()",
+          "passed": false,
+          "evidence": "Output file SocialAiIndexingServiceTest.php has no setUp() method defined. The class has only testServiceIsAccessible() and testTopicNodeCreation() methods. Without setUp(), there is no parent::setUp() call and no entity schema installation."
+        },
+        {
+          "text": "setUp() calls $this->installEntitySchema('node') or similar entity schema installation",
+          "passed": false,
+          "evidence": "Output file SocialAiIndexingServiceTest.php has no setUp() method and therefore no installEntitySchema() call. In a KernelTestBase context this would cause 'Table not found' errors when node entities are queried."
+        },
+        {
+          "text": "Test has @group annotation",
+          "passed": true,
+          "evidence": "Output file SocialAiIndexingServiceTest.php lines 9-11 (PHPDoc): '@group social_ai_indexing_test' annotation is present."
+        },
+        {
+          "text": "Test uses $this->container->get() or \\Drupal::service() to load the service under test",
+          "passed": true,
+          "evidence": "Output file SocialAiIndexingServiceTest.php line 27: '$service = \\Drupal::service(social_ai_indexing.indexer)' \u2014 uses static facade. While container injection ($this->container->get()) is preferred in Kernel tests, the assertion accepts either form and \\Drupal::service() is listed as acceptable."
+        },
+        {
+          "text": "Test uses proper assertion methods ($this->assertNotNull, $this->assertEquals, etc.)",
+          "passed": true,
+          "evidence": "Output file SocialAiIndexingServiceTest.php line 28: '$this->assertNotNull($service, ...)' and line 43: '$this->assertEquals(topic, $loaded->getType())' \u2014 proper PHPUnit assertion methods used."
+        }
+      ],
+      "notes": [
+        "BrowserTestBase with @group annotation in Kernel namespace path could cause test runner confusion"
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "tokens": {
+        "mean": 2000.0,
+        "stddev": 0.0,
+        "min": 2000,
+        "max": 2000
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.625,
+        "stddev": 0.0,
+        "min": 0.625,
+        "max": 0.625
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "tokens": {
+        "mean": 1100.0,
+        "stddev": 0.0,
+        "min": 1100,
+        "max": 1100
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.38",
+      "time_seconds": "+0.0",
+      "tokens": "+900"
+    }
+  },
+  "notes": []
+}
