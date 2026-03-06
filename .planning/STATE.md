@@ -10,8 +10,8 @@ progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 27
-  completed_plans: 24
-  percent: 89
+  completed_plans: 25
+  percent: 93
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-05)
 ## Current Position
 
 Phase: 7 of 7 (Full Eval-Optimize Loop)
-Plan: 4 of 7 in current phase (COMPLETE)
+Plan: 5 of 7 in current phase (COMPLETE)
 Status: Executing phase 7
-Last activity: 2026-03-06 -- Completed 07-04 (Eval batch 1 -- 5 skills benchmarked, all 0% delta on Sonnet)
+Last activity: 2026-03-06 -- Completed 07-05 (Eval batch 2 -- theming, database-api, views-dev, batch-queue-cron; +29% delta on batch-queue-cron)
 
-Progress: [█████████░] 89%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -73,6 +73,7 @@ Progress: [█████████░] 89%
 | Phase 07 P02 | 2min | 2 tasks | 5 files |
 | Phase 07 P03 | 3min | 2 tasks | 8 files |
 | Phase 07 P04 | 49min | 2 tasks | 70 files |
+| Phase 07 P05 | 74min | 2 tasks | 67 files |
 
 ## Accumulated Context
 
@@ -137,6 +138,10 @@ Recent decisions affecting current work:
 - [Phase 07]: Each eval targets specific wrong-way callouts: ControllerBase vs ContainerInjectionInterface, ConfigFormBase vs FormBase, 4-param create() for blocks, config schema types, permissions.yml
 - [Phase 07]: Testing skill uses runtime-only verification -- no E2E browser check needed since test execution is the verification
 - [Phase 07]: Each new eval targets skill-specific wrong-way patterns with discriminating expectations; E2E expectations prefixed with 'E2E:' for automated tier detection
+- [Phase 07]: Theming, database-api, views-dev expectations not discriminating for Sonnet -- all pass 100% both configs; need tighter expectations
+- [Phase 07]: Batch-queue-cron shows +29% delta -- without-skill fails cron due to undeclared logger.channel service
+- [Phase 07]: Must include 'Do NOT ask questions' in without-skill prompts to prevent Sonnet from asking clarification instead of coding
+- [Phase 07]: Stale os-knowledge-garden ddev project causes persistent traefik router health check failures; must delete before eval runs
 - [Phase 07]: Eval batch 1 (routing, forms, blocks, config, access) all show 0% delta on Sonnet -- standard patterns well-known
 - [Phase 07]: Single-env dual-module pattern saves RAM: install both with/without modules in same ddev instance
 - [Phase 07]: ddev-router health check failures recoverable with docker restart + retry
@@ -159,6 +164,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T11:40:07.000Z
-Stopped at: Completed 07-04-PLAN.md
+Last session: 2026-03-06T12:05:00Z
+Stopped at: Completed 07-05-PLAN.md
 Resume file: None

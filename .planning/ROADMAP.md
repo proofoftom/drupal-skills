@@ -118,7 +118,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 4. Specialized Patterns | 2/2 | Complete | 2026-03-06 |
 | 5. Eval, Optimization, and Packaging | 2/2 | Complete   | 2026-03-06 |
 | 6. Live Eval Loop | 5/5 | Complete | 2026-03-06 |
-| 7. Full Eval-Optimize Loop | 0/7 | Planned | - |
+| 7. Full Eval-Optimize Loop | 5/7 | In Progress|  |
 
 ### Phase 6: Live Eval Loop
 
@@ -152,7 +152,7 @@ Plans:
   4. All 13 skills have graded benchmarks showing with-skill vs without-skill delta
   5. Skills with weak deltas have been iterated on (assertions tightened, skill content improved) and re-evaluated
   6. Final analysis covers all 13 skills with stabilized results, tier classifications, and overall verdict
-**Plans:** 7 plans
+**Plans:** 5/7 plans executed
 
 Plans:
 - [ ] 07-01-PLAN.md -- Install agent-browser, create E2E grading helpers, bake CLAUDECODE fix into setup
