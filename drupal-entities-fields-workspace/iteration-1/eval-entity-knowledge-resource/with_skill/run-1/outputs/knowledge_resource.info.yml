@@ -1,0 +1,5 @@
+name: Knowledge Resource
+type: module
+description: 'Provides a KnowledgeResource content entity type for organizing external learning resources.'
+core_version_requirement: ^10 || ^11
+package: Custom

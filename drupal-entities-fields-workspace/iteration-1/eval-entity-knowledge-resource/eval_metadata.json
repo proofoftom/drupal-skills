@@ -1,0 +1,16 @@
+{
+  "skill_name": "drupal-entities-fields",
+  "eval_id": 1,
+  "prompt": "I'm building a knowledge curation feature on our Open Social Drupal 10 site (os-knowledge-garden). We need a custom content entity type called KnowledgeResource for organizing external learning resources (articles, papers, tools, documentation) alongside our AI-indexed content. It should have base fields for: related_topic (entity_reference to node), author (entity_reference to user), resource_type (list_string with allowed values: article, research_paper, tool, documentation), and created timestamp. Include all necessary handlers - forms, list builder, access handler, and route provider. Put it in a module called knowledge_resource.",
+  "expectations": [
+    "Entity class file exists at src/Entity/KnowledgeResource.php",
+    "Entity class has either #[ContentEntityType] attribute (D11) or @ContentEntityType annotation (D10)",
+    "baseFieldDefinitions() calls parent::baseFieldDefinitions() first",
+    "related_topic field uses setSetting('target_type', 'node')",
+    "resource_type field defines allowed_values with article, research_paper, tool, documentation",
+    "Entity handlers include form, list_builder, access handler, and route_provider declarations",
+    "The module enables successfully: ddev drush en knowledge_resource returns exit code 0",
+    "Entity type is installed: running ddev drush php-eval outputs 'installed'",
+    "An entity can be created: running ddev drush php-eval create + save outputs an id without error"
+  ]
+}

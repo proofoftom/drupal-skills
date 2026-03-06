@@ -1,0 +1,5 @@
+knowledge_resource.admin_list:
+  title: 'Knowledge Resources'
+  route_name: entity.knowledge_resource.collection
+  parent: system.admin_content
+  description: 'Manage knowledge resources.'

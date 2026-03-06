@@ -1,0 +1,14 @@
+knowledge_resource.view:
+  title: 'View'
+  route_name: entity.knowledge_resource.canonical
+  base_route: entity.knowledge_resource.canonical
+
+knowledge_resource.edit:
+  title: 'Edit'
+  route_name: entity.knowledge_resource.edit_form
+  base_route: entity.knowledge_resource.canonical
+
+knowledge_resource.delete:
+  title: 'Delete'
+  route_name: entity.knowledge_resource.delete_form
+  base_route: entity.knowledge_resource.canonical

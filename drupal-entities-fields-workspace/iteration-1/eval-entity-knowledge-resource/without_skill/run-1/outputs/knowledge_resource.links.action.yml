@@ -1,0 +1,5 @@
+knowledge_resource.add:
+  title: 'Add Knowledge Resource'
+  route_name: entity.knowledge_resource.add_form
+  appears_on:
+    - entity.knowledge_resource.collection

@@ -1,0 +1,15 @@
+administer knowledge resource entities:
+  title: 'Administer Knowledge Resource entities'
+  restrict access: true
+
+view knowledge resource entities:
+  title: 'View Knowledge Resource entities'
+
+add knowledge resource entities:
+  title: 'Add Knowledge Resource entities'
+
+edit knowledge resource entities:
+  title: 'Edit Knowledge Resource entities'
+
+delete knowledge resource entities:
+  title: 'Delete Knowledge Resource entities'
