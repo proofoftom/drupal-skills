@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 03-03-PLAN.md
-last_updated: "2026-03-06T01:04:04.761Z"
-last_activity: 2026-03-06 -- Completed 03-04 (drupal-testing)
+status: in-progress
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-06T03:18:51.515Z"
+last_activity: 2026-03-06 -- Completed 04-01 (drupal-views-dev)
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 11
-  completed_plans: 11
-  percent: 100
+  total_plans: 13
+  completed_plans: 12
+  percent: 92
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-05)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** Phase 3: Presentation and Quality
+**Current focus:** Phase 4: Specialized Patterns
 
 ## Current Position
 
-Phase: 3 of 5 (Presentation and Quality)
-Plan: 4 of 4 in current phase
-Status: Phase 3 Complete
-Last activity: 2026-03-06 -- Completed 03-04 (drupal-testing)
+Phase: 4 of 5 (Specialized Patterns)
+Plan: 1 of 2 in current phase
+Status: In Progress
+Last activity: 2026-03-06 -- Completed 04-01 (drupal-views-dev)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [██████████] 100%
 | Phase 03 P01 | 3min | 2 tasks | 2 files |
 | Phase 03 P03 | 2min | 2 tasks | 2 files |
 | Phase 03 P04 | 3min | 2 tasks | 2 files |
+| Phase 04 P01 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Included 6 wrong-way callouts in database API SKILL.md covering entity SQL, injection, entity table writes, untagged query alter, schema without update hook, duplicate hook numbers
 - [Phase 03]: Used 6 wrong-way callouts for testing mistakes (wrong base class, missing modules, missing installSchema, missing defaultTheme, missing @group, setUp ordering)
 - [Phase 03]: Kept FunctionalJavascript section brief since most modules rarely need JS tests
+- [Phase 04]: Included 5 wrong-way callouts for Views integration mistakes (entity hook_views_data, missing group, virtual field query, missing schema, data vs alter)
+- [Phase 04]: Used D11 attribute classes from Drupal\views\Attribute namespace for all Views plugin types
 
 ### Pending Todos
 
@@ -109,6 +112,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T01:01:17.847Z
-Stopped at: Completed 03-03-PLAN.md
+Last session: 2026-03-06T03:18:51.513Z
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None

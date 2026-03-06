@@ -39,7 +39,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Wave 4 — Specialized Patterns
 
-- [ ] **SPEC-01**: drupal-views-dev skill covers hook_views_data, Views field/filter/sort plugins, Views integration
+- [x] **SPEC-01**: drupal-views-dev skill covers hook_views_data, Views field/filter/sort plugins, Views integration
 - [ ] **SPEC-02**: drupal-batch-queue-cron skill covers Batch API, queue workers, cron hooks, with logging/mail/tokens reference file
 
 ### Eval and Optimization
@@ -103,7 +103,7 @@ Requirements for initial release. Each maps to roadmap phases.
 | PRES-02 | Phase 3 | Complete |
 | PRES-03 | Phase 3 | Complete |
 | PRES-04 | Phase 3 | Complete |
-| SPEC-01 | Phase 4 | Pending |
+| SPEC-01 | Phase 4 | Complete |
 | SPEC-02 | Phase 4 | Pending |
 | EVAL-01 | Phase 5 | Pending |
 | EVAL-02 | Phase 5 | Pending |
