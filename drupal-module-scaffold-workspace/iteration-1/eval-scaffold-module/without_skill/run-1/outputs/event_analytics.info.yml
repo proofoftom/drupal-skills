@@ -1,0 +1,7 @@
+name: Event Analytics
+type: module
+description: Tracks event attendance.
+package: Events
+core_version_requirement: ^10
+dependencies:
+  - node
