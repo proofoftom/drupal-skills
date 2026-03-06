@@ -1,0 +1,3 @@
+similarity_threshold: 0.7
+result_limit: 5
+cache_ttl: 300

@@ -1,0 +1,13 @@
+search_settings.settings:
+  type: config_object
+  label: 'Search settings'
+  mapping:
+    similarity_threshold:
+      type: float
+      label: 'Similarity threshold'
+    result_limit:
+      type: integer
+      label: 'Result limit'
+    cache_ttl:
+      type: integer
+      label: 'Cache TTL'

@@ -1,0 +1,6 @@
+search_settings_baseline.settings:
+  title: 'Search Settings Baseline'
+  description: 'Configure search parameters such as similarity threshold, result limit, and cache TTL.'
+  route_name: search_settings_baseline.settings
+  parent: system.admin_config_search
+  weight: 10

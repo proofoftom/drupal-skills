@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "Controller class extends ControllerBase (not bare ContainerInjectionInterface)",
+      "passed": true,
+      "evidence": "ApiStatusController.php line 11: 'class ApiStatusController extends ControllerBase' -- correctly uses ControllerBase, not bare ContainerInjectionInterface."
+    },
+    {
+      "text": "Controller has static create() method accepting ContainerInterface",
+      "passed": true,
+      "evidence": "ApiStatusController.php line 43: 'public static function create(ContainerInterface $container)' -- proper factory method pulling config.factory and module_handler."
+    },
+    {
+      "text": "Constructor uses typed service parameters with DI (not \\Drupal::service() calls in methods)",
+      "passed": true,
+      "evidence": "ApiStatusController.php lines 35-38: constructor accepts ConfigFactoryInterface and ModuleHandlerInterface, stores as properties. No \\Drupal:: static calls anywhere in the class."
+    },
+    {
+      "text": "Route YAML uses _controller key with fully qualified class name",
+      "passed": true,
+      "evidence": "api_status_endpoint.routing.yml line 4: '_controller: \\Drupal\\api_status_endpoint\\Controller\\ApiStatusController::status' -- correct _controller key with FQCN."
+    },
+    {
+      "text": "Route has _permission or _access requirement (not unprotected)",
+      "passed": true,
+      "evidence": "api_status_endpoint.routing.yml line 7: '_access: TRUE' under requirements -- route is protected (public access explicitly declared, appropriate for status endpoint)."
+    },
+    {
+      "text": ".info.yml has core_version_requirement including ^10 and ^11",
+      "passed": true,
+      "evidence": "api_status_endpoint.info.yml line 4: 'core_version_requirement: ^10 || ^11' -- both D10 and D11 included."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en api_status_endpoint returns exit code 0",
+      "passed": true,
+      "evidence": "Transcript confirms module enabled successfully. Verified via ddev drush pm:list showing api_status_endpoint in enabled modules."
+    },
+    {
+      "text": "The API endpoint returns JSON: navigate to /api/system/status and verify page contains site name or module count data",
+      "passed": true,
+      "evidence": "E2E assertion PASS: page-contains 'site_name' at /api/system/status -- JSON response contains site_name field."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  }
+}

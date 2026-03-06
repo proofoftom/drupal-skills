@@ -1,0 +1,6 @@
+services:
+  content_recommendations.recommendation_service:
+    class: Drupal\content_recommendations\RecommendationService
+    arguments:
+      - '@entity_type.manager'
+      - '@current_user'

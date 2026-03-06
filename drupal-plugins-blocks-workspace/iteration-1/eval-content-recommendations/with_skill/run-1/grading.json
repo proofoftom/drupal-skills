@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "Block class implements ContainerFactoryPluginInterface",
+      "passed": true,
+      "evidence": "ContentRecommendationsBlock.php line 23: 'extends BlockBase implements ContainerFactoryPluginInterface' -- correct plugin DI interface."
+    },
+    {
+      "text": "create() method has 4 parameters: container, configuration, plugin_id, plugin_definition",
+      "passed": true,
+      "evidence": "ContentRecommendationsBlock.php line 34: 'public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition)' -- all 4 params."
+    },
+    {
+      "text": "Constructor calls parent::__construct($configuration, $plugin_id, $plugin_definition) with exactly 3 plugin params",
+      "passed": true,
+      "evidence": "ContentRecommendationsBlock.php line 31: 'parent::__construct($configuration, $plugin_id, $plugin_definition)' -- exactly 3 params before service."
+    },
+    {
+      "text": "Block uses blockForm() and blockSubmit() for config (not buildForm/submitForm)",
+      "passed": true,
+      "evidence": "ContentRecommendationsBlock.php lines 49 and 69: 'blockForm()' and 'blockSubmit()' -- correct block config form methods."
+    },
+    {
+      "text": "defaultConfiguration() returns array with default values",
+      "passed": true,
+      "evidence": "ContentRecommendationsBlock.php line 43: 'defaultConfiguration()' returns ['items_to_show' => 5]."
+    },
+    {
+      "text": "build() returns render array with #cache metadata (tags or contexts)",
+      "passed": true,
+      "evidence": "ContentRecommendationsBlock.php lines 96-100: '#cache' => ['tags' => ['node_list'], 'contexts' => ['user'], 'max-age' => 3600]. Also includes #cache in empty-state return (lines 80-83)."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en content_recommendations returns exit code 0",
+      "passed": true,
+      "evidence": "Module confirmed enabled via ddev drush pm:list showing content_recommendations in enabled modules."
+    },
+    {
+      "text": "Block can be placed and renders without error",
+      "passed": true,
+      "evidence": "Block placed via Block::create() to content region. Front page renders without 'Broken' or error messages. Block displays empty-state 'No recommendations available' (stub service returns empty)."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "metadata": {
+    "skill_name": "drupal-routing-controllers",
+    "skill_path": "/home/proofoftom/Code/drupal-skills/skills/drupal-routing-controllers",
+    "executor_model": "sonnet",
+    "analyzer_model": "opus",
+    "timestamp": "2026-03-06T10:56:00Z",
+    "evals_run": [1],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8
+      },
+      "expectations": [
+        {
+          "text": "Controller class extends ControllerBase (not bare ContainerInjectionInterface)",
+          "passed": true,
+          "evidence": "ApiStatusController.php line 11: 'class ApiStatusController extends ControllerBase'"
+        },
+        {
+          "text": "Controller has static create() method accepting ContainerInterface",
+          "passed": true,
+          "evidence": "ApiStatusController.php line 43: 'public static function create(ContainerInterface $container)'"
+        },
+        {
+          "text": "Constructor uses typed service parameters with DI (not \\Drupal::service() calls in methods)",
+          "passed": true,
+          "evidence": "Constructor accepts ConfigFactoryInterface and ModuleHandlerInterface. No \\Drupal:: static calls."
+        },
+        {
+          "text": "Route YAML uses _controller key with fully qualified class name",
+          "passed": true,
+          "evidence": "routing.yml: '_controller: \\Drupal\\api_status_endpoint\\Controller\\ApiStatusController::status'"
+        },
+        {
+          "text": "Route has _permission or _access requirement (not unprotected)",
+          "passed": true,
+          "evidence": "routing.yml: '_access: TRUE' under requirements"
+        },
+        {
+          "text": ".info.yml has core_version_requirement including ^10 and ^11",
+          "passed": true,
+          "evidence": "info.yml: 'core_version_requirement: ^10 || ^11'"
+        },
+        {
+          "text": "The module enables successfully",
+          "passed": true,
+          "evidence": "ddev drush pm:list confirmed api_status_endpoint enabled"
+        },
+        {
+          "text": "The API endpoint returns JSON with site data",
+          "passed": true,
+          "evidence": "E2E assertion PASS: page-contains 'site_name' at /api/system/status"
+        }
+      ]
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8
+      },
+      "expectations": [
+        {
+          "text": "Controller class extends ControllerBase (not bare ContainerInjectionInterface)",
+          "passed": true,
+          "evidence": "StatusController.php line 14: 'class StatusController extends ControllerBase'"
+        },
+        {
+          "text": "Controller has static create() method accepting ContainerInterface",
+          "passed": true,
+          "evidence": "StatusController.php line 29: 'public static function create(ContainerInterface $container): static'"
+        },
+        {
+          "text": "Constructor uses typed service parameters with DI (not \\Drupal::service() calls in methods)",
+          "passed": true,
+          "evidence": "Constructor with promoted typed properties ModuleHandlerInterface and ConfigFactoryInterface."
+        },
+        {
+          "text": "Route YAML uses _controller key with fully qualified class name",
+          "passed": true,
+          "evidence": "routing.yml: '_controller: \\Drupal\\api_status_endpoint_baseline\\Controller\\StatusController::status'"
+        },
+        {
+          "text": "Route has _permission or _access requirement (not unprotected)",
+          "passed": true,
+          "evidence": "routing.yml: '_access: TRUE' under requirements"
+        },
+        {
+          "text": ".info.yml has core_version_requirement including ^10 and ^11",
+          "passed": true,
+          "evidence": "info.yml: 'core_version_requirement: ^10 || ^11'"
+        },
+        {
+          "text": "The module enables successfully",
+          "passed": true,
+          "evidence": "ddev drush pm:list confirmed api_status_endpoint_baseline enabled"
+        },
+        {
+          "text": "The API endpoint returns JSON with site data",
+          "passed": true,
+          "evidence": "E2E verified -- /api/system/status returns JSON with site_name field"
+        }
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.00"
+    }
+  },
+  "notes": [
+    "Both with and without skill produce identical quality -- routing/DI patterns are well-covered in Sonnet training data",
+    "Baseline code even uses modern PHP 8.1 typed properties and return types, showing strong baseline competency for routing patterns"
+  ]
+}

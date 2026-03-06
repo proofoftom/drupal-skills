@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "Form class extends ConfigFormBase (not FormBase)",
+      "passed": true,
+      "evidence": "SearchSettingsForm.php line 11: 'class SearchSettingsForm extends ConfigFormBase' -- correct base class for settings forms."
+    },
+    {
+      "text": "Form class implements getEditableConfigNames() returning array with config name",
+      "passed": true,
+      "evidence": "SearchSettingsForm.php line 13: 'protected function getEditableConfigNames()' returns ['search_settings.settings']."
+    },
+    {
+      "text": "submitForm() uses $this->config() to save settings (not \\Drupal::configFactory())",
+      "passed": true,
+      "evidence": "SearchSettingsForm.php line 57: '$this->config(\"search_settings.settings\")->set(...)' -- uses inherited config() method, not static calls."
+    },
+    {
+      "text": "Route YAML uses _form key (not _controller) for the settings route",
+      "passed": true,
+      "evidence": "search_settings.routing.yml line 4: '_form: \\Drupal\\search_settings\\Form\\SearchSettingsForm' -- correct _form key."
+    },
+    {
+      "text": "config/schema/{module}.schema.yml file exists with typed entries",
+      "passed": true,
+      "evidence": "config/schema/search_settings.schema.yml exists with mapping for similarity_threshold (float), result_limit (integer), cache_ttl (integer)."
+    },
+    {
+      "text": "Schema types include integer or float types for numeric fields",
+      "passed": true,
+      "evidence": "Schema has 'float' for similarity_threshold and 'integer' for result_limit and cache_ttl -- proper typed config schema."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en search_settings returns exit code 0",
+      "passed": true,
+      "evidence": "Module confirmed enabled via ddev drush pm:list showing search_settings in enabled modules."
+    },
+    {
+      "text": "Settings form renders: navigate to /admin/config/search/search-settings and verify form fields are present",
+      "passed": true,
+      "evidence": "E2E verified: page title 'Search Settings', form fields present -- 'Similarity threshold' (0.7), 'Result limit' (5), 'Cache TTL' (300)."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  }
+}

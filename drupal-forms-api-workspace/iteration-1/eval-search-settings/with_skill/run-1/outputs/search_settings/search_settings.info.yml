@@ -1,0 +1,5 @@
+name: 'Search Settings'
+type: module
+description: 'Provides configuration for search parameters including similarity threshold, result limit, and cache TTL.'
+package: Custom
+core_version_requirement: ^10 || ^11

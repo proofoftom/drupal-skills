@@ -1,0 +1,9 @@
+search_settings.settings:
+  path: '/admin/config/search/search-settings'
+  defaults:
+    _form: '\Drupal\search_settings\Form\SearchSettingsForm'
+    _title: 'Search Settings'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE

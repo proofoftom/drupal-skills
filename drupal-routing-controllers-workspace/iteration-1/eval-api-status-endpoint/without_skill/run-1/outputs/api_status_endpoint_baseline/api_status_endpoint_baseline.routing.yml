@@ -1,0 +1,7 @@
+api_status_endpoint_baseline.status:
+  path: '/api/system/status'
+  defaults:
+    _controller: '\Drupal\api_status_endpoint_baseline\Controller\StatusController::status'
+    _title: 'System Status'
+  requirements:
+    _access: 'TRUE'
