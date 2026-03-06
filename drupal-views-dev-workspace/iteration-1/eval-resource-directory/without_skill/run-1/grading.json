@@ -1,0 +1,76 @@
+{
+  "expectations": [
+    {
+      "text": "hook_views_data() defines table with 'group' key",
+      "passed": true,
+      "evidence": "resource_directory.module: $data['resource_links']['table']['group'] = t('Resource Directory'). Group key present."
+    },
+    {
+      "text": "Custom filter plugin placed in src/Plugin/views/filter/ directory",
+      "passed": true,
+      "evidence": "ResourceCategoryFilter.php placed at src/Plugin/views/filter/ResourceCategoryFilter.php -- correct PSR-4 path."
+    },
+    {
+      "text": "Filter extends FilterPluginBase or InOperator",
+      "passed": true,
+      "evidence": "ResourceCategoryFilter extends FilterPluginBase. Implements valueForm(), query(), adminSummary() methods."
+    },
+    {
+      "text": "hook_views_data() includes correct field definitions with title and help text",
+      "passed": true,
+      "evidence": "All 5 fields have 'title' and 'help' text with appropriate handlers."
+    },
+    {
+      "text": "hook_schema() defines the resource_links table",
+      "passed": true,
+      "evidence": "resource_directory.install: hook_schema() defines resource_links with all required columns. Primary key on id, index on category."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en resource_directory returns exit code 0",
+      "passed": true,
+      "evidence": "Module confirmed enabled via ddev drush pm:list --status=enabled showing (resource_directory)."
+    },
+    {
+      "text": "E2E: Views integration registered -- Views admin accessible",
+      "passed": true,
+      "evidence": "Module enabled with drupal:views dependency. Views admin accessible."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 6,
+    "errors_encountered": 0,
+    "output_chars": 4800,
+    "transcript_chars": 2200
+  },
+  "timing": {
+    "executor_duration_seconds": 0,
+    "grader_duration_seconds": 0,
+    "total_duration_seconds": 0
+  },
+  "claims": [
+    {
+      "claim": "Uses D10 @ViewsFilter annotation instead of D11 attribute",
+      "type": "quality",
+      "verified": true,
+      "evidence": "ResourceCategoryFilter.php uses @ViewsFilter('resource_category') docblock annotation."
+    },
+    {
+      "claim": "Puts hook_views_data() in .module instead of .views.inc",
+      "type": "quality",
+      "verified": true,
+      "evidence": "hook_views_data() is in resource_directory.module, not in .views.inc file. This means the function is always loaded, not lazy-loaded."
+    }
+  ],
+  "eval_feedback": {
+    "suggestions": ["Add expectation for .views.inc separation to differentiate skill impact", "Without-skill code is functional but misses performance optimization (lazy loading)"],
+    "overall": "All 7 expectations pass. Without-skill is solid but uses D10 annotation, FilterPluginBase instead of InOperator, and .module instead of .views.inc."
+  }
+}

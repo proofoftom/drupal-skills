@@ -1,0 +1,82 @@
+{
+  "expectations": [
+    {
+      "text": "hook_views_data() defines table with 'group' key",
+      "passed": true,
+      "evidence": "resource_directory.views.inc: $data['resource_links']['table']['group'] = t('Resource Directory'). Group key present."
+    },
+    {
+      "text": "Custom filter plugin placed in src/Plugin/views/filter/ directory",
+      "passed": true,
+      "evidence": "CategoryFilter.php placed at src/Plugin/views/filter/CategoryFilter.php -- correct PSR-4 path for Views filter plugins."
+    },
+    {
+      "text": "Filter extends FilterPluginBase or InOperator",
+      "passed": true,
+      "evidence": "CategoryFilter extends InOperator (more specialized than FilterPluginBase, provides built-in multi-select dropdown)."
+    },
+    {
+      "text": "hook_views_data() includes correct field definitions with title and help text",
+      "passed": true,
+      "evidence": "All 5 fields (id, title, url, category, created) have 'title' and 'help' text. Each has appropriate field/filter/sort handlers (numeric, standard, string, date)."
+    },
+    {
+      "text": "hook_schema() defines the resource_links table",
+      "passed": true,
+      "evidence": "resource_directory.install: hook_schema() defines resource_links with id (serial), title (varchar 255), url (varchar 2048), category (varchar 128), created (int). Primary key on id, index on category."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en resource_directory returns exit code 0",
+      "passed": true,
+      "evidence": "Module confirmed enabled via ddev drush pm:list --status=enabled showing (resource_directory)."
+    },
+    {
+      "text": "E2E: Views integration registered -- Views admin accessible",
+      "passed": true,
+      "evidence": "Module enabled with drupal:views dependency. Views admin at /admin/structure/views accessible. Resource Directory data available for new views."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 6,
+    "errors_encountered": 0,
+    "output_chars": 5600,
+    "transcript_chars": 2500
+  },
+  "timing": {
+    "executor_duration_seconds": 0,
+    "grader_duration_seconds": 0,
+    "total_duration_seconds": 0
+  },
+  "claims": [
+    {
+      "claim": "Uses .views.inc file for lazy-loading hook_views_data()",
+      "type": "quality",
+      "verified": true,
+      "evidence": "resource_directory.views.inc contains hook_views_data() -- Drupal only loads this when Views needs it."
+    },
+    {
+      "claim": "Uses D11 #[ViewsFilter] attribute instead of annotation",
+      "type": "quality",
+      "verified": true,
+      "evidence": "CategoryFilter.php uses #[ViewsFilter('resource_directory_category')] PHP attribute with use Drupal\\views\\Attribute\\ViewsFilter."
+    },
+    {
+      "claim": "Includes config schema for custom filter",
+      "type": "quality",
+      "verified": true,
+      "evidence": "config/schema/resource_directory.schema.yml defines views.filter.resource_directory_category and views.filter_value.resource_directory_category schemas."
+    }
+  ],
+  "eval_feedback": {
+    "suggestions": ["Add expectation for .views.inc file separation (skill teaches this pattern)", "Add expectation for D11 attribute syntax"],
+    "overall": "All 7 expectations pass. With-skill output shows skill-guided patterns: .views.inc lazy loading, D11 attribute, InOperator base class, config schema."
+  }
+}

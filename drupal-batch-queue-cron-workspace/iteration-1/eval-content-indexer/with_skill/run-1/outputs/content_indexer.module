@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * @file
+ * Hooks for the content_indexer module.
+ */
+
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_cron().
+ *
+ * Finds published nodes that have not yet been indexed and adds them to the
+ * content_indexer_worker queue. Items are processed during cron by the
+ * QueueWorker plugin — do not process them here.
+ */
+function content_indexer_cron() {
+  $database = \Drupal::database();
+
+  // Collect NIDs already marked as indexed to exclude them.
+  $indexed_nids = $database->select('content_indexer_status', 'cis')
+    ->fields('cis', ['nid'])
+    ->condition('cis.indexed', 1)
+    ->execute()
+    ->fetchCol();
+
+  // Query for published nodes not yet indexed.
+  $query = \Drupal::entityQuery('node')
+    ->condition('status', NodeInterface::PUBLISHED)
+    ->accessCheck(FALSE);
+
+  if (!empty($indexed_nids)) {
+    $query->condition('nid', $indexed_nids, 'NOT IN');
+  }
+
+  $nids = $query->execute();
+
+  if (empty($nids)) {
+    return;
+  }
+
+  // Add each unindexed node to the queue for background processing.
+  // Queue name must exactly match the QueueWorker plugin ID.
+  $queue = \Drupal::queue('content_indexer_worker');
+  foreach ($nids as $nid) {
+    $item = new \stdClass();
+    $item->nid = (int) $nid;
+    $queue->createItem($item);
+  }
+
+  \Drupal::logger('content_indexer')->info(
+    'Queued @count node(s) for indexing.',
+    ['@count' => count($nids)]
+  );
+}

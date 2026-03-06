@@ -1,0 +1,42 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the content_indexer module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function content_indexer_schema() {
+  $schema['content_indexer_status'] = [
+    'description' => 'Tracks indexing status for content nodes.',
+    'fields' => [
+      'nid' => [
+        'description' => 'The node ID.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'indexed' => [
+        'description' => 'Whether this node has been indexed (1) or not (0).',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'indexed_at' => [
+        'description' => 'Unix timestamp of when the node was last indexed.',
+        'type' => 'int',
+        'not null' => FALSE,
+        'default' => NULL,
+      ],
+    ],
+    'primary key' => ['nid'],
+    'indexes' => [
+      'indexed' => ['indexed'],
+    ],
+  ];
+
+  return $schema;
+}

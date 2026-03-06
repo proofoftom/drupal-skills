@@ -1,0 +1,7 @@
+name: Resource Directory
+type: module
+description: Exposes the resource_links table to Views with a custom category filter plugin.
+package: Custom
+core_version_requirement: ^10 || ^11
+dependencies:
+  - drupal:views

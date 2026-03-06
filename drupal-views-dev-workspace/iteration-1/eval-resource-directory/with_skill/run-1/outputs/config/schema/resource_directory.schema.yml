@@ -1,0 +1,14 @@
+views.filter.resource_directory_category:
+  type: views_filter
+  label: 'Resource directory category filter'
+  mapping:
+    value:
+      type: sequence
+      label: 'Categories'
+
+views.filter_value.resource_directory_category:
+  type: sequence
+  label: 'Categories'
+  sequence:
+    type: string
+    label: 'Category'

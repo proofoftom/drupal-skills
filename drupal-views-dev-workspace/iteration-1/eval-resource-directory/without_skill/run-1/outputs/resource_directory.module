@@ -1,0 +1,69 @@
+<?php
+
+/**
+ * @file
+ * Provides Views integration for the resource_links table.
+ */
+
+/**
+ * Implements hook_views_data().
+ */
+function resource_directory_views_data(): array {
+  $data = [];
+
+  $data['resource_links']['table']['group'] = t('Resource Directory');
+  $data['resource_links']['table']['base'] = [
+    'field' => 'id',
+    'title' => t('Resource Links'),
+    'help' => t('Resource links with categories from the resource directory.'),
+  ];
+
+  $data['resource_links']['id'] = [
+    'title' => t('ID'),
+    'help' => t('The unique resource ID.'),
+    'field' => ['id' => 'numeric'],
+    'filter' => ['id' => 'numeric'],
+    'sort' => ['id' => 'standard'],
+    'argument' => ['id' => 'numeric'],
+  ];
+
+  $data['resource_links']['title'] = [
+    'title' => t('Title'),
+    'help' => t('The resource title.'),
+    'field' => ['id' => 'standard'],
+    'filter' => ['id' => 'string'],
+    'sort' => ['id' => 'standard'],
+    'argument' => ['id' => 'string'],
+  ];
+
+  $data['resource_links']['url'] = [
+    'title' => t('URL'),
+    'help' => t('The resource URL.'),
+    'field' => ['id' => 'standard'],
+    'filter' => ['id' => 'string'],
+    'sort' => ['id' => 'standard'],
+  ];
+
+  $data['resource_links']['category'] = [
+    'title' => t('Category'),
+    'help' => t('The resource category. Use the category filter for a dropdown.'),
+    'field' => ['id' => 'standard'],
+    'filter' => [
+      'id' => 'resource_category',
+      'title' => t('Category'),
+      'help' => t('Filter resources by category using a dropdown.'),
+    ],
+    'sort' => ['id' => 'standard'],
+    'argument' => ['id' => 'string'],
+  ];
+
+  $data['resource_links']['created'] = [
+    'title' => t('Created'),
+    'help' => t('The Unix timestamp when the resource was created.'),
+    'field' => ['id' => 'date'],
+    'filter' => ['id' => 'date'],
+    'sort' => ['id' => 'date'],
+  ];
+
+  return $data;
+}

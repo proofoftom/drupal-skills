@@ -1,0 +1,76 @@
+{
+  "expectations": [
+    {
+      "text": "hook_cron() adds items to queue (calls createItem, does NOT process directly)",
+      "passed": true,
+      "evidence": "content_indexer.module: hook_cron() queries unindexed nodes, then $queue->createItem($item) for each. No processing in cron -- only queue population."
+    },
+    {
+      "text": "QueueWorker plugin has annotation/attribute with cron time setting (cron.time or cron = {\"time\" = ...})",
+      "passed": true,
+      "evidence": "ContentIndexerWorker.php: #[QueueWorker(id: 'content_indexer_worker', title: new TranslatableMarkup('Content Indexer Worker'), cron: ['time' => 30])]. D11 attribute with 30-second cron time."
+    },
+    {
+      "text": "processItem() handles the actual processing logic",
+      "passed": true,
+      "evidence": "processItem() does $this->database->merge('content_indexer_status')->key('nid', $nid)->fields(['indexed' => 1, 'indexed_at' => time()])->execute(). Marks node as indexed."
+    },
+    {
+      "text": "Queue worker has try/catch or error handling in processItem",
+      "passed": true,
+      "evidence": "processItem() validates $data->nid and throws exception if invalid: throw new \\Exception('Missing or invalid node ID'). This leaves the item in queue for retry."
+    },
+    {
+      "text": "QueueWorker placed in correct PSR-4 path: src/Plugin/QueueWorker/",
+      "passed": true,
+      "evidence": "ContentIndexerWorker.php at src/Plugin/QueueWorker/ContentIndexerWorker.php -- correct PSR-4 path."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en content_indexer returns exit code 0",
+      "passed": true,
+      "evidence": "Module confirmed enabled via ddev drush pm:list --status=enabled showing (content_indexer)."
+    },
+    {
+      "text": "E2E: Cron runs without error -- run ddev drush cron and verify exit code 0",
+      "passed": true,
+      "evidence": "ddev drush cron completed with exit code 0. Queue worker ID matches queue name ('content_indexer_worker')."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 6,
+    "errors_encountered": 0,
+    "output_chars": 4200,
+    "transcript_chars": 2800
+  },
+  "timing": {
+    "executor_duration_seconds": 0,
+    "grader_duration_seconds": 0,
+    "total_duration_seconds": 0
+  },
+  "claims": [
+    {
+      "claim": "Queue name exactly matches QueueWorker plugin ID",
+      "type": "quality",
+      "verified": true,
+      "evidence": "hook_cron uses \\Drupal::queue('content_indexer_worker') and QueueWorker id is 'content_indexer_worker' -- required match for cron dispatch."
+    },
+    {
+      "claim": "Uses D11 #[QueueWorker] attribute syntax",
+      "type": "quality",
+      "verified": true,
+      "evidence": "Uses Drupal\\Core\\Queue\\Attribute\\QueueWorker PHP attribute instead of @QueueWorker annotation."
+    }
+  ],
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All 7 expectations pass. With-skill output is clean, idiomatic, and cron-tested."
+  }
+}

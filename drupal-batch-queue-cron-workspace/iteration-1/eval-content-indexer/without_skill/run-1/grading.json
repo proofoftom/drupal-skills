@@ -1,0 +1,76 @@
+{
+  "expectations": [
+    {
+      "text": "hook_cron() adds items to queue (calls createItem, does NOT process directly)",
+      "passed": true,
+      "evidence": "content_indexer.module: hook_cron() queries unindexed nodes using raw SQL on node table, then $queue->createItem(['nid' => (int) $nid]). No direct processing."
+    },
+    {
+      "text": "QueueWorker plugin has annotation/attribute with cron time setting (cron.time or cron = {\"time\" = ...})",
+      "passed": true,
+      "evidence": "ContentIndexerWorker.php: #[QueueWorker(id: 'content_indexer', title: new TranslatableMarkup('Content Indexer'), cron: ['time' => 60])]. D11 attribute with 60-second time."
+    },
+    {
+      "text": "processItem() handles the actual processing logic",
+      "passed": true,
+      "evidence": "processItem() does $this->database->merge('content_indexer_status')->key('nid', $nid)->fields(['indexed' => 1, 'indexed_at' => ...])->execute()."
+    },
+    {
+      "text": "Queue worker has try/catch or error handling in processItem",
+      "passed": false,
+      "evidence": "processItem() checks if $nid <= 0 and returns early, but does not throw an exception or have try/catch. The early return silently discards invalid items without logging or retry."
+    },
+    {
+      "text": "QueueWorker placed in correct PSR-4 path: src/Plugin/QueueWorker/",
+      "passed": true,
+      "evidence": "ContentIndexerWorker.php at src/Plugin/QueueWorker/ContentIndexerWorker.php -- correct path."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en content_indexer returns exit code 0",
+      "passed": true,
+      "evidence": "Module confirmed enabled via ddev drush pm:list --status=enabled showing (content_indexer)."
+    },
+    {
+      "text": "E2E: Cron runs without error -- run ddev drush cron and verify exit code 0",
+      "passed": false,
+      "evidence": "ddev drush cron failed with exit code 1. Error: 'You have requested a non-existent service logger.channel.content_indexer'. The QueueWorker create() injects logger.channel.content_indexer but no services.yml or logger_channel tag was defined."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 2,
+    "total": 7,
+    "pass_rate": 0.714
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 6,
+    "errors_encountered": 1,
+    "output_chars": 4500,
+    "transcript_chars": 2400
+  },
+  "timing": {
+    "executor_duration_seconds": 0,
+    "grader_duration_seconds": 0,
+    "total_duration_seconds": 0
+  },
+  "claims": [
+    {
+      "claim": "Missing services.yml for logger channel causes runtime failure",
+      "type": "factual",
+      "verified": true,
+      "evidence": "ContentIndexerWorker create() calls $container->get('logger.channel.content_indexer') but no services.yml exists to register this channel. Drupal throws ServiceNotFoundException on cron."
+    },
+    {
+      "claim": "Queue name mismatch between hook_cron and QueueWorker ID",
+      "type": "factual",
+      "verified": true,
+      "evidence": "hook_cron uses \\Drupal::queue('content_indexer') but QueueWorker id is 'content_indexer' -- names match in this case. No mismatch."
+    }
+  ],
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "5/7 pass. Two failures: (1) processItem silent return instead of throw/catch, (2) fatal cron error from undeclared logger channel service. The skill prevents this by teaching proper service registration."
+  }
+}
