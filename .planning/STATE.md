@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 07-03-PLAN.md
-last_updated: "2026-03-06T10:42:31.822Z"
-last_activity: 2026-03-06 -- Completed 07-03 (Eval authoring -- 4 new + 4 upgraded evals.json)
+stopped_at: Completed 07-04-PLAN.md
+last_updated: "2026-03-06T11:40:07.000Z"
+last_activity: 2026-03-06 -- Completed 07-04 (Eval batch 1 -- 5 skills benchmarked, all 0% delta on Sonnet)
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 27
-  completed_plans: 23
-  percent: 85
+  completed_plans: 24
+  percent: 89
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-05)
 ## Current Position
 
 Phase: 7 of 7 (Full Eval-Optimize Loop)
-Plan: 3 of 7 in current phase (COMPLETE)
+Plan: 4 of 7 in current phase (COMPLETE)
 Status: Executing phase 7
-Last activity: 2026-03-06 -- Completed 07-03 (Eval authoring -- 4 new + 4 upgraded evals.json)
+Last activity: 2026-03-06 -- Completed 07-04 (Eval batch 1 -- 5 skills benchmarked, all 0% delta on Sonnet)
 
-Progress: [█████████░] 85%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
@@ -72,6 +72,7 @@ Progress: [█████████░] 85%
 | Phase 07 P01 | 3min | 2 tasks | 2 files |
 | Phase 07 P02 | 2min | 2 tasks | 5 files |
 | Phase 07 P03 | 3min | 2 tasks | 8 files |
+| Phase 07 P04 | 49min | 2 tasks | 70 files |
 
 ## Accumulated Context
 
@@ -136,6 +137,10 @@ Recent decisions affecting current work:
 - [Phase 07]: Each eval targets specific wrong-way callouts: ControllerBase vs ContainerInjectionInterface, ConfigFormBase vs FormBase, 4-param create() for blocks, config schema types, permissions.yml
 - [Phase 07]: Testing skill uses runtime-only verification -- no E2E browser check needed since test execution is the verification
 - [Phase 07]: Each new eval targets skill-specific wrong-way patterns with discriminating expectations; E2E expectations prefixed with 'E2E:' for automated tier detection
+- [Phase 07]: Eval batch 1 (routing, forms, blocks, config, access) all show 0% delta on Sonnet -- standard patterns well-known
+- [Phase 07]: Single-env dual-module pattern saves RAM: install both with/without modules in same ddev instance
+- [Phase 07]: ddev-router health check failures recoverable with docker restart + retry
+- [Phase 07]: Config eval langcode expectation fails equally for both with/without -- Drupal auto-adds langcode on install
 
 ### Roadmap Evolution
 
@@ -154,6 +159,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T10:42:31.820Z
-Stopped at: Completed 07-03-PLAN.md
+Last session: 2026-03-06T11:40:07.000Z
+Stopped at: Completed 07-04-PLAN.md
 Resume file: None
