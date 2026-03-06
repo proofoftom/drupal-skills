@@ -1,9 +1,12 @@
 ---
 name: drupal-caching
 description: |
-  Apply correct cache metadata to Drupal render arrays and use cache invalidation patterns.
-  Use when producing render arrays, working with blocks, building controllers that display
-  entity/config data, or troubleshooting stale content in a Drupal module.
+  Apply correct cache metadata (tags, contexts, max-age) to Drupal render arrays and
+  implement cache invalidation patterns. Use WHENEVER producing render arrays that display
+  entity or config data, working with blocks that need cache metadata, or troubleshooting
+  stale content. Covers #cache on render arrays, getCacheTags()/getCacheContexts() on
+  blocks, cache tag invalidation, and cache bubbling behavior.
+  Do NOT use for building templates or themed output structure (use drupal-theming).
 ---
 
 # Drupal Caching

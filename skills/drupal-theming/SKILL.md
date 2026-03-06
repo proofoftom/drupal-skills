@@ -1,9 +1,12 @@
 ---
 name: drupal-theming
 description: |
-  Theme Drupal output with render arrays, Twig templates, and preprocess functions.
-  Use when asked to create themed output, build a template, define a theme hook,
-  attach CSS/JS libraries, or render structured data in a Drupal module.
+  Theme Drupal output by building render arrays, Twig templates, hook_theme(),
+  preprocess functions, and CSS/JS library attachments. Use WHENEVER producing visible
+  output in a Drupal module: creating themed markup, building a template, defining a
+  theme hook, attaching CSS or JavaScript libraries, or rendering structured data with
+  #theme or #type render elements. Covers render array types and .libraries.yml.
+  Do NOT use for cache invalidation or cache metadata strategy (use drupal-caching).
 ---
 
 # Drupal Theming

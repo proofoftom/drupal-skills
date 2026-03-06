@@ -1,9 +1,12 @@
 ---
 name: drupal-access-security
 description: |
-  Implement Drupal access control and security: permissions, route access, entity access,
-  CSRF protection, and XSS prevention. Use when asked to restrict access to routes, protect
-  content, define permissions, or secure output against XSS/CSRF attacks.
+  Implement Drupal access control and security: permissions (.permissions.yml), route
+  access requirements, entity access handlers, CSRF protection, and XSS prevention.
+  Use when asked to restrict access to routes or content, define custom permissions,
+  protect forms against CSRF, sanitize output against XSS, or implement AccessResult-based
+  access checks. Covers cacheable access results with addCacheableDependency().
+  Do NOT use for building the routes themselves (use drupal-routing-controllers).
 ---
 
 # Drupal Access Control and Security

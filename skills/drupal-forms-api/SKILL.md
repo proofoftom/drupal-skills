@@ -2,8 +2,10 @@
 name: drupal-forms-api
 description: |
   Build Drupal forms with the Form API lifecycle (buildForm, validateForm, submitForm).
-  Use when asked to create a form, settings page, confirmation dialog, or alter an
-  existing form in a Drupal module.
+  Use when asked to create a form, settings page, admin configuration page, confirmation
+  dialog, or alter an existing form in a Drupal module. Covers ConfigFormBase for settings
+  forms, _form route key, form_alter hooks, and AJAX form elements.
+  Do NOT use for entity forms (use drupal-entities-fields for entity add/edit forms).
 ---
 
 # Drupal Forms API

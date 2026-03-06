@@ -1,9 +1,12 @@
 ---
 name: drupal-plugins-blocks
 description: |
-  Create Drupal block plugins and custom plugin types with correct DI and discovery.
-  Use when asked to create a custom block, add a block config form, build a custom
-  plugin type, or work with Drupal's plugin system.
+  Create Drupal block plugins and custom plugin types with correct plugin-style
+  dependency injection (ContainerFactoryPluginInterface, 4-param create()). Use when
+  asked to create a custom block, add a block configuration form, build a custom plugin
+  type with a plugin manager, or work with Drupal's plugin discovery system. Covers
+  D10 annotations and D11 PHP attributes for plugin discovery.
+  Do NOT use for controller/service DI (use drupal-routing-controllers instead).
 ---
 
 # Drupal Plugins and Blocks

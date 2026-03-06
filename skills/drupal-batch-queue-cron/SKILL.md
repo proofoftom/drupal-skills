@@ -1,9 +1,12 @@
 ---
 name: drupal-batch-queue-cron
 description: |
-  Implement background processing in Drupal using Batch API, queue workers, and cron.
-  Use when asked to process large datasets, run periodic tasks, defer work to background
-  queues, or implement cron operations in a Drupal module.
+  Implement background and deferred processing in Drupal using Batch API, Queue API
+  with QueueWorker plugins, and hook_cron(). Use when asked to process large datasets
+  in batches, run periodic scheduled tasks, defer work to background queues, implement
+  cron operations, or build queue workers with processItem(). Covers cron-queue
+  separation pattern, RequeueException handling, and Lock API for exclusive operations.
+  Do NOT use for one-off database operations (use drupal-database-api).
 ---
 
 # Drupal Batch, Queue, and Cron

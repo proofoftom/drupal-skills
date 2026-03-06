@@ -1,9 +1,12 @@
 ---
 name: drupal-config-storage
 description: |
-  Store and manage Drupal configuration, state, and temporary data using the correct API.
-  Use when asked to save settings, store runtime state, manage temporary user data,
-  create config schemas, or work with Drupal's configuration system.
+  Store and manage Drupal configuration, state, and temporary data using the correct
+  storage API. Use when asked to save module settings, create config/install YAML files,
+  write config schemas, store runtime state values, manage temporary per-user data, or
+  choose between Config API vs State API vs TempStore. Covers config/install vs
+  config/optional, ConfigFactoryInterface, and config overrides.
+  Do NOT use for form building (use drupal-forms-api for the form itself).
 ---
 
 # Drupal Config, State, and TempStore

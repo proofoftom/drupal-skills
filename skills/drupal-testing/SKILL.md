@@ -2,9 +2,11 @@
 name: drupal-testing
 description: |
   Write PHPUnit tests for Drupal modules using the correct test type and base class.
-  Use when asked to write tests, create test coverage, or verify module behavior.
-  Choose the LOWEST level test type (Unit < Kernel < Functional < FunctionalJavascript)
-  that covers the need.
+  Use when asked to write tests, create test coverage, add unit/kernel/functional tests,
+  or verify Drupal module behavior with automated testing. Guides choosing the LOWEST
+  sufficient test level (Unit < Kernel < Functional < FunctionalJavascript) and covers
+  required setUp patterns: $modules, installEntitySchema(), installConfig(), @group.
+  Do NOT use for manual testing or debugging (this is for automated PHPUnit tests).
 ---
 
 # Drupal Testing

@@ -1,10 +1,12 @@
 ---
 name: drupal-entities-fields
 description: |
-  Create Drupal content and config entity types with proper annotations/attributes,
-  base field definitions, and entity handlers. Use when asked to create a custom
-  entity type, define entity fields, set up entity forms and listings, or work
-  with Drupal's Entity API.
+  Create Drupal content and config entity types with D10 annotations or D11 PHP
+  attributes, base field definitions, and entity handlers (form, list_builder,
+  access, route_provider). Use when asked to create a custom entity type, define
+  entity fields, build entity forms and listings, add an entity reference field,
+  or work with Drupal's Entity API. Covers the annotation-to-attribute migration.
+  Do NOT use for direct database tables -- use drupal-database-api instead.
 ---
 
 # Drupal Entities and Fields

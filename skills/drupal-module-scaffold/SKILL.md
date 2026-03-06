@@ -1,9 +1,13 @@
 ---
 name: drupal-module-scaffold
 description: |
-  Scaffold Drupal modules with correct .info.yml, PSR-4 namespace structure,
-  and .module files. Use when asked to create a new Drupal module, start a
-  custom module, or set up module boilerplate.
+  Scaffold new Drupal modules with correct .info.yml, PSR-4 namespace structure,
+  and .module file conventions. Use WHENEVER creating a new Drupal module, starting
+  a custom module, setting up module boilerplate, or generating the initial file
+  structure for any Drupal development task. Covers D10/D11 .info.yml format,
+  dependency declarations, and hook vs OOP file placement.
+  Do NOT use for adding specific features (routes, forms, entities) -- use the
+  relevant feature skill instead.
 ---
 
 # Drupal Module Scaffold

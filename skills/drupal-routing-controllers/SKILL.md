@@ -1,9 +1,12 @@
 ---
 name: drupal-routing-controllers
 description: |
-  Define Drupal routes with controllers, services, and dependency injection.
-  Use when asked to add a page, endpoint, or route to a Drupal module, create
-  a controller, define a custom service, or set up dependency injection.
+  Define Drupal routes in .routing.yml with controllers, custom services, and
+  dependency injection via the create() factory pattern. Use when asked to add a
+  page, URL endpoint, API route, or JSON controller to a Drupal module, define a
+  custom service in .services.yml, or set up constructor injection in controllers.
+  Do NOT use for form routes (use drupal-forms-api with _form route key instead).
+  Do NOT use for plugin/block DI (use drupal-plugins-blocks instead).
 ---
 
 # Drupal Routing and Controllers

@@ -1,9 +1,12 @@
 ---
 name: drupal-views-dev
 description: |
-  Integrate custom data with Drupal Views and build custom Views plugins.
-  Use when asked to expose a database table or entity type to Views, create custom
-  Views field/filter/sort handlers, or alter existing Views data definitions.
+  Integrate custom data with Drupal Views and build custom Views plugins (field, filter,
+  sort, argument, relationship). Use when asked to expose a database table or entity type
+  to Views via hook_views_data(), create custom Views field/filter/sort handlers, or alter
+  existing Views definitions with hook_views_data_alter(). Covers D11 Views plugin
+  attributes (#[ViewsField], #[ViewsFilter]) and entity-based Views integration.
+  Do NOT use for general entity creation (use drupal-entities-fields).
 ---
 
 # Drupal Views Development

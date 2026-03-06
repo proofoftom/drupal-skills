@@ -1,10 +1,12 @@
 ---
 name: drupal-database-api
 description: |
-  Work with Drupal's database abstraction layer for custom tables and direct queries.
-  Use when asked to create custom database tables, write dynamic or static queries,
-  define schema, or build update hooks in a Drupal module. Do NOT use for entity data --
-  use Entity Query instead.
+  Work with Drupal's database abstraction layer for custom tables and direct SQL queries.
+  Use when asked to create custom database tables via hook_schema(), write dynamic or
+  static select/insert/update/delete queries, define database schema, or build
+  hook_update_N() for schema changes. Covers tagged queries and query alter hooks.
+  Do NOT use for entity data -- use drupal-entities-fields and Entity Query instead.
+  Do NOT use for Views query handlers (use drupal-views-dev instead).
 ---
 
 # Drupal Database API
