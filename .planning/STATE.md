@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: active
-stopped_at: Completed 07-01-PLAN.md
-last_updated: "2026-03-06T10:36:16Z"
-last_activity: 2026-03-06 -- Completed 07-01 (E2E eval infrastructure)
+status: executing
+stopped_at: Completed 07-02-PLAN.md
+last_updated: "2026-03-06T10:41:06.453Z"
+last_activity: 2026-03-06 -- Completed 07-02 (Eval authoring batch 1)
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 27
-  completed_plans: 21
-  percent: 78
+  completed_plans: 22
+  percent: 81
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-05)
 ## Current Position
 
 Phase: 7 of 7 (Full Eval-Optimize Loop)
-Plan: 1 of 7 in current phase (COMPLETE)
+Plan: 2 of 7 in current phase (COMPLETE)
 Status: Executing phase 7
-Last activity: 2026-03-06 -- Completed 07-01 (E2E eval infrastructure)
+Last activity: 2026-03-06 -- Completed 07-02 (Eval authoring batch 1)
 
-Progress: [███████░░░] 78%
+Progress: [████████░░] 81%
 
 ## Performance Metrics
 
@@ -70,6 +70,7 @@ Progress: [███████░░░] 78%
 | Phase 06 P05 | 26min | 3 tasks | 37 files |
 | Phase 06 P05 | 26min | 3 tasks | 37 files |
 | Phase 07 P01 | 3min | 2 tasks | 2 files |
+| Phase 07 P02 | 2min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -130,6 +131,8 @@ Recent decisions affecting current work:
 - [Phase 07]: Used agent-browser sessions with unique names for parallel eval isolation
 - [Phase 07]: Used accessibility snapshot (not raw HTML) for page-contains E2E assertions
 - [Phase 07]: Used JS eval for element-exists to check querySelector directly
+- [Phase 07]: Module names avoid Open Social collisions: api_status_endpoint, search_settings, content_recommendations, site_announcements, restricted_reports
+- [Phase 07]: Each eval targets specific wrong-way callouts: ControllerBase vs ContainerInjectionInterface, ConfigFormBase vs FormBase, 4-param create() for blocks, config schema types, permissions.yml
 
 ### Roadmap Evolution
 
@@ -148,6 +151,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T10:36:16Z
-Stopped at: Completed 07-01-PLAN.md
+Last session: 2026-03-06T10:41:06.451Z
+Stopped at: Completed 07-02-PLAN.md
 Resume file: None
