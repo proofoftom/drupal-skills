@@ -25,7 +25,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Wave 2 — Core Workflow
 
-- [ ] **CORE-01**: drupal-forms-api skill covers Form API lifecycle, form altering, submit handlers, validation
+- [x] **CORE-01**: drupal-forms-api skill covers Form API lifecycle, form altering, submit handlers, validation
 - [ ] **CORE-02**: drupal-plugins-blocks skill covers block plugins, custom plugin types, plugin discovery
 - [ ] **CORE-03**: drupal-config-storage skill covers Config API, State API, TempStore, config schemas, with i18n reference file
 - [ ] **CORE-04**: drupal-access-security skill covers permissions, access handlers, route access, CSRF/XSS prevention
@@ -95,7 +95,7 @@ Requirements for initial release. Each maps to roadmap phases.
 | FOUN-01 | Phase 1 | Complete |
 | FOUN-02 | Phase 1 | Complete |
 | FOUN-03 | Phase 1 | Complete |
-| CORE-01 | Phase 2 | Pending |
+| CORE-01 | Phase 2 | Complete |
 | CORE-02 | Phase 2 | Pending |
 | CORE-03 | Phase 2 | Pending |
 | CORE-04 | Phase 2 | Pending |

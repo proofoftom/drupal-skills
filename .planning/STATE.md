@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-03-05T23:54:48.262Z"
-last_activity: 2026-03-05 -- Completed 01-02 (drupal-routing-controllers)
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-06T00:20:36.935Z"
+last_activity: 2026-03-06 -- Completed 02-01 (drupal-forms-api)
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 7
+  completed_plans: 4
   percent: 67
 ---
 
@@ -21,36 +21,37 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-05)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** Phase 1: Foundations
+**Current focus:** Phase 2: Core Workflow
 
 ## Current Position
 
-Phase: 1 of 5 (Foundations)
-Plan: 2 of 3 in current phase
+Phase: 2 of 5 (Core Workflow)
+Plan: 1 of 4 in current phase
 Status: Executing
-Last activity: 2026-03-05 -- Completed 01-02 (drupal-routing-controllers)
+Last activity: 2026-03-06 -- Completed 02-01 (drupal-forms-api)
 
-Progress: [██████░░░░] 67%
+Progress: [██████░░░░] 57%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 3.5min
-- Total execution time: 0.12 hours
+- Total plans completed: 4
+- Average duration: 3.3min
+- Total execution time: 0.22 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Foundations | 2/3 | 7min | 3.5min |
+| 1. Foundations | 3/3 | 11min | 3.7min |
+| 2. Core Workflow | 1/4 | 2min | 2min |
 
 **Recent Trend:**
-- Last 5 plans: -
-- Trend: -
+- Last 5 plans: 3min, 4min, 4min, 2min
+- Trend: stable
 
 *Updated after each plan completion*
-| Phase 01 P03 | 4min | 2 tasks | 2 files |
+| Phase 02 P01 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Included 5 wrong-way callouts for routing mistakes (hook_menu, hardcoded access, plain strings, static DI, container injection)
 - [Phase 01]: Used progressive disclosure (references/files-images.md) to keep entities skill at 499 lines despite large Entity API surface
 - [Phase 01]: Included 6 wrong-way callouts for entity mistakes (mixed syntax, @Translation in attributes, missing schema, missing config_export, hand-rolled routes/forms)
+- [Phase 02]: Included 6 wrong-way callouts for form mistakes (validation, drupal_set_message, static DI, missing config schema, unguarded form_alter, wrong route key)
+- [Phase 02]: Used distinct my_module examples in forms skill to avoid overlap with scaffold skill's hello_world
+- [Phase 02]: Added _form vs _controller route distinction as wrong-way callout for common Claude mistake
 
 ### Pending Todos
 
@@ -81,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-05T23:44:53.230Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-03-06T00:20:00Z
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None
