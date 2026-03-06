@@ -7,13 +7,15 @@
       "expected_output": "permissions.yml, route with _permission, controller with AccessResult",
       "files": [],
       "expectations": [
-        "Permissions defined in restricted_reports.permissions.yml with title and description keys",
-        "Route has _permission requirement matching the defined permission name",
-        "Controller extends ControllerBase or uses proper access handling",
-        ".info.yml contains type: module and core_version_requirement",
+        "Permission defined in restricted_reports.permissions.yml with 'title' key (permission string must match what route uses)",
+        "Route _permission requirement references the EXACT permission string defined in .permissions.yml",
+        "If custom access checking code exists, it returns AccessResult objects (AccessResult::allowed(), AccessResult::forbidden(), AccessResult::neutral()) -- NOT bare booleans (TRUE/FALSE)",
+        "If AccessResult objects are used, they include ->addCacheContexts(['user.permissions']) or ->addCacheTags() for cache-aware access",
+        "Does NOT use hook_permission() (D7 pattern) -- permissions are in .permissions.yml",
+        "Does NOT implement manual CSRF token checking -- would use _csrf_token route option if CSRF protection needed",
         "The module enables successfully: ddev drush en restricted_reports returns exit code 0",
-        "Anonymous gets 403: navigate to /reports/restricted as anonymous user and verify page shows 'Access denied' (use agent-browser without login)",
-        "Admin gets 200: navigate to /reports/restricted as admin (via drush uli session) and verify page loads without access denied"
+        "E2E: Anonymous gets 403 -- navigate to /reports/restricted as anonymous and verify access denied",
+        "E2E: Admin gets 200 -- navigate to /reports/restricted as admin and verify page loads"
       ]
     }
   ]

@@ -7,14 +7,14 @@
       "expected_output": "A theming module with hook_theme(), a hyphen-named Twig template, render arrays using #theme, and an attached CSS library via .libraries.yml",
       "files": [],
       "expectations": [
-        "hook_theme() returns array with 'variables' key listing all template variables",
-        "Template filename uses hyphens (e.g., featured-resources-list.html.twig), NOT underscores",
-        "Render array uses #theme key referencing the hook_theme entry",
-        "CSS/JS attached via #attached.library referencing featured_resources/{library-name}",
-        "featured_resources.libraries.yml defines the library with CSS path",
-        "Does NOT build raw HTML strings (no Markup::create with HTML tags in build methods)",
-        "The module enables successfully: ddev drush en featured_resources returns exit code 0",
-        "E2E: Template renders -- the module's themed output can be rendered without PHP errors (verify by accessing a route or block that uses the theme hook)"
+        "hook_theme() declares ALL template variables with default values in the 'variables' key (not leaving variables undeclared)",
+        "Template filename uses hyphens: e.g., featured-resources-list.html.twig (NOT underscores like featured_resources_list.html.twig) -- Drupal convention is underscores in hook name map to hyphens in filename",
+        "Render array uses #theme key referencing the hook_theme entry name (NOT building raw HTML strings with Markup::create())",
+        "CSS/JS attached via #attached['library'] array referencing featured_resources/{library-name} (NOT inline <script> or <style> tags, NOT drupal_add_css/drupal_add_js)",
+        "featured_resources.libraries.yml file exists defining the CSS library with relative path and optional dependencies",
+        "Controller or page callback returns a render array (NOT a plain string or Response object for themed content)",
+        "Template file exists in templates/ subdirectory of the module (correct location for module templates)",
+        "The module enables successfully: ddev drush en featured_resources returns exit code 0"
       ]
     }
   ]

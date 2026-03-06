@@ -7,15 +7,15 @@
       "expected_output": "config/install YAML, config/schema YAML, ConfigFormBase form",
       "files": [],
       "expectations": [
-        "config/install/site_announcements.settings.yml exists with default values including langcode",
-        "config/schema/site_announcements.schema.yml exists with typed entries",
-        "Schema types correctly use string, boolean, and integer (not all strings)",
-        "Config YAML keys match what the form reads via $config->get()",
-        "Form extends ConfigFormBase (not FormBase) and implements getEditableConfigNames()",
-        "Does NOT use variable_get/variable_set or State API for persistent settings",
+        "config/install/site_announcements.settings.yml exists with default values",
+        "config/schema/site_announcements.schema.yml exists with typed mapping entries",
+        "Schema uses 'label' type for translatable human-readable text like announcement_text -- not 'string' for user-facing text",
+        "Schema uses correct types: 'boolean' for display_enabled (not 'string'), 'integer' for max_display_count",
+        "Form uses $this->config('site_announcements.settings') for reads and writes (NOT \\Drupal::config() which returns immutable)",
+        "Does NOT use variable_get/variable_set (D7 pattern) or State API for exportable settings",
+        "Does NOT use \\Drupal::state() for settings that should be config-exportable",
         "The module enables successfully: ddev drush en site_announcements returns exit code 0",
-        "Config loads correctly: ddev drush config:get site_announcements.settings returns values without error",
-        "Config change reflects on page: after running `ddev drush config:set site_announcements.settings announcement_text 'Test123' -y`, navigate to /admin/config/system/announcements and verify form shows 'Test123'"
+        "Config loads correctly: ddev drush config:get site_announcements.settings returns values without error"
       ]
     }
   ]

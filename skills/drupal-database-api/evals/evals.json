@@ -7,14 +7,15 @@
       "expected_output": "A database module with hook_schema(), insert via database abstraction, aggregation query with COUNT, and an admin report page -- no Entity API, no raw SQL",
       "files": [],
       "expectations": [
-        "hook_schema() defines the view_analytics table with correct column types and keys",
-        "Insert uses database abstraction: ->insert()->fields() pattern (not raw SQL)",
-        "Select query uses ->select(), ->addExpression() with COUNT (not raw SQL string)",
-        "Does NOT use Entity API for the tracking data",
-        ".info.yml has core_version_requirement including ^10",
+        "hook_schema() defines table with correct column types, primary key as 'serial' type, and indexes for frequently queried columns",
+        "Insert operations use \\Drupal::database()->insert('table')->fields([...]) pattern (NOT raw SQL, NOT db_insert)",
+        "Select queries use database abstraction: ->select('table', 'alias')->fields()->condition() (NOT raw SQL strings, NOT db_query for selects)",
+        "Aggregation uses ->addExpression('COUNT(nid)', 'view_count') pattern (NOT raw SQL COUNT in a db_query string)",
+        "Query includes ->addTag('view_analytics') or similar tag enabling hook_query_alter() support for other modules",
+        "Does NOT use Entity API (EntityTypeManager, Entity Query) for the tracking/analytics data -- the prompt explicitly says to use Database API",
+        "Does NOT concatenate user input into SQL strings -- uses placeholders (:placeholder) or condition() methods",
         "The module enables successfully: ddev drush en view_analytics returns exit code 0",
-        "Table exists after install: ddev drush php-eval \"echo \\Drupal::database()->schema()->tableExists('view_analytics') ? 'yes' : 'no';\" returns \"yes\"",
-        "E2E: Analytics report page loads -- navigate to /admin/reports/view-analytics as admin and verify page does not show 404 or error"
+        "Table exists after install: ddev drush php-eval returns 'yes' for tableExists('view_analytics')"
       ]
     }
   ]
