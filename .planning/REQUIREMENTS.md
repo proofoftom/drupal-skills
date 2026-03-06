@@ -51,9 +51,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Packaging and Distribution
 
-- [ ] **PACK-01**: skills/ folder in repo contains all 13 skill directories ready for GitHub publishing
-- [ ] **PACK-02**: install.sh script copies/symlinks skills to ~/.claude/skills/
-- [ ] **PACK-03**: Repository README documents skill inventory, installation, and usage
+- [x] **PACK-01**: skills/ folder in repo contains all 13 skill directories ready for GitHub publishing
+- [x] **PACK-02**: install.sh script copies/symlinks skills to ~/.claude/skills/
+- [x] **PACK-03**: Repository README documents skill inventory, installation, and usage
 
 ## v2 Requirements
 
@@ -109,9 +109,9 @@ Requirements for initial release. Each maps to roadmap phases.
 | EVAL-02 | Phase 5 | Pending |
 | EVAL-03 | Phase 5 | Pending |
 | EVAL-04 | Phase 5 | Pending |
-| PACK-01 | Phase 5 | Pending |
-| PACK-02 | Phase 5 | Pending |
-| PACK-03 | Phase 5 | Pending |
+| PACK-01 | Phase 5 | Complete |
+| PACK-02 | Phase 5 | Complete |
+| PACK-03 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 27 total
