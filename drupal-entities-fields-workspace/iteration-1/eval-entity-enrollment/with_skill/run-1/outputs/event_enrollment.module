@@ -1,0 +1,8 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @file
+ * Primary module hooks for Event Enrollment module.
+ */
