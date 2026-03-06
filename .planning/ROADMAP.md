@@ -33,9 +33,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 01-01-PLAN.md -- Create skills directory structure and drupal-module-scaffold skill (establishes template pattern)
-- [ ] 01-02-PLAN.md -- Create drupal-routing-controllers skill with menus reference
-- [ ] 01-03-PLAN.md -- Create drupal-entities-fields skill with files-images reference
+- [x] 01-01-PLAN.md -- Create skills directory structure and drupal-module-scaffold skill (establishes template pattern)
+- [x] 01-02-PLAN.md -- Create drupal-routing-controllers skill with menus reference
+- [x] 01-03-PLAN.md -- Create drupal-entities-fields skill with files-images reference
 
 ### Phase 2: Core Workflow
 **Goal**: Developers can use Claude to build forms, block plugins, config/state management, and access control -- the daily-use patterns that compose with foundational skills
@@ -47,11 +47,13 @@ Plans:
   3. drupal-config-storage skill produces correct Config API, State API, and TempStore patterns with config schemas when Claude is asked to store or manage configuration
   4. drupal-access-security skill generates correct permission definitions, access handlers, route access checks, and CSRF/XSS prevention when Claude is asked about access control
   5. All four skills satisfy SKIL-01 through SKIL-07 quality standards and pass skill-creator eval
-**Plans**: TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md -- Create drupal-forms-api skill (Form API lifecycle, form altering, ConfigFormBase)
+- [ ] 02-02-PLAN.md -- Create drupal-config-storage skill with i18n reference (Config API, State API, TempStore)
+- [ ] 02-03-PLAN.md -- Create drupal-plugins-blocks skill (block plugins, custom plugin types, D10/D11 dual syntax)
+- [ ] 02-04-PLAN.md -- Create drupal-access-security skill (permissions, access handlers, CSRF/XSS prevention)
 
 ### Phase 3: Presentation and Quality
 **Goal**: Developers can use Claude to build themed output, apply caching correctly, write tests, and use the database API -- completing the full module development workflow
@@ -106,7 +108,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundations | 3/3 | Complete    | 2026-03-05 |
-| 2. Core Workflow | 0/2 | Not started | - |
+| 2. Core Workflow | 0/4 | Not started | - |
 | 3. Presentation and Quality | 0/2 | Not started | - |
 | 4. Specialized Patterns | 0/1 | Not started | - |
 | 5. Eval, Optimization, and Packaging | 0/2 | Not started | - |
