@@ -66,7 +66,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **FULL-01**: All 13 skills have evals.json with functional assertions grounded in os-knowledge-garden tasks
 - [x] **FULL-02**: Eval infrastructure handles nested claude sessions cleanly (CLAUDECODE env var fix baked into setup script)
-- [x] **FULL-03**: Eval runs use 1-agent-per-skill parallelization with Sonnet 4.6 via headless claude -p
+- [x] **FULL-03**: Eval runs use 1-agent-per-skill parallelization with Sonnet 4.6 via Agent subagents
 - [x] **FULL-04**: All 13 skills have graded benchmarks showing with-skill vs without-skill delta
 - [ ] **FULL-05**: Skills with weak deltas have been analyzed and iterated on (assertions tightened or skill content improved) where feasible
 - [ ] **FULL-06**: Final analysis covers all 13 skills with stabilized results, tier classifications, and overall verdict
