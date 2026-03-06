@@ -1,0 +1,22 @@
+{
+  "skill_name": "drupal-config-storage",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a module called `site_announcements` for our Drupal 10 Open Social site that stores announcement configuration. The module should have config/install default YAML with settings for: announcement_text (string, default 'Welcome'), display_enabled (boolean, default true), and max_display_count (integer, default 3). Create the matching config schema file. Add a settings form at /admin/config/system/announcements that allows editing these values and saves them to config. We want D11 compatibility.",
+      "expected_output": "config/install YAML, config/schema YAML, ConfigFormBase form",
+      "files": [],
+      "expectations": [
+        "config/install/site_announcements.settings.yml exists with default values including langcode",
+        "config/schema/site_announcements.schema.yml exists with typed entries",
+        "Schema types correctly use string, boolean, and integer (not all strings)",
+        "Config YAML keys match what the form reads via $config->get()",
+        "Form extends ConfigFormBase (not FormBase) and implements getEditableConfigNames()",
+        "Does NOT use variable_get/variable_set or State API for persistent settings",
+        "The module enables successfully: ddev drush en site_announcements returns exit code 0",
+        "Config loads correctly: ddev drush config:get site_announcements.settings returns values without error",
+        "Config change reflects on page: after running `ddev drush config:set site_announcements.settings announcement_text 'Test123' -y`, navigate to /admin/config/system/announcements and verify form shows 'Test123'"
+      ]
+    }
+  ]
+}
