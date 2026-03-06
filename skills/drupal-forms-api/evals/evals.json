@@ -1,0 +1,21 @@
+{
+  "skill_name": "drupal-forms-api",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a settings form module called `search_settings` for configuring search parameters on our Drupal 10 Open Social site. The form at `/admin/config/search/search-settings` should have fields for: similarity_threshold (number, default 0.7), result_limit (number, default 5), and cache_ttl (number, default 300). Save all settings to config. Include a config schema file. We want D11 compatibility.",
+      "expected_output": "ConfigFormBase with getEditableConfigNames, config schema, route with _form key",
+      "files": [],
+      "expectations": [
+        "Form class extends ConfigFormBase (not FormBase)",
+        "Form class implements getEditableConfigNames() returning array with config name",
+        "submitForm() uses $this->config() to save settings (not \\Drupal::configFactory())",
+        "Route YAML uses _form key (not _controller) for the settings route",
+        "config/schema/{module}.schema.yml file exists with typed entries",
+        "Schema types include integer or float types for numeric fields",
+        "The module enables successfully: ddev drush en search_settings returns exit code 0",
+        "Settings form renders: navigate to /admin/config/search/search-settings (as admin) and verify form fields are present (page contains 'Similarity' or 'similarity_threshold')"
+      ]
+    }
+  ]
+}

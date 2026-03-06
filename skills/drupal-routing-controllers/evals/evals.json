@@ -1,0 +1,21 @@
+{
+  "skill_name": "drupal-routing-controllers",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a JSON API endpoint module for a Drupal 10 Open Social site (os-knowledge-garden). The module `api_status_endpoint` should provide a route at `/api/system/status` that returns a JSON response with site name and module count. The controller should use dependency injection to inject the module_handler and config.factory services. Use proper DI patterns with a create() factory method. We want D11 compatibility.",
+      "expected_output": "Controller extending ControllerBase with create() factory, DI services, JsonResponse, route with _permission",
+      "files": [],
+      "expectations": [
+        "Controller class extends ControllerBase (not bare ContainerInjectionInterface)",
+        "Controller has static create() method accepting ContainerInterface",
+        "Constructor uses typed service parameters with DI (not \\Drupal::service() calls in methods)",
+        "Route YAML uses _controller key with fully qualified class name",
+        "Route has _permission or _access requirement (not unprotected)",
+        ".info.yml has core_version_requirement including ^10 and ^11",
+        "The module enables successfully: ddev drush en api_status_endpoint returns exit code 0",
+        "The API endpoint returns JSON: navigate to /api/system/status (as admin via drush uli) and verify page contains site name or module count data (not a 404 page)"
+      ]
+    }
+  ]
+}
