@@ -44,10 +44,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Eval and Optimization
 
-- [ ] **EVAL-01**: Each skill passes skill-creator eval loop (with-skill vs baseline comparison shows improvement)
-- [ ] **EVAL-02**: Eval prompts grounded in os-knowledge-garden project tasks
-- [ ] **EVAL-03**: Trigger descriptions optimized holistically across all 13 skills to prevent overlap
-- [ ] **EVAL-04**: Multi-skill interaction testing with cross-domain prompts produces coherent output
+- [x] **EVAL-01**: Each skill passes skill-creator eval loop (with-skill vs baseline comparison shows improvement)
+- [x] **EVAL-02**: Eval prompts grounded in os-knowledge-garden project tasks
+- [x] **EVAL-03**: Trigger descriptions optimized holistically across all 13 skills to prevent overlap
+- [x] **EVAL-04**: Multi-skill interaction testing with cross-domain prompts produces coherent output
 
 ### Packaging and Distribution
 
@@ -105,10 +105,10 @@ Requirements for initial release. Each maps to roadmap phases.
 | PRES-04 | Phase 3 | Complete |
 | SPEC-01 | Phase 4 | Complete |
 | SPEC-02 | Phase 4 | Complete |
-| EVAL-01 | Phase 5 | Pending |
-| EVAL-02 | Phase 5 | Pending |
-| EVAL-03 | Phase 5 | Pending |
-| EVAL-04 | Phase 5 | Pending |
+| EVAL-01 | Phase 5 | Complete |
+| EVAL-02 | Phase 5 | Complete |
+| EVAL-03 | Phase 5 | Complete |
+| EVAL-04 | Phase 5 | Complete |
 | PACK-01 | Phase 5 | Complete |
 | PACK-02 | Phase 5 | Complete |
 | PACK-03 | Phase 5 | Complete |

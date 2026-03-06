@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Completed 05-02-PLAN.md
-last_updated: "2026-03-06T03:45:00Z"
-last_activity: 2026-03-06 -- Completed 05-02 (packaging)
+status: completed
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-06T03:51:22.234Z"
+last_activity: 2026-03-06 -- Completed 05-01 (eval-trigger-optimization)
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 15
-  completed_plans: 14
-  percent: 93
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-05)
 ## Current Position
 
 Phase: 5 of 5 (Eval, Optimization, and Packaging)
-Plan: 2 of 2 in current phase (plan 2 complete, plan 1 remaining)
-Status: Phase 5 In Progress
-Last activity: 2026-03-06 -- Completed 05-02 (packaging)
+Plan: 2 of 2 in current phase
+Status: Phase 5 Complete -- All Phases Complete
+Last activity: 2026-03-06 -- Completed 05-01 (eval-trigger-optimization)
 
-Progress: [█████████░] 93%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [█████████░] 93%
 | Phase 04 P01 | 2min | 2 tasks | 2 files |
 | Phase 04 P02 | 3min | 2 tasks | 2 files |
 | Phase 05 P02 | 1min | 2 tasks | 2 files |
+| Phase 05 P01 | 7min | 2 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Included 5 wrong-way callouts in batch/queue/cron SKILL.md for thorough coverage of common mistakes
 - [Phase 05]: MIT license for repository packaging (no existing LICENSE file)
 - [Phase 05]: Wave-based organization in README skill table for progressive learning
+- [Phase 05]: Used expected-behavior eval methodology documenting known Claude blind spots vs skill corrections
+- [Phase 05]: Added negative triggers to 11 of 13 skills to prevent cross-domain over-triggering
+- [Phase 05]: Made core skills pushy with Use WHENEVER to combat under-triggering (scaffold, caching, theming)
 
 ### Pending Todos
 
@@ -118,6 +122,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T03:45:00Z
-Stopped at: Completed 05-02-PLAN.md
+Last session: 2026-03-06T03:51:22.232Z
+Stopped at: Completed 05-01-PLAN.md
 Resume file: None
