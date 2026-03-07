@@ -65,7 +65,7 @@ Plans:
 **Goal**: Prove the new pipeline produces valid, meaningful data by running calibration skills with known deltas
 **Depends on**: Phase 9
 **Requirements**: PIPE-01
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 10-01-PLAN.md -- Run caching calibration skill through full pipeline (first real grader validation)
 - [ ] 10-02-PLAN.md -- Run scaffold calibration skill and cross-skill pipeline validation
@@ -104,6 +104,6 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 | 1-7 | v1.0 | 26/28 | Shipped | 2026-03-07 |
 | 8. Eval Infrastructure | v2.0 | 2/2 | Complete | 2026-03-07 |
 | 9. Eval Prompt Rewrite | v2.0 | 2/2 | Complete | 2026-03-07 |
-| 10. Pipeline Validation | v2.0 | 0/2 | Not started | - |
+| 10. Pipeline Validation | 1/2 | In Progress|  | - |
 | 11. Batch Execution | v2.0 | 0/? | Not started | - |
 | 12. Analysis & Optimization | v2.0 | 0/? | Not started | - |

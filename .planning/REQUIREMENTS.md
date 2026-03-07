@@ -17,7 +17,7 @@
 
 ## Pipeline
 
-- [ ] **PIPE-01**: Pipeline validated end-to-end on 2-3 calibration skills (caching, scaffold) before batch run
+- [x] **PIPE-01**: Pipeline validated end-to-end on 2-3 calibration skills (caching, scaffold) before batch run
 - [ ] **PIPE-02**: Batch orchestrator runs all 13 skills through eval with minimal manual intervention (3-4 skills per session)
 - [ ] **PIPE-03**: Each skill produces grading.json, benchmark.json in correct workspace layout
 
