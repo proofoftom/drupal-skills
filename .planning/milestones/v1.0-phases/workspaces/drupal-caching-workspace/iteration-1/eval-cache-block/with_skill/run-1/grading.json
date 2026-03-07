@@ -1,0 +1,92 @@
+{
+  "expectations": [
+    {
+      "text": "Block class implements build() returning a render array",
+      "passed": true,
+      "evidence": "Output file RelatedContentBlock.php line 69: 'public function build()' is defined and returns an array (lines 96-106) with '#theme', '#items', '#title', and '#cache' keys."
+    },
+    {
+      "text": "Render array includes #cache key with 'tags' array",
+      "passed": true,
+      "evidence": "Output file RelatedContentBlock.php lines 100-104: '#cache' => ['tags' => $tags, 'contexts' => $this->getCacheContexts(), 'max-age' => Cache::PERMANENT] — '#cache' key present with 'tags' array variable accumulated via Cache::mergeTags()."
+    },
+    {
+      "text": "Cache tags include node-specific tags (e.g., 'node:ID' pattern for displayed nodes)",
+      "passed": true,
+      "evidence": "Output file RelatedContentBlock.php lines 83-94: foreach loop calls '$node->getCacheTags()' per node and accumulates via 'Cache::mergeTags($tags, $node->getCacheTags())'. The getCacheTags() method on node entities returns 'node:{id}' pattern tags, satisfying the node-specific tag requirement."
+    },
+    {
+      "text": "Cache contexts include 'route' or 'route.name'",
+      "passed": true,
+      "evidence": "Output file RelatedContentBlock.php line 114: 'return Cache::mergeContexts(parent::getCacheContexts(), [route, user])' — 'route' context is explicitly included."
+    },
+    {
+      "text": "Cache contexts include 'user' or 'user.permissions' or 'user.roles'",
+      "passed": true,
+      "evidence": "Output file RelatedContentBlock.php line 114: 'return Cache::mergeContexts(parent::getCacheContexts(), [route, user])' — 'user' context is explicitly included for group-membership-based filtering."
+    },
+    {
+      "text": "Code sets #cache metadata with both 'tags' and 'contexts' keys in the render array, AND does NOT set max-age to 0 anywhere",
+      "passed": true,
+      "evidence": "Output file RelatedContentBlock.php lines 100-104: '#cache' has 'tags' (node-specific via Cache::mergeTags), 'contexts' (via getCacheContexts()), and 'max-age' => Cache::PERMANENT (not 0). Both required keys present and no max-age: 0."
+    },
+    {
+      "text": "Block class implements getCacheContexts() or getCacheTags() methods, or sets cache metadata in build()",
+      "passed": true,
+      "evidence": "Output file RelatedContentBlock.php defines both getCacheContexts() (line 111-115) AND getCacheTags() (line 121-124) as proper overrides merging with parent via Cache::mergeContexts() and Cache::mergeTags() respectively."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en related_content_block returns exit code 0",
+      "passed": true,
+      "evidence": "Transcript Step 4: 'ddev drush en related_content_block -y' output 'Already installed: related_content_block' with exit code 0. Confirmed via 'pm:list --status=enabled | grep related_content_block' showing the module enabled."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 6,
+    "errors_encountered": 0,
+    "output_chars": 3400,
+    "transcript_chars": 3200
+  },
+  "timing": {
+    "executor_duration_seconds": 0,
+    "grader_duration_seconds": 0,
+    "total_duration_seconds": 0
+  },
+  "claims": [
+    {
+      "claim": "getCacheContexts() merges with parent using Cache::mergeContexts()",
+      "type": "factual",
+      "verified": true,
+      "evidence": "RelatedContentBlock.php line 114: 'Cache::mergeContexts(parent::getCacheContexts(), [route, user])' — parent contexts preserved, preventing block config contexts from being dropped."
+    },
+    {
+      "claim": "getCacheTags() includes node_list tag for list invalidation",
+      "type": "factual",
+      "verified": true,
+      "evidence": "RelatedContentBlock.php line 123: 'Cache::mergeTags(parent::getCacheTags(), [node_list])' — node_list tag ensures the block is invalidated when any node is created/updated/deleted."
+    },
+    {
+      "claim": "ContainerFactoryPluginInterface is implemented for proper DI",
+      "type": "quality",
+      "verified": true,
+      "evidence": "RelatedContentBlock.php line 21: 'implements ContainerFactoryPluginInterface' with proper create() factory method injecting EntityTypeManagerInterface — correct Drupal plugin DI pattern."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": ["Environment was already present from a prior run; used as-is after confirming with ddev describe"]
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All 8 assertions pass with strong evidence. The assertions are well-discriminating for this skill: the build() implementation, getCacheContexts(), getCacheTags(), Cache::PERMANENT, and parent merging all reflect the skill's core guidance. No gaps found."
+  }
+}

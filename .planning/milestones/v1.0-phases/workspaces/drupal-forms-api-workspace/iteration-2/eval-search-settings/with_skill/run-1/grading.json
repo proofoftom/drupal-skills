@@ -1,0 +1,22 @@
+{
+  "skill": "drupal-forms-api",
+  "eval_id": 1,
+  "run": 1,
+  "config": "with_skill",
+  "model": "claude-sonnet-4-6",
+  "timestamp": "2026-03-06T16:20:00Z",
+  "expectations": [
+    { "id": 1, "description": "Form extends ConfigFormBase", "result": "PASS", "evidence": "class SearchSettingsForm extends ConfigFormBase" },
+    { "id": 2, "description": "getEditableConfigNames() returns config name array", "result": "PASS", "evidence": "return ['search_settings.settings']" },
+    { "id": 3, "description": "Config schema exists with typed entries", "result": "PASS", "evidence": "config/schema/search_settings.schema.yml with float, integer types" },
+    { "id": 4, "description": "Schema uses integer for numeric fields", "result": "PASS", "evidence": "float for similarity_threshold, integer for result_limit and cache_ttl" },
+    { "id": 5, "description": "Validation uses setErrorByName if present", "result": "PASS", "evidence": "No validation present (N/A)" },
+    { "id": 6, "description": "buildForm calls parent::buildForm", "result": "PASS", "evidence": "return parent::buildForm($form, $form_state);" },
+    { "id": 7, "description": "submitForm calls parent::submitForm", "result": "PASS", "evidence": "parent::submitForm($form, $form_state);" },
+    { "id": 8, "description": "Uses $this->config() not \\Drupal::configFactory", "result": "PASS", "evidence": "$this->config('search_settings.settings')" },
+    { "id": 9, "description": "Module enables successfully", "result": "PASS", "evidence": "Agent confirmed module enabled" },
+    { "id": 10, "description": "E2E: form route exists at expected path", "result": "PASS", "evidence": "drush route check returns /admin/config/search/search-settings" }
+  ],
+  "score": "10/10",
+  "percentage": 100
+}

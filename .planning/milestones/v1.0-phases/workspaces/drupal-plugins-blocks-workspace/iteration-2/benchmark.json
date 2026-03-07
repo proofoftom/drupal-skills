@@ -1,0 +1,26 @@
+{
+  "skill": "drupal-plugins-blocks",
+  "iteration": 2,
+  "model": "claude-sonnet-4-6",
+  "timestamp": "2026-03-06T16:45:00Z",
+  "eval_id": 1,
+  "prompt": "Create a block plugin module called content_recommendations for our Drupal 10 Open Social site. The block should display recommended content items. It needs to inject a service for fetching recommendations via dependency injection. The block should have a configuration option for how many items to show (default: 5). Include proper block configuration form and default configuration. We want D11 compatibility.",
+  "results": {
+    "with_skill": {
+      "score": "9/9",
+      "percentage": 100,
+      "tokens": 19005,
+      "tool_uses": 12,
+      "duration_ms": 67566
+    },
+    "without_skill": {
+      "score": "9/9",
+      "percentage": 100,
+      "tokens": 11905,
+      "tool_uses": 8,
+      "duration_ms": 50906
+    }
+  },
+  "delta": 0,
+  "notes": "Both produce correct block plugin code with 4-param create(), 3-param parent::__construct(), blockForm/blockSubmit, defaultConfiguration, D11 #[Block] attribute, and #cache metadata. Without-skill was arguably more thorough (parent::blockForm/blockSubmit calls, cache contexts). Block DI patterns are well within Sonnet training data."
+}
