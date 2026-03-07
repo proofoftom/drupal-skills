@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "I need to create a new Drupal module called event_analytics for tracking event attendance on our Open Social site. It should depend on the node module and be part of a custom 'Events' package. Set it up so I can start adding services and controllers to it. We're running Drupal 10 but want D11 compatibility.",
+      "prompt": "I need to create a new Drupal module called event_analytics for tracking event attendance on a Drupal 10 site. It should depend on the node module and be part of a custom 'Events' package. Set it up so I can start adding services and controllers to it. We're running Drupal 10 but want D11 compatibility.",
       "expected_output": "A complete Drupal module scaffold with .info.yml, .module file, and src/ directory following PSR-4 conventions",
       "files": [],
       "expectations": [

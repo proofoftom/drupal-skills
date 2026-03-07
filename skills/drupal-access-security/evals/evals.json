@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Create a module called `restricted_reports` for our Drupal 10 Open Social site. It should define a custom permission 'view restricted reports' and provide a route at /reports/restricted that shows a simple page. Only users with the 'view restricted reports' permission should be able to access it. Anonymous users should get a 403 Access Denied response. Use AccessResult objects for access checking, not bare booleans. We want D11 compatibility.",
+      "prompt": "Create a module called `restricted_reports` for a Drupal 10 site. It should define a custom permission 'view restricted reports' and provide a route at /reports/restricted that shows a simple page. Only users with the 'view restricted reports' permission should be able to access it. Anonymous users should get a 403 Access Denied response. Use AccessResult objects for access checking, not bare booleans. We want D11 compatibility.",
       "expected_output": "permissions.yml, route with _permission, controller with AccessResult",
       "files": [],
       "expectations": [
