@@ -4,7 +4,7 @@ milestone: v2.0
 milestone_name: Eval & Optimization Loop
 status: completed
 stopped_at: Completed 09-02-PLAN.md (Phase 9 complete)
-last_updated: "2026-03-07T04:55:00Z"
+last_updated: "2026-03-07T04:56:16.203Z"
 last_activity: 2026-03-07 -- Completed 09-02 complex prompt rewrites (Phase 9 complete)
 progress:
   total_phases: 5
@@ -43,6 +43,8 @@ Progress: [██████████] 100%
 - 08-02: Grader validated via bash/jq simulation; real subagent grading deferred to Phase 10
 - 08-02: Production eval runs orchestrated directly from Opus session (no gsd-executor wrapper)
 - [Phase 09]: 09-01: Text-only prompt replacement, expectations byte-identical, consistent 'a Drupal 10 site' phrasing
+- [Phase 09]: 09-02: Removed 3 high-impact hints (max-age:0, queue pattern, Entity API ban) to maximize differentiation
+- [Phase 09]: 09-02: Redesigned testing eval with calculator module (self-contained, no external deps)
 
 ### Carried from v1.0
 
@@ -61,6 +63,6 @@ None -- clean slate for v2.0.
 
 ## Session Continuity
 
-Last session: 2026-03-07T04:55:31.680Z
-Stopped at: Completed 09-01-PLAN.md
+Last session: 2026-03-07T04:56:16.201Z
+Stopped at: Completed 09-02-PLAN.md (Phase 9 complete)
 Resume file: None

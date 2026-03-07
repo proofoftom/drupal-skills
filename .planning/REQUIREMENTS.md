@@ -13,7 +13,7 @@
 ## Eval Content
 
 - [x] **EVAL-01**: All 13 eval prompts rewritten for fresh Drupal 10 instances (not os-kg tasks)
-- [ ] **EVAL-02**: All 13 evals.json have differentiating assertions targeting SKILL.md non-obvious patterns (carried from v1.0 07-06, may need adjustment for new prompts)
+- [x] **EVAL-02**: All 13 evals.json have differentiating assertions targeting SKILL.md non-obvious patterns (carried from v1.0 07-06, may need adjustment for new prompts)
 
 ## Pipeline
 
