@@ -4,11 +4,11 @@
     "skill_path": "/home/proofoftom/Code/drupal-skills/skills/drupal-access-security",
     "executor_model": "sonnet",
     "analyzer_model": "opus",
-    "timestamp": "2026-03-07T08:44:52Z",
+    "timestamp": "2026-03-07T08:57:41Z",
     "evals_run": [
       1
     ],
-    "runs_per_configuration": 1
+    "runs_per_configuration": 2
   },
   "runs": [
     {
@@ -72,7 +72,74 @@
           "evidence": "After authenticating via drush uli, curl -sk -b cookies -o /dev/null -w '%{http_code}' https://d10-access-with.ddev.site/reports/restricted returned 200."
         }
       ],
-      "notes": []
+      "notes": [
+        "Run 1: biased prompt included AccessResult hint, caused _custom_access pattern"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Permission defined in restricted_reports.permissions.yml with 'title' key (permission string must match what route uses)",
+          "passed": true,
+          "evidence": "restricted_reports.permissions.yml line 1-2 defines 'view restricted reports' with title: 'View restricted reports'. The route in restricted_reports.routing.yml line 7 uses _permission: 'view restricted reports' -- strings match exactly."
+        },
+        {
+          "text": "Route _permission requirement references the EXACT permission string defined in .permissions.yml",
+          "passed": true,
+          "evidence": "restricted_reports.routing.yml line 7: _permission: 'view restricted reports'. restricted_reports.permissions.yml line 1: 'view restricted reports:' -- exact match confirmed."
+        },
+        {
+          "text": "If custom access checking code exists, it returns AccessResult objects (AccessResult::allowed(), AccessResult::forbidden(), AccessResult::neutral()) -- NOT bare booleans (TRUE/FALSE)",
+          "passed": true,
+          "evidence": "No custom access checking code exists. The module uses only the declarative _permission route requirement in routing.yml. No AccessResult, no bare boolean returns found in any module files. The expectation is vacuously satisfied (no custom access code to violate it)."
+        },
+        {
+          "text": "If AccessResult objects are used, they include ->addCacheContexts(['user.permissions']) or ->addCacheTags() for cache-aware access",
+          "passed": true,
+          "evidence": "No AccessResult objects are used anywhere in the module. The module relies entirely on the declarative _permission route requirement, so this conditional expectation is vacuously satisfied."
+        },
+        {
+          "text": "Does NOT use hook_permission() (D7 pattern) -- permissions are in .permissions.yml",
+          "passed": true,
+          "evidence": "Grep for 'hook_permission' across all module files returned no matches. Permissions are correctly defined in restricted_reports.permissions.yml."
+        },
+        {
+          "text": "Does NOT implement manual CSRF token checking -- would use _csrf_token route option if CSRF protection needed",
+          "passed": true,
+          "evidence": "Grep for 'csrf' and 'token' (case-insensitive) across all module files returned no matches. No manual CSRF token checking is implemented."
+        },
+        {
+          "text": "The module enables successfully: ddev drush en restricted_reports returns exit code 0",
+          "passed": true,
+          "evidence": "Command 'ddev drush en restricted_reports -y' returned '[notice] Already installed: restricted_reports' with EXIT_CODE=0."
+        },
+        {
+          "text": "E2E: Anonymous gets 403 -- navigate to /reports/restricted as anonymous and verify access denied",
+          "passed": true,
+          "evidence": "curl -sk -o /dev/null -w '%{http_code}' https://d10-access-with.ddev.site/reports/restricted returned HTTP 403."
+        },
+        {
+          "text": "E2E: Admin gets 200 -- navigate to /reports/restricted as admin and verify page loads",
+          "passed": true,
+          "evidence": "After authenticating as admin (uid=1) via drush uli one-time login, curl -sk -b cookies -o /dev/null -w '%{http_code}' https://d10-access-with.ddev.site/reports/restricted returned HTTP 200."
+        }
+      ],
+      "notes": [
+        "Run 2: debiased prompt, correctly chose _permission pattern"
+      ]
     },
     {
       "eval_id": 1,
@@ -135,16 +202,83 @@
           "evidence": "After logging in as admin (uid 1) via drush uli one-time login, curl with session cookie to https://d10-access-without.ddev.site/reports/restricted returned 200."
         }
       ],
-      "notes": []
+      "notes": [
+        "Run 1: biased prompt included AccessResult hint, caused _custom_access pattern"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Permission defined in restricted_reports.permissions.yml with 'title' key (permission string must match what route uses)",
+          "passed": true,
+          "evidence": "restricted_reports.permissions.yml line 1-2: 'view restricted reports:' with 'title: View restricted reports'. The permission key 'view restricted reports' matches what the route uses in _permission."
+        },
+        {
+          "text": "Route _permission requirement references the EXACT permission string defined in .permissions.yml",
+          "passed": true,
+          "evidence": "restricted_reports.routing.yml line 7: '_permission: view restricted reports' exactly matches the permission key 'view restricted reports' defined in restricted_reports.permissions.yml line 1."
+        },
+        {
+          "text": "If custom access checking code exists, it returns AccessResult objects (AccessResult::allowed(), AccessResult::forbidden(), AccessResult::neutral()) -- NOT bare booleans (TRUE/FALSE)",
+          "passed": true,
+          "evidence": "No custom access checking code exists in the module. The module uses only the route-level _permission requirement for access control. Grep for 'AccessResult' returned no matches -- no custom access code to evaluate, so this expectation is satisfied vacuously."
+        },
+        {
+          "text": "If AccessResult objects are used, they include ->addCacheContexts(['user.permissions']) or ->addCacheTags() for cache-aware access",
+          "passed": true,
+          "evidence": "No AccessResult objects are used anywhere in the module (grep for 'AccessResult' returned no files). The module relies solely on route-level _permission, which handles caching automatically. This conditional expectation is vacuously satisfied."
+        },
+        {
+          "text": "Does NOT use hook_permission() (D7 pattern) -- permissions are in .permissions.yml",
+          "passed": true,
+          "evidence": "Grep for 'hook_permission' across the entire module returned no matches. Permissions are defined in restricted_reports.permissions.yml as expected for Drupal 10."
+        },
+        {
+          "text": "Does NOT implement manual CSRF token checking -- would use _csrf_token route option if CSRF protection needed",
+          "passed": true,
+          "evidence": "Grep for 'csrf' (case-insensitive) across the entire module returned no matches. No manual CSRF token checking is implemented."
+        },
+        {
+          "text": "The module enables successfully: ddev drush en restricted_reports returns exit code 0",
+          "passed": true,
+          "evidence": "Command 'ddev drush en restricted_reports -y' returned '[notice] Already installed: restricted_reports' with EXIT_CODE: 0."
+        },
+        {
+          "text": "E2E: Anonymous gets 403 -- navigate to /reports/restricted as anonymous and verify access denied",
+          "passed": true,
+          "evidence": "curl -sk -o /dev/null -w '%{http_code}' https://d10-access-without.ddev.site/reports/restricted returned HTTP 403."
+        },
+        {
+          "text": "E2E: Admin gets 200 -- navigate to /reports/restricted as admin and verify page loads",
+          "passed": true,
+          "evidence": "After logging in via drush uli one-time login link with cookie jar, curl -sk -b cookie_jar https://d10-access-without.ddev.site/reports/restricted returned HTTP 200."
+        }
+      ],
+      "notes": [
+        "Run 2: debiased prompt, also chose _permission pattern"
+      ]
     }
   ],
   "run_summary": {
     "with_skill": {
       "pass_rate": {
-        "mean": 0.89,
-        "stddev": 0.0,
+        "mean": 0.945,
+        "stddev": 0.055,
         "min": 0.89,
-        "max": 0.89
+        "max": 1.0
       },
       "time_seconds": {
         "mean": 0,
@@ -161,10 +295,10 @@
     },
     "without_skill": {
       "pass_rate": {
-        "mean": 0.89,
-        "stddev": 0.0,
+        "mean": 0.945,
+        "stddev": 0.055,
         "min": 0.89,
-        "max": 0.89
+        "max": 1.0
       },
       "time_seconds": {
         "mean": 0,
@@ -185,5 +319,9 @@
       "tokens": "+0"
     }
   },
-  "notes": []
+  "notes": [
+    "Run 1 used biased prompt (Use AccessResult objects for access checking) which steered both configs toward _custom_access instead of simpler _permission.",
+    "Run 2 removed the bias. Both configs correctly chose _permission. Delta remains 0 -- Sonnet knows this pattern without the skill.",
+    "This skill needs more complex eval scenarios (ownership checks, cache-aware access, entity access handlers) to differentiate."
+  ]
 }
