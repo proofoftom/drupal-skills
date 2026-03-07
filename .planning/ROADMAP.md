@@ -67,8 +67,8 @@ Plans:
 **Requirements**: PIPE-01
 **Plans:** 2/2 plans complete
 Plans:
-- [ ] 10-01-PLAN.md -- Run caching calibration skill through full pipeline (first real grader validation)
-- [ ] 10-02-PLAN.md -- Run scaffold calibration skill and cross-skill pipeline validation
+- [x] 10-01-PLAN.md -- Run caching calibration skill through full pipeline (first real grader validation)
+- [x] 10-02-PLAN.md -- Run scaffold calibration skill and cross-skill pipeline validation
 **Success Criteria** (what must be TRUE):
   1. Caching skill (known +75% delta in v1.0) produces >30% delta through new pipeline
   2. Scaffold skill (known +43% delta in v1.0) produces >15% delta through new pipeline
@@ -79,6 +79,13 @@ Plans:
 **Goal**: All 13 skills have graded benchmarks from the new pipeline
 **Depends on**: Phase 10
 **Requirements**: PIPE-02, PIPE-03, ANLZ-01
+**Plans:** 5 plans
+Plans:
+- [ ] 11-01-PLAN.md -- Workspace setup and Phase 10 calibration data copy
+- [ ] 11-02-PLAN.md -- Batch 1: access-security, routing-controllers, plugins-blocks, forms-api
+- [ ] 11-03-PLAN.md -- Batch 2: entities-fields, config-storage, database-api, batch-queue-cron
+- [ ] 11-04-PLAN.md -- Batch 3: testing, theming, views-dev
+- [ ] 11-05-PLAN.md -- Consolidation: validate all 13 benchmarks and produce results table
 **Success Criteria** (what must be TRUE):
   1. All 13 skills have benchmark.json with with-skill and without-skill pass rates
   2. Eval runs completed in batches of 3-4 skills per session
@@ -104,6 +111,6 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 | 1-7 | v1.0 | 26/28 | Shipped | 2026-03-07 |
 | 8. Eval Infrastructure | v2.0 | 2/2 | Complete | 2026-03-07 |
 | 9. Eval Prompt Rewrite | v2.0 | 2/2 | Complete | 2026-03-07 |
-| 10. Pipeline Validation | 2/2 | Complete   | 2026-03-07 | - |
-| 11. Batch Execution | v2.0 | 0/? | Not started | - |
+| 10. Pipeline Validation | v2.0 | 2/2 | Complete | 2026-03-07 |
+| 11. Batch Execution | v2.0 | 0/5 | Planned | - |
 | 12. Analysis & Optimization | v2.0 | 0/? | Not started | - |
