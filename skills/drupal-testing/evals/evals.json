@@ -3,18 +3,18 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Write a kernel test for the social_ai_indexing module that verifies the related_content service (social_ai_indexing.related_content, class RelatedContentService) can be loaded from the container. The test should: install the node module and social_ai_indexing module, set up entity schemas, and verify the service is available. Use the correct test base class - this is testing a service, not a browser interaction. Our site runs Drupal 10 with Open Social.",
-      "expected_output": "A kernel test extending KernelTestBase with correct module installation, entity schema setup, and service testing. Note: Testing skill evaluated via runtime test execution, not E2E browser verification.",
+      "prompt": "Create a module called `calculator` that provides a Calculator service class with add() and subtract() methods accepting two numbers. Register the service in the module's services.yml file. Then write a kernel test that verifies the calculator service can be loaded from the Drupal service container and that its methods return correct results. Use the correct test base class for testing a service without browser interaction. Put the test in the proper directory following Drupal test conventions. We're running Drupal 10 and want D11 compatibility.",
+      "expected_output": "A calculator module with a service class, services.yml, and a kernel test extending KernelTestBase with correct module installation, service loading, and method assertions.",
       "files": [],
       "expectations": [
         "Test class extends KernelTestBase (NOT BrowserTestBase, NOT WebDriverTestBase) -- kernel tests are for service/API testing without browser, the LOWEST sufficient test type",
         "Test class has protected static $modules array (NOT a setUp() module_enable call)",
-        "$modules includes all required modules: at minimum 'node' and 'social_ai_indexing'",
-        "setUp() calls $this->installEntitySchema('node') or similar -- kernel tests do NOT auto-install entity schemas like functional tests",
-        "setUp() calls $this->installSchema() for any custom tables needed (schema installation is NOT automatic in kernel tests)",
+        "$modules includes all required modules: at minimum 'calculator'",
+        "setUp() calls parent::setUp() (required for KernelTestBase to initialize the container)",
+        "Test loads the calculator service from the container using $this->container->get('calculator.calculator') or similar service ID",
         "Test has @group annotation (required for test discovery by PHPUnit)",
         "Does NOT extend BrowserTestBase for a service test (over-testing -- BrowserTestBase boots full Drupal + browser, kernel test only needs container)",
-        "Test method uses assertion methods: $this->assertNotNull(), $this->assertInstanceOf(), etc. (NOT bare if/echo)"
+        "Test method uses assertion methods like assertEquals(), assertNotNull(), assertInstanceOf() to verify service behavior (NOT bare if/echo)"
       ]
     }
   ]
