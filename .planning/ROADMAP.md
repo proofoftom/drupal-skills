@@ -79,7 +79,7 @@ Plans:
 **Goal**: All 13 skills have graded benchmarks from the new pipeline
 **Depends on**: Phase 10
 **Requirements**: PIPE-02, PIPE-03, ANLZ-01
-**Plans:** 5 plans
+**Plans:** 1/13 plans executed
 Plans:
 - [ ] 11-01-PLAN.md -- Workspace setup and Phase 10 calibration data copy
 - [ ] 11-02-PLAN.md -- Batch 1: access-security, routing-controllers, plugins-blocks, forms-api
@@ -112,5 +112,5 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 | 8. Eval Infrastructure | v2.0 | 2/2 | Complete | 2026-03-07 |
 | 9. Eval Prompt Rewrite | v2.0 | 2/2 | Complete | 2026-03-07 |
 | 10. Pipeline Validation | v2.0 | 2/2 | Complete | 2026-03-07 |
-| 11. Batch Execution | v2.0 | 0/5 | Planned | - |
+| 11. Batch Execution | 1/13 | In Progress|  | - |
 | 12. Analysis & Optimization | v2.0 | 0/? | Not started | - |
