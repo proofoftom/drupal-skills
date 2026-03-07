@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Create a block plugin module called `content_recommendations` for our Drupal 10 Open Social site. The block should display recommended content items. It needs to inject a service for fetching recommendations via dependency injection. The block should have a configuration option for how many items to show (default: 5). Include proper block configuration form and default configuration. We want D11 compatibility.",
+      "prompt": "Create a block plugin module called `content_recommendations` for a Drupal 10 site. The block should display recommended content items. It needs to inject a service for fetching recommendations via dependency injection. The block should have a configuration option for how many items to show (default: 5). Include proper block configuration form and default configuration. We want D11 compatibility.",
       "expected_output": "Block with ContainerFactoryPluginInterface, 4-param create(), parent::__construct with 3 plugin params, blockForm/blockSubmit",
       "files": [],
       "expectations": [

@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Create a module called `resource_directory` for our Drupal 10 Open Social site. It should expose a custom database table (resource_links with columns: id, title, url, category, created) to Views via hook_views_data(). Add a custom Views filter plugin that lets users filter resources by category using a dropdown. Place the filter in the correct PSR-4 path. Include a 'group' key in the Views data definition. We want D11 compatibility.",
+      "prompt": "Create a module called `resource_directory` for a Drupal 10 site. It should expose a custom database table (resource_links with columns: id, title, url, category, created) to Views via hook_views_data(). Add a custom Views filter plugin that lets users filter resources by category using a dropdown. Place the filter in the correct PSR-4 path. Include a 'group' key in the Views data definition. We want D11 compatibility.",
       "expected_output": "A Views integration module with hook_views_data() including group key, hook_schema() for the table, and a custom filter plugin extending FilterPluginBase or InOperator in the correct PSR-4 path",
       "files": [],
       "expectations": [

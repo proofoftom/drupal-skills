@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Create a settings form module called `search_settings` for configuring search parameters on our Drupal 10 Open Social site. The form at `/admin/config/search/search-settings` should have fields for: similarity_threshold (number, default 0.7), result_limit (number, default 5), and cache_ttl (number, default 300). Save all settings to config. Include a config schema file. We want D11 compatibility.",
+      "prompt": "Create a settings form module called `search_settings` for configuring search parameters on a Drupal 10 site. The form at `/admin/config/search/search-settings` should have fields for: similarity_threshold (number, default 0.7), result_limit (number, default 5), and cache_ttl (number, default 300). Save all settings to config. Include a config schema file. We want D11 compatibility.",
       "expected_output": "ConfigFormBase with getEditableConfigNames, config schema, route with _form key",
       "files": [],
       "expectations": [
