@@ -45,6 +45,62 @@ cd "$TARGET_DIR"
 # --- Configure ddev for Drupal 10 ---
 ddev config --project-type=drupal10 --docroot=web --project-name="${PROJECT_NAME}"
 
+# --- Clean stale Traefik configs that block ddev-router health ---
+# Dead ddev projects can leave behind Traefik config/cert files in the
+# ddev-global-cache Docker volume. These reference non-existent entry points,
+# causing the router health check to report "configuration error(s) in project"
+# and never become healthy. We clean orphans from BOTH the Docker volume
+# (where the router actually reads) and the host filesystem mirror.
+ACTIVE_PROJECTS=$(ddev list --json-output 2>/dev/null | python3 -c "
+import json, sys
+try:
+    data = json.load(sys.stdin)
+    items = data.get('raw', []) if isinstance(data, dict) else data
+    for p in items:
+        if isinstance(p, dict) and 'name' in p:
+            print(p['name'])
+except: pass
+" 2>/dev/null || true)
+
+# Clean from Docker volume (authoritative source for ddev-router)
+STALE_CLEANED=0
+VOLUME_CONFIGS=$(docker run --rm -v ddev-global-cache:/mnt/ddev-global-cache alpine \
+  ls /mnt/ddev-global-cache/traefik/config/ 2>/dev/null || true)
+for cfg_file in $VOLUME_CONFIGS; do
+  cfg_name="${cfg_file%.yaml}"
+  [ "$cfg_name" = "default_config" ] && continue
+  if ! echo "$ACTIVE_PROJECTS" | grep -qx "$cfg_name"; then
+    echo "Removing stale Traefik config from volume: $cfg_name" >&2
+    docker run --rm -v ddev-global-cache:/mnt/ddev-global-cache alpine sh -c "
+      rm -f /mnt/ddev-global-cache/traefik/config/${cfg_file}
+      rm -f /mnt/ddev-global-cache/traefik/certs/${cfg_name}.crt
+      rm -f /mnt/ddev-global-cache/traefik/certs/${cfg_name}.key
+    " 2>/dev/null || true
+    STALE_CLEANED=1
+  fi
+done
+
+# Also clean from host filesystem mirror
+TRAEFIK_CONFIG_DIR="$HOME/.ddev/traefik/config"
+TRAEFIK_CERTS_DIR="$HOME/.ddev/traefik/certs"
+if [ -d "$TRAEFIK_CONFIG_DIR" ]; then
+  for cfg in "$TRAEFIK_CONFIG_DIR"/*.yaml; do
+    [ -f "$cfg" ] || continue
+    cfg_name=$(basename "$cfg" .yaml)
+    [ "$cfg_name" = "default_config" ] && continue
+    if ! echo "$ACTIVE_PROJECTS" | grep -qx "$cfg_name"; then
+      rm -f "$cfg"
+      rm -f "$TRAEFIK_CERTS_DIR/${cfg_name}.crt" "$TRAEFIK_CERTS_DIR/${cfg_name}.key" 2>/dev/null
+    fi
+  done
+fi
+
+# If we cleaned stale configs, force-remove the router so it restarts clean
+if [ "$STALE_CLEANED" -eq 1 ]; then
+  echo "Stale configs cleaned, force-removing ddev-router for clean restart..." >&2
+  docker rm -f ddev-router 2>/dev/null || true
+fi
+
 # --- Start ddev with retry loop for router failures ---
 # ~50% of first ddev starts fail due to ddev-router health check issues.
 # Strategy: flock serializes concurrent starts; on failure, restart the
