@@ -2,7 +2,7 @@
 phase: 8
 slug: eval-optimization-loop
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-03-06
 ---
@@ -36,15 +36,17 @@ created: 2026-03-06
 
 ## Per-Task Verification Map
 
+Task IDs follow the format `{plan}-{task}` matching actual plan structure.
+
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 08-01-01 | 01 | 1 | INFRA-03 | smoke | `bash eval/setup-fresh-drupal10.sh smoke-test` | ❌ W0 | ⬜ pending |
-| 08-01-02 | 01 | 1 | INFRA-01 | integration | Spawn eval-executor, verify .info.yml created | ❌ W0 | ⬜ pending |
-| 08-01-03 | 01 | 1 | INFRA-02 | integration | Spawn eval-grader, verify grading.json schema | ❌ W0 | ⬜ pending |
-| 08-01-04 | 01 | 1 | INFRA-04 | integration | Spawn eval-browser, verify drush uli + snapshot | ❌ W0 | ⬜ pending |
-| 08-01-05 | 01 | 1 | INFRA-01 | integration | Run with/without skill, verify knowledge isolation | ❌ W0 | ⬜ pending |
+| 01-T1 | 01 | 1 | INFRA-01,02,04 | static | `test -f .claude/agents/eval-executor.md && grep -q "model: sonnet" ...` | Wave 0 | pending |
+| 01-T2 | 01 | 1 | INFRA-03 | static | `test -x eval/setup-fresh-drupal10.sh && bash -n eval/setup-fresh-drupal10.sh` | Wave 0 | pending |
+| 01-T3 | 01 | 1 | INFRA-03 | static | `bash -n eval/teardown-drupal-env.sh && grep -q "d10-" ...` | Wave 0 | pending |
+| 02-T1 | 02 | 2 | INFRA-01,03 | integration | `test -f /tmp/.../test_smoke.info.yml && ddev drush pm:list --filter=test_smoke` | Depends 01 | pending |
+| 02-T2 | 02 | 2 | INFRA-02,04 | integration | `jq -e '.expectations \| length > 0' /tmp/.../grading.json` + skills: test | Depends 01 | pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: pending / green / red / flaky*
 
 ---
 
@@ -63,16 +65,17 @@ created: 2026-03-06
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
 | Knowledge isolation A/B | INFRA-01 | Requires spawning two agents and comparing output | Run caching eval with/without skill, compare generated code for cache-specific patterns |
+| skills: frontmatter resolution | INFRA-01 | Empirical test of Claude Code feature with non-standard skill paths | Plan 02 Task 2 Step 3 tests this and documents the result |
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
 - [ ] No watch-mode flags
-- [ ] Feedback latency < 120s
+- [x] Feedback latency < 120s
 - [ ] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
