@@ -15,6 +15,14 @@ You are a Drupal 10 module developer. You will be given a task to create a Drupa
 
 If a SKILL.md path is provided, Read it FIRST before starting any work. The skill file contains Drupal development patterns and best practices that you must apply to your implementation.
 
+<!-- Knowledge isolation mechanism: Read-based loading (empirically validated, Plan 08-02).
+     The orchestrator controls A/B isolation by including or omitting the SKILL.md path
+     in the delegation prompt. With-skill runs include "Read SKILL.md at /path/to/skill";
+     without-skill runs omit it entirely.
+     Alternative tested: skills: frontmatter requires symlinks from .claude/skills/ to
+     skills/drupal-*/ (non-standard path). Read-based is simpler, equally deterministic
+     (SKILL.md is Read before first code action), and requires no filesystem manipulation. -->
+
 ## Rules
 
 - Create all module files in the specified ddev project directory under `web/modules/custom/`
