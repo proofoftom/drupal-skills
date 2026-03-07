@@ -25,7 +25,7 @@ Full details: milestones/v1.0-ROADMAP.md
 ### v2.0 Eval & Optimization Loop
 
 - [x] **Phase 8: Eval Infrastructure** - Create subagent definitions (eval-executor, eval-grader, eval-browser), fresh D10 setup script with auto-retry, validate subagent model control
-- [ ] **Phase 9: Eval Prompt Rewrite** - Rewrite all 13 eval prompts for fresh Drupal 10 instances (replace os-kg references), adjust assertions if needed for new prompt context
+- [x] **Phase 9: Eval Prompt Rewrite** - Rewrite all 13 eval prompts for fresh Drupal 10 instances (replace os-kg references), adjust assertions if needed for new prompt context
 - [ ] **Phase 10: Pipeline Validation** - Run 2-3 calibration skills (caching, scaffold) end-to-end through new pipeline, validate grading.json/benchmark.json schemas, confirm meaningful deltas
 - [ ] **Phase 11: Batch Execution** - Run all 13 skills through eval pipeline in batches of 3-4 per session, produce graded benchmarks for every skill
 - [ ] **Phase 12: Analysis & Optimization** - Classify skills into tiers, iterate on weak deltas (tighten assertions or improve skill content), produce final report with stabilized results
@@ -65,6 +65,10 @@ Plans:
 **Goal**: Prove the new pipeline produces valid, meaningful data by running calibration skills with known deltas
 **Depends on**: Phase 9
 **Requirements**: PIPE-01
+**Plans:** 2 plans
+Plans:
+- [ ] 10-01-PLAN.md -- Run caching calibration skill through full pipeline (first real grader validation)
+- [ ] 10-02-PLAN.md -- Run scaffold calibration skill and cross-skill pipeline validation
 **Success Criteria** (what must be TRUE):
   1. Caching skill (known +75% delta in v1.0) produces >30% delta through new pipeline
   2. Scaffold skill (known +43% delta in v1.0) produces >15% delta through new pipeline
@@ -100,6 +104,6 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 | 1-7 | v1.0 | 26/28 | Shipped | 2026-03-07 |
 | 8. Eval Infrastructure | v2.0 | 2/2 | Complete | 2026-03-07 |
 | 9. Eval Prompt Rewrite | v2.0 | 2/2 | Complete | 2026-03-07 |
-| 10. Pipeline Validation | v2.0 | 0/? | Not started | - |
+| 10. Pipeline Validation | v2.0 | 0/2 | Not started | - |
 | 11. Batch Execution | v2.0 | 0/? | Not started | - |
 | 12. Analysis & Optimization | v2.0 | 0/? | Not started | - |
