@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Eval & Optimization Loop
 status: in-progress
-stopped_at: Completed 10-01-PLAN.md
-last_updated: "2026-03-07T05:33:13.470Z"
-last_activity: 2026-03-07 -- Completed 10-01 caching calibration pipeline (+11% delta)
+stopped_at: Completed 10-02-PLAN.md (Phase 10 complete)
+last_updated: "2026-03-07T06:15:00.000Z"
+last_activity: 2026-03-07 -- Completed 10-02 scaffold calibration + cross-skill validation (Phase 10 complete)
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 6
-  completed_plans: 5
-  percent: 83
+  completed_plans: 6
+  percent: 100
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 ## Current Position
 
-Phase: 10 of 12 -- Pipeline Validation (in progress)
-Plan: 1 of 2 complete
-Status: Plan 10-01 complete (caching calibration), Plan 10-02 next (scaffold calibration)
-Last activity: 2026-03-07 -- Completed 10-01 caching calibration pipeline (+11% delta)
+Phase: 10 of 12 -- Pipeline Validation (complete)
+Plan: 2 of 2 complete
+Status: Phase 10 complete, ready for Phase 11
+Last activity: 2026-03-07 -- Completed 10-02 scaffold calibration + cross-skill validation (Phase 10 complete)
 
 Progress: [████████░░] 83%
 
@@ -48,6 +48,9 @@ Progress: [████████░░] 83%
 - [Phase 10]: Caching delta +11% (9/9 with vs 8/9 without) -- pipeline validated, delta below 30% threshold indicates assertions need tuning (Phase 12 work)
 - [Phase 10]: eval-grader subagent produces compliant grading.json on first real run (no schema fixes needed)
 - [Phase 10]: Only 1 differentiating expectation: route vs url.path cache context -- Sonnet without skill is highly competent at caching patterns
+- [Phase 10]: Scaffold delta +13% (7/8 with vs 6/8 without) -- .module discipline is the differentiator
+- [Phase 10]: declare(strict_types=1) fails for BOTH configs -- skill doesn't teach it effectively either
+- [Phase 10]: Pipeline validated but both calibration deltas below thresholds -- assertion tuning needed in Phase 12
 
 ### Carried from v1.0
 
@@ -66,6 +69,6 @@ None -- clean slate for v2.0.
 
 ## Session Continuity
 
-Last session: 2026-03-07T05:33:13.468Z
-Stopped at: Completed 10-01-PLAN.md
+Last session: 2026-03-07T06:15:00.000Z
+Stopped at: Completed 10-02-PLAN.md (Phase 10 complete)
 Resume file: None

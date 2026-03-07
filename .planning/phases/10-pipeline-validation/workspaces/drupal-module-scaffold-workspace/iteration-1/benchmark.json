@@ -1,0 +1,147 @@
+{
+  "metadata": {
+    "skill_name": "drupal-module-scaffold",
+    "skill_path": "/home/proofoftom/Code/drupal-skills/skills/drupal-module-scaffold",
+    "executor_model": "sonnet",
+    "analyzer_model": "opus",
+    "timestamp": "2026-03-07T05:45:17Z",
+    "evals_run": [1],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.88,
+        "passed": 7,
+        "failed": 1,
+        "total": 8,
+        "time_seconds": 0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+  {
+    "text": "event_analytics.info.yml contains core_version_requirement with BOTH ^10 AND ^11: '^10 || ^11' (NOT just '^10', NOT 'core: 8.x')",
+    "passed": true,
+    "evidence": "event_analytics.info.yml contains: core_version_requirement: ^10 || ^11"
+  },
+  {
+    "text": "Dependencies listed in 'drupal:node' format (NOT bare 'node' without the drupal: prefix)",
+    "passed": true,
+    "evidence": "event_analytics.info.yml contains: dependencies:\n  - drupal:node"
+  },
+  {
+    "text": "PHP files include declare(strict_types=1)",
+    "passed": false,
+    "evidence": "Neither src/Controller/EventAnalyticsController.php nor src/Service/AttendanceManager.php contain declare(strict_types=1). Both files start with <?php followed by a blank line and namespace declaration."
+  },
+  {
+    "text": ".module file only created if hooks are actually needed (NOT an empty .module file with no hooks)",
+    "passed": true,
+    "evidence": "No .module file exists in the module directory. Module contains only: event_analytics.info.yml, event_analytics.routing.yml, event_analytics.services.yml, and src/ directory. No hooks are implemented and no empty .module file was created."
+  },
+  {
+    "text": "All PHP classes are in src/ directory following PSR-4 (NOT in the module root)",
+    "passed": true,
+    "evidence": "Both PHP classes are properly located under src/: src/Controller/EventAnalyticsController.php (namespace Drupal\\event_analytics\\Controller) and src/Service/AttendanceManager.php (namespace Drupal\\event_analytics\\Service). No PHP class files exist in the module root."
+  },
+  {
+    "text": ".info.yml has 'type: module' (required in D10+, was optional in D8)",
+    "passed": true,
+    "evidence": "event_analytics.info.yml contains: type: module"
+  },
+  {
+    "text": "The module enables successfully: ddev drush en event_analytics returns exit code 0",
+    "passed": true,
+    "evidence": "ddev drush en event_analytics -y returned: '[notice] Already installed: event_analytics' with EXIT_CODE:0"
+  },
+  {
+    "text": "E2E: Module appears in /admin/modules list",
+    "passed": true,
+    "evidence": "Authenticated curl to /admin/modules shows 'Event Analytics' appearing in multiple Required by lists (e.g., Node's Required by includes Event Analytics). Also confirmed via ddev drush pm:list showing 'Event Analytics (event_analytics)' with Status: Enabled under Package: Events."
+  }
+],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 6,
+        "failed": 2,
+        "total": 8,
+        "time_seconds": 0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+  {
+    "text": "event_analytics.info.yml contains core_version_requirement with BOTH ^10 AND ^11: '^10 || ^11' (NOT just '^10', NOT 'core: 8.x')",
+    "passed": true,
+    "evidence": "event_analytics.info.yml line 5: 'core_version_requirement: ^10 || ^11' — exact match of required format with both ^10 and ^11."
+  },
+  {
+    "text": "Dependencies listed in 'drupal:node' format (NOT bare 'node' without the drupal: prefix)",
+    "passed": true,
+    "evidence": "event_analytics.info.yml line 7: '  - drupal:node' — uses the required 'drupal:' prefix format."
+  },
+  {
+    "text": "PHP files include declare(strict_types=1)",
+    "passed": false,
+    "evidence": "None of the 3 PHP files (event_analytics.module, src/AttendanceTracker.php, src/Controller/EventAnalyticsController.php) contain declare(strict_types=1). All start with '<?php' followed by namespace or docblock without the strict_types declaration."
+  },
+  {
+    "text": ".module file only created if hooks are actually needed (NOT an empty .module file with no hooks)",
+    "passed": false,
+    "evidence": "event_analytics.module exists but contains only a docblock comment (lines 1-7) with no hook implementations — it is effectively an empty .module file with no hooks."
+  },
+  {
+    "text": "All PHP classes are in src/ directory following PSR-4 (NOT in the module root)",
+    "passed": true,
+    "evidence": "Both PHP classes are under src/: src/AttendanceTracker.php (Drupal\\event_analytics namespace) and src/Controller/EventAnalyticsController.php (Drupal\\event_analytics\\Controller namespace). No PHP class files exist in the module root."
+  },
+  {
+    "text": ".info.yml has 'type: module' (required in D10+, was optional in D8)",
+    "passed": true,
+    "evidence": "event_analytics.info.yml line 2: 'type: module'"
+  },
+  {
+    "text": "The module enables successfully: ddev drush en event_analytics returns exit code 0",
+    "passed": true,
+    "evidence": "ddev drush en event_analytics -y returned '[notice] Already installed: event_analytics' with EXIT_CODE: 0"
+  },
+  {
+    "text": "E2E: Module appears in /admin/modules list",
+    "passed": true,
+    "evidence": "ddev drush pm:list --filter=event_analytics shows 'Event Analytics (event_analytics)' with Status 'Enabled' under Package 'Events'. The module is confirmed present and enabled in Drupal's module system."
+  }
+],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": { "mean": 0.88, "stddev": 0.0, "min": 0.88, "max": 0.88 },
+      "time_seconds": { "mean": 0, "stddev": 0, "min": 0, "max": 0 },
+      "tokens": { "mean": 0, "stddev": 0, "min": 0, "max": 0 }
+    },
+    "without_skill": {
+      "pass_rate": { "mean": 0.75, "stddev": 0.0, "min": 0.75, "max": 0.75 },
+      "time_seconds": { "mean": 0, "stddev": 0, "min": 0, "max": 0 },
+      "tokens": { "mean": 0, "stddev": 0, "min": 0, "max": 0 }
+    },
+    "delta": {
+      "pass_rate": "+.13",
+      "time_seconds": "+0.0",
+      "tokens": "+0"
+    }
+  },
+  "notes": []
+}

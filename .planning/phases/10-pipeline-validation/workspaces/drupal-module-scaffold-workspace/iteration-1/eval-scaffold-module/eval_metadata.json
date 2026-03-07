@@ -1,0 +1,21 @@
+{
+  "skill_name": "drupal-module-scaffold",
+  "eval_id": 1,
+  "iteration": 1,
+  "eval_name": "eval-scaffold-module",
+  "prompt": "I need to create a new Drupal module called event_analytics for tracking event attendance on a Drupal 10 site. It should depend on the node module and be part of a custom 'Events' package. Set it up so I can start adding services and controllers to it. We're running Drupal 10 but want D11 compatibility.",
+  "expected_output": "A complete Drupal module scaffold with .info.yml, .module file, and src/ directory following PSR-4 conventions",
+  "expectations": [
+    "event_analytics.info.yml contains core_version_requirement with BOTH ^10 AND ^11: '^10 || ^11' (NOT just '^10', NOT 'core: 8.x')",
+    "Dependencies listed in 'drupal:node' format (NOT bare 'node' without the drupal: prefix)",
+    "PHP files include declare(strict_types=1)",
+    ".module file only created if hooks are actually needed (NOT an empty .module file with no hooks)",
+    "All PHP classes are in src/ directory following PSR-4 (NOT in the module root)",
+    ".info.yml has 'type: module' (required in D10+, was optional in D8)",
+    "The module enables successfully: ddev drush en event_analytics returns exit code 0",
+    "E2E: Module appears in /admin/modules list"
+  ],
+  "configs": ["with_skill", "without_skill"],
+  "runs_per_config": 1,
+  "model": "claude-sonnet-4-6"
+}
