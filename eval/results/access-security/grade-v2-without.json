@@ -1,0 +1,60 @@
+{
+  "expectations": [
+    {
+      "text": "Custom access checker class exists and returns AccessResult::allowedIf() or similar with ->addCacheContexts() including 'user' or 'user.permissions' (bare AccessResult without cache contexts gets cached for the first user and bleeds to ALL subsequent users -- this is the #1 access security bug in Drupal)",
+      "passed": true,
+      "evidence": "ProjectNoteAccessChecker.php exists at src/Access/ProjectNoteAccessChecker.php. Uses AccessResult::allowed() and AccessResult::forbidden() (equivalent to allowedIf pattern) with ->addCacheContexts(['user']) on every return path (lines 55, 61, 72, 76, 94, 100, 110, 115)."
+    },
+    {
+      "text": "Custom access checker adds ->addCacheTags() referencing the node entity (e.g., 'node:{id}') so access is recalculated when the node changes ownership (without this, a transferred node keeps the old owner's access cached)",
+      "passed": true,
+      "evidence": "ProjectNoteAccessChecker.php uses ->addCacheTags(['node:' . $node_entity->id()]) on lines 62, 72, 77, 101, 111, 116 -- every return path that has a loaded node entity includes the node cache tag."
+    },
+    {
+      "text": "The archive route includes _csrf_token: 'TRUE' in requirements (this is a state-changing action link, not a form -- without CSRF protection any site can forge a link that archives the user's notes)",
+      "passed": false,
+      "evidence": "project_notes.routing.yml lines 18-24 show the archive route with requirements containing only _custom_access and node pattern -- no _csrf_token: 'TRUE'. CSRF is instead handled manually in the controller via a query parameter token (ProjectNotesArchiveController.php line 68), which is not the Drupal-standard _csrf_token route requirement."
+    },
+    {
+      "text": "The 'administer project notes' permission has 'restrict access: true' in .permissions.yml (without this flag, the permissions page shows no warning and site builders may grant it to untrusted roles without realizing the danger)",
+      "passed": true,
+      "evidence": "project_notes.permissions.yml lines 9-12: 'administer project notes:' with 'restrict access: true' explicitly set."
+    },
+    {
+      "text": "Edit route uses _custom_access pointing to the checker class (NOT _permission alone, which cannot do ownership checks)",
+      "passed": true,
+      "evidence": "project_notes.routing.yml line 15: '_custom_access: project_notes.access_checker:checkEditAccess' -- uses _custom_access pointing to the service-based checker, not _permission."
+    },
+    {
+      "text": "All permission strings used in routes and access checker code EXACTLY match strings defined in .permissions.yml (orphaned permission strings silently deny access to everyone -- no error, no warning)",
+      "passed": true,
+      "evidence": "permissions.yml defines: 'view project notes', 'edit own project notes', 'administer project notes'. Route uses 'view project notes' (routing.yml line 7). Access checker uses 'administer project notes' (lines 59, 98) and 'edit own project notes' (lines 67, 106). All strings match exactly."
+    },
+    {
+      "text": "Does NOT check permissions directly in the controller instead of using _custom_access or _permission in routing (bypasses Drupal's access system -- entity listings, views, and REST won't respect controller-only checks)",
+      "passed": true,
+      "evidence": "Grep for 'hasPermission' and '->access(' in src/Controller/ returned no matches. Neither ProjectNotesController.php nor ProjectNotesArchiveController.php contain direct permission checks. All access control is handled via routing requirements (_permission and _custom_access)."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en project_notes returns exit code 0",
+      "passed": true,
+      "evidence": "ddev drush en project_notes -y returned 'Already installed: project_notes' with exit code 0."
+    },
+    {
+      "text": "Navigate to /notes WITHOUT logging in -- verify a 403 Access Denied response (proves permission-based route protection works) (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report confirms: 'Page title: Access denied | Drush Site-Install, HTTP 403' -- passed: true."
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": false,
+      "evidence": "phpcs returned exit code 2 with 2 errors: (1) ProjectNotesController.php line 139: 'Namespaced classes/interfaces/traits should be referenced with use statements' (inline \\Symfony\\Component\\HttpKernel\\Exception\\NotFoundHttpException), (2) ProjectNotesArchiveController.php line 76: same error for NotFoundHttpException. Also 5 warnings (\\Drupal calls, version in info.yml, unprefixed dependencies)."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 2,
+    "total": 10,
+    "pass_rate": 0.8
+  }
+}

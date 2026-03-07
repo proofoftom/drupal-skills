@@ -1,0 +1,60 @@
+{
+  "expectations": [
+    {
+      "text": "Custom access checker class exists and returns AccessResult::allowedIf() or similar with ->addCacheContexts() including 'user' or 'user.permissions' (bare AccessResult without cache contexts gets cached for the first user and bleeds to ALL subsequent users -- this is the #1 access security bug in Drupal)",
+      "passed": true,
+      "evidence": "EditOwnAccessChecker.php line 36-37: returns AccessResult::allowedIf($is_owner && $account->hasPermission('edit own project notes'))->addCacheContexts(['user', 'user.permissions']). Both 'user' and 'user.permissions' cache contexts are present."
+    },
+    {
+      "text": "Custom access checker adds ->addCacheTags() referencing the node entity (e.g., 'node:{id}') so access is recalculated when the node changes ownership (without this, a transferred node keeps the old owner's access cached)",
+      "passed": true,
+      "evidence": "EditOwnAccessChecker.php line 38: ->addCacheTags(['node:' . $node->id()]). Cache tag references the specific node entity."
+    },
+    {
+      "text": "The archive route includes _csrf_token: 'TRUE' in requirements (this is a state-changing action link, not a form -- without CSRF protection any site can forge a link that archives the user's notes)",
+      "passed": true,
+      "evidence": "project_notes.routing.yml line 27: _csrf_token: 'TRUE' is present in the project_notes.archive route requirements."
+    },
+    {
+      "text": "The 'administer project notes' permission has 'restrict access: true' in .permissions.yml (without this flag, the permissions page shows no warning and site builders may grant it to untrusted roles without realizing the danger)",
+      "passed": true,
+      "evidence": "project_notes.permissions.yml line 12: 'restrict access: true' is present under the 'administer project notes' permission definition."
+    },
+    {
+      "text": "Edit route uses _custom_access pointing to the checker class (NOT _permission alone, which cannot do ownership checks)",
+      "passed": true,
+      "evidence": "project_notes.routing.yml line 15: _custom_access: '\\Drupal\\project_notes\\Access\\EditOwnAccessChecker::access' in the project_notes.edit route requirements."
+    },
+    {
+      "text": "All permission strings used in routes and access checker code EXACTLY match strings defined in .permissions.yml (orphaned permission strings silently deny access to everyone -- no error, no warning)",
+      "passed": true,
+      "evidence": "Permissions defined in .permissions.yml: 'view project notes', 'edit own project notes', 'administer project notes'. Used in routing.yml: 'view project notes' (line 7), 'administer project notes' (line 26). Used in EditOwnAccessChecker.php: 'edit own project notes' (line 36). Used in NotesController.php: 'administer project notes' (line 127, for UI display only). All strings match exactly."
+    },
+    {
+      "text": "Does NOT check permissions directly in the controller instead of using _custom_access or _permission in routing (bypasses Drupal's access system -- entity listings, views, and REST won't respect controller-only checks)",
+      "passed": true,
+      "evidence": "All three routes use routing-level access control: list route uses _permission: 'view project notes', edit route uses _custom_access pointing to EditOwnAccessChecker::access, archive route uses _permission: 'administer project notes'. The controller's hasPermission() call at NotesController.php line 127 is only for UI display of action links (showing/hiding archive button), not for route access control -- this is standard Drupal practice."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en project_notes returns exit code 0",
+      "passed": true,
+      "evidence": "ddev drush pm:list shows 'Project Notes (project_notes)' with Status: Enabled, Version: 1.0.0. ddev drush en project_notes -y returns '[notice] Already installed: project_notes' with exit code 0."
+    },
+    {
+      "text": "Navigate to /notes WITHOUT logging in -- verify a 403 Access Denied response (proves permission-based route protection works) (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report: Page title: 'Access denied | Drush Site-Install', HTTP 403. Anonymous users correctly receive 403 on /notes."
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": false,
+      "evidence": "phpcs found 1 ERROR in EditOwnAccessChecker.php line 28: 'Parameter $node has null default value, but is not marked as nullable.' Also 2 warnings (unused use statement in NotesController.php, version in info.yml). The expectation says 'without errors' and there is 1 error."
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 1,
+    "total": 10,
+    "pass_rate": 0.9
+  }
+}

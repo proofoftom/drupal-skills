@@ -3,21 +3,20 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Create a module called `restricted_reports` for a Drupal 10 site. It should define a custom permission 'view restricted reports' and provide a route at /reports/restricted that shows a simple page. Only users with the 'view restricted reports' permission should be able to access it. Anonymous users should get a 403 Access Denied response. We want D11 compatibility.",
-      "expected_output": "permissions.yml, route with _permission, controller with AccessResult",
+      "prompt": "Create a module called `project_notes` for a Drupal 10 site with D11 compatibility. It needs:\n\n1. A page at /notes that lists all notes (accessible to anyone with 'view project notes' permission)\n2. A page at /notes/{node}/edit that lets users edit their OWN notes only -- use a custom access checker class that verifies the current user is the node author AND has 'edit own project notes' permission\n3. An action link at /notes/{node}/archive that archives a note (sets it unpublished) -- this is NOT a form, it's a direct action link that changes state, so it needs CSRF protection\n4. An admin permission 'administer project notes' that should show a security warning on the permissions page since it grants full control\n\nThe custom access checker for the edit route must work correctly with Drupal's caching system so access decisions don't bleed between users.",
+      "expected_output": "permissions.yml with restrict access, custom access checker with AccessResult + cache contexts, CSRF route",
       "files": [],
       "expectations": [
-        "Permission string in route _permission EXACTLY matches the string defined in .permissions.yml (orphaned/mismatched permission strings silently deny access to everyone -- no error, no warning, just a 403 for all users)",
-        "If custom access checking code exists, it returns AccessResult objects with ->addCacheContexts(['user.permissions']) or uses AccessResult::allowedIfHasPermission() which adds contexts automatically (bare AccessResult without cache contexts gets cached for the first user's result and applies to ALL subsequent users)",
-        "If AccessResult::allowedIf() or AccessResult::forbidden() is used directly, it includes ->addCacheContexts() call (NOT bare AccessResult without cache metadata -- this is a security and caching bug where access decisions bleed across users)",
-        "Does NOT use hook_permission() to define permissions (D7 pattern removed in D8 -- permissions must be in .permissions.yml)",
-        "Does NOT use _access: 'TRUE' on a route that should be permission-restricted (opens route to everyone including anonymous)",
-        "The module enables successfully: ddev drush en restricted_reports returns exit code 0"
-      ],
-      "browser_checks": [
-        "Navigate to /reports/restricted WITHOUT logging in — verify an Access Denied / 403 response is shown (proves anonymous access is properly blocked)",
-        "Log in as admin via drush uli, navigate to /reports/restricted — verify the page renders with content and HTTP 200 (proves permission-based access grants correctly)",
-        "Navigate to /admin/people/permissions — verify 'view restricted reports' permission appears in the permissions table under the module's group"
+        "Custom access checker class exists and returns AccessResult::allowedIf() or similar with ->addCacheContexts() including 'user' or 'user.permissions' (bare AccessResult without cache contexts gets cached for the first user and bleeds to ALL subsequent users -- this is the #1 access security bug in Drupal)",
+        "Custom access checker adds ->addCacheTags() referencing the node entity (e.g., 'node:{id}') so access is recalculated when the node changes ownership (without this, a transferred node keeps the old owner's access cached)",
+        "The archive route includes _csrf_token: 'TRUE' in requirements (this is a state-changing action link, not a form -- without CSRF protection any site can forge a link that archives the user's notes)",
+        "The 'administer project notes' permission has 'restrict access: true' in .permissions.yml (without this flag, the permissions page shows no warning and site builders may grant it to untrusted roles without realizing the danger)",
+        "Edit route uses _custom_access pointing to the checker class (NOT _permission alone, which cannot do ownership checks)",
+        "All permission strings used in routes and access checker code EXACTLY match strings defined in .permissions.yml (orphaned permission strings silently deny access to everyone -- no error, no warning)",
+        "Does NOT check permissions directly in the controller instead of using _custom_access or _permission in routing (bypasses Drupal's access system -- entity listings, views, and REST won't respect controller-only checks)",
+        "The module enables successfully: ddev drush en project_notes returns exit code 0",
+        "Navigate to /notes WITHOUT logging in -- verify a 403 Access Denied response (proves permission-based route protection works) (via eval-browser)",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
       ]
     }
   ]

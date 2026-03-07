@@ -1,0 +1,35 @@
+{
+  "project": "d10-access-security-without",
+  "skill": "drupal-access-security",
+  "checks": [
+    {
+      "description": "Navigate to /reports/restricted WITHOUT logging in -- verify an Access Denied / 403 response (proves anonymous access is properly blocked)",
+      "url": "https://d10-access-security-without.ddev.site/reports/restricted",
+      "passed": true,
+      "http_status": 403,
+      "page_title": "Access denied | Drush Site-Install",
+      "evidence": "Anonymous user receives HTTP 403 response code as expected. Page title indicates access was denied."
+    },
+    {
+      "description": "Log in as admin via drush uli, navigate to /reports/restricted -- verify the page renders with content and HTTP 200 (proves permission-based access grants correctly)",
+      "url": "https://d10-access-security-without.ddev.site/reports/restricted",
+      "passed": true,
+      "http_status": 200,
+      "page_title": "Restricted Reports | Drush Site-Install",
+      "authenticated_user": "admin (with test_editor role that has 'view restricted reports' permission)",
+      "content_found": "Yes - page displays heading 'Restricted Reports' and descriptive text 'This page is only accessible to users with the \"view restricted reports\" permission.'",
+      "evidence": "Authenticated user with proper permission receives HTTP 200 response code and page content renders correctly with expected heading and explanation text."
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2
+  },
+  "notes": [
+    "Test setup required granting the 'view restricted reports' permission to the admin user via role assignment (test_editor role was created and added to admin user).",
+    "The administrator role itself is marked as is_admin=true, which means it doesn't need explicit permissions but inherited admin rights.",
+    "Anonymous access properly denies with HTTP 403 as expected.",
+    "Authenticated access with proper permission grant returns HTTP 200 and renders page content correctly."
+  ]
+}

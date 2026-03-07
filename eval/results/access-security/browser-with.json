@@ -1,0 +1,21 @@
+{
+  "checks": [
+    {
+      "description": "Navigate to /reports/restricted WITHOUT logging in -- verify an Access Denied / 403 response (proves anonymous access is properly blocked)",
+      "url": "https://d10-access-security-with.ddev.site/reports/restricted",
+      "passed": true,
+      "evidence": "HTTP Status: 403 (Access denied page title confirmed)"
+    },
+    {
+      "description": "Log in as admin via drush uli, navigate to /reports/restricted -- verify the page renders with content and HTTP 200 (proves permission-based access grants correctly)",
+      "url": "https://d10-access-security-with.ddev.site/reports/restricted",
+      "passed": true,
+      "evidence": "HTTP Status: 200, Page title: 'Restricted Reports | Drush Site-Install', Content: 'This is the restricted reports page. Only users with the \"view restricted reports\" permission can access this content.'"
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2
+  }
+}

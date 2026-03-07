@@ -1,0 +1,25 @@
+{
+  "checks": [
+    {
+      "description": "Navigate to /notes WITHOUT logging in -- verify a 403 Access Denied response (proves permission-based route protection works)",
+      "url": "/notes",
+      "project": "d10-access-security-without",
+      "passed": true,
+      "evidence": {
+        "page_title": "Access denied | Drush Site-Install",
+        "heading": "Access denied",
+        "message": "You are not authorized to access this page.",
+        "status_code": 403,
+        "auth_state": "not_logged_in",
+        "user_menu_link": "Log in",
+        "notes": "Route protection verified: unauthenticated user cannot access /notes, receives 403 Access Denied"
+      }
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "total": 1,
+    "project": "d10-access-security-without"
+  }
+}

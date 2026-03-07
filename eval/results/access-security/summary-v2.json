@@ -1,0 +1,17 @@
+{
+    "skill": "drupal-access-security",
+    "version": "v2-hardened",
+    "with_score": 9,
+    "without_score": 8,
+    "total": 10,
+    "delta": 1,
+    "delta_pct": "10%",
+    "pipeline": "headless",
+    "date": "2026-03-07",
+    "differentiators": [
+        "_csrf_token: TRUE on archive route (with=correct, without=manual token in controller)"
+    ],
+    "shared_failures": [
+        "phpcs errors (different reasons)"
+    ]
+}
