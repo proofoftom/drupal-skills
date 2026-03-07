@@ -53,8 +53,8 @@ Plans:
 **Requirements**: EVAL-01, EVAL-02
 **Plans:** 2 plans
 Plans:
-- [ ] 09-01-PLAN.md -- Rewrite 8 straightforward eval prompts (text swap, no hint issues)
-- [ ] 09-02-PLAN.md -- Rewrite 5 complex eval prompts (hint removal, testing redesign, entities recontextualization)
+- [x] 09-01-PLAN.md -- Rewrite 8 straightforward eval prompts (text swap, no hint issues)
+- [x] 09-02-PLAN.md -- Rewrite 5 complex eval prompts (hint removal, testing redesign, entities recontextualization)
 **Success Criteria** (what must be TRUE):
   1. All 13 evals.json have prompts that reference "Drupal 10 site" not os-kg/Open Social
   2. Prompts describe realistic module development tasks grounded in Sipos book patterns
@@ -99,7 +99,7 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 |-------|-----------|----------------|--------|-----------|
 | 1-7 | v1.0 | 26/28 | Shipped | 2026-03-07 |
 | 8. Eval Infrastructure | v2.0 | 2/2 | Complete | 2026-03-07 |
-| 9. Eval Prompt Rewrite | v2.0 | 0/2 | Not started | - |
+| 9. Eval Prompt Rewrite | v2.0 | 2/2 | Complete | 2026-03-07 |
 | 10. Pipeline Validation | v2.0 | 0/? | Not started | - |
 | 11. Batch Execution | v2.0 | 0/? | Not started | - |
 | 12. Analysis & Optimization | v2.0 | 0/? | Not started | - |
