@@ -7,16 +7,16 @@
       "expected_output": "ConfigFormBase with getEditableConfigNames, config schema, route with _form key",
       "files": [],
       "expectations": [
-        "Form class extends ConfigFormBase (not FormBase or ControllerBase) for the settings form",
-        "Form implements getEditableConfigNames() returning an array with the config object name",
-        "Config schema file exists at config/schema/search_settings.schema.yml with typed entries for each field",
-        "Schema uses appropriate types: 'integer' for numeric fields like result_limit and cache_ttl (not 'string' for everything)",
-        "If validation exists, it uses $form_state->setErrorByName() (not throwing exceptions or using drupal_set_message)",
-        "buildForm() calls parent::buildForm($form, $form_state) to get automatic submit button",
-        "submitForm() calls parent::submitForm($form, $form_state) for automatic status message",
-        "submitForm() uses $this->config() to get editable config (not \\Drupal::configFactory()->getEditable())",
-        "The module enables successfully: ddev drush en search_settings returns exit code 0",
-        "E2E: Settings form renders -- navigate to /admin/config/search/search-settings as admin and verify form fields are present"
+        "Form class extends ConfigFormBase (not FormBase) -- ConfigFormBase provides getEditableConfigNames(), config helpers, and automatic submit button/status message via parent calls",
+        "buildForm() calls parent::buildForm($form, $form_state) and returns its result -- parent adds the submit button automatically (NOT manually adding a '#type' => 'submit' element which duplicates the button)",
+        "submitForm() calls parent::submitForm($form, $form_state) for the automatic 'The configuration options have been saved.' status message (NOT calling messenger()->addMessage() manually for save confirmation)",
+        "submitForm() uses $this->config('search_settings.settings') to get editable config (NOT \\Drupal::configFactory()->getEditable() static call -- ConfigFormBase provides $this->config() which returns editable config within submitForm)",
+        "Config schema file exists and uses appropriate types: 'integer' for result_limit and cache_ttl, 'float' for similarity_threshold (NOT 'string' for all numeric fields)",
+        "Route uses _form key pointing to the form class (NOT _controller -- using _controller for a form bypasses CSRF protection, form token validation, and the full form lifecycle)",
+        "The module enables successfully: ddev drush en search_settings returns exit code 0"
+      ],
+      "browser_checks": [
+        "Log in as admin via drush uli, navigate to /admin/config/search/search-settings — verify the form renders with fields for similarity_threshold (showing 0.7), result_limit (showing 5), and cache_ttl (showing 300) with correct default values"
       ]
     }
   ]

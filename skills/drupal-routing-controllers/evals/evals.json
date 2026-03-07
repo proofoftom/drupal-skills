@@ -7,14 +7,16 @@
       "expected_output": "Custom service in .services.yml, controller with create() DI, {user} entity auto-upcasting, _title_callback for dynamic title, _permission access",
       "files": [],
       "expectations": [
-        "A .services.yml file exists that registers a custom service with `arguments:` containing at least one @-prefixed core service reference (e.g., @entity_type.manager)",
-        "Route parameter is named `{user}` (matching the entity type machine name) for automatic entity upcasting -- the controller does NOT manually call User::load() or \\Drupal\\user\\Entity\\User::load()",
-        "Route file defines `_title_callback` pointing to a controller method for dynamic page title (not just a static `_title` string)",
-        "Controller injects the custom service via create() factory method -- the service is pulled from the container by its module-prefixed name (e.g., user_activity.something)",
-        "The custom service class does NOT extend ControllerBase -- it is a standalone class with constructor injection via .services.yml arguments",
-        "Routes use `_permission` for access control (not `_access: 'TRUE'` which bypasses all access checking)",
-        "The module enables successfully: ddev drush en user_activity -y returns exit code 0",
-        "E2E: curl to /user/1/activity as authenticated admin returns HTTP 200 with page content (not 404 or 403)"
+        "Route parameter is named `{user}` (matching the entity type machine name) for automatic entity upcasting -- the controller does NOT manually call User::load() or \\Drupal\\user\\Entity\\User::load() (Drupal auto-loads when param name matches entity type)",
+        "Route file defines `_title_callback` pointing to a controller method for dynamic page title (not just a static `_title` string -- dynamic titles need a callback that receives the upcasted entity)",
+        "The custom service class does NOT extend ControllerBase -- services are standalone classes with constructor injection via .services.yml arguments (not the create() factory pattern which is for controllers)",
+        "Controller does NOT use static \\Drupal::service() or \\Drupal::entityTypeManager() calls -- injects all dependencies via create() + constructor (static calls bypass DI, making code untestable)",
+        "Routes use `_permission` for access control (not `_access: 'TRUE'` which bypasses all access checking including for anonymous users)",
+        "The module enables successfully: ddev drush en user_activity -y returns exit code 0"
+      ],
+      "browser_checks": [
+        "Log in as admin via drush uli, navigate to /user/1/activity — verify the page renders with a dynamic title containing the admin user's display name and shows activity summary content (not a 404 or fatal error, confirming route registration and entity auto-upcasting work)",
+        "Navigate to /api/user/1/activity — verify the response contains valid JSON with activity data fields (not an HTML error page or 500 error)"
       ]
     }
   ]

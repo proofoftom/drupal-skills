@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Eval & Optimization Loop
-status: blocked
-stopped_at: Phase 11 paused — eval infrastructure redesign needed
-last_updated: "2026-03-07T12:00:00Z"
-last_activity: 2026-03-07 -- Discovered eval scaffold confound + expectations test obvious patterns. Headless comparison proved skills DO teach valuable patterns but agent scaffold compresses delta to 0%.
+status: in_progress
+stopped_at: Phase 11 paused — evals.json needs schema cleanup before eval runs
+last_updated: "2026-03-07T12:25:30Z"
+last_activity: 2026-03-07 -- Session 14 reworked E2E strategy. Added browser_checks to evals.json (needs cleanup — non-schema field). Established eval verification approach for this milestone.
 progress:
   total_phases: 5
   completed_phases: 3
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-07)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** v2.0 -- Eval & Optimization Loop (Phase 11 PAUSED for pipeline redesign)
+**Current focus:** v2.0 -- Eval & Optimization Loop (Phase 11: evals.json schema cleanup, then validation run)
 
 ## Current Position
 
 Phase: 11 of 12 -- Batch Execution
 Plan: 3 of 13 complete (11-01 setup, 11-02 access-security, 11-03 routing-controllers)
-Status: PAUSED — eval infrastructure has two confounds that produce 0% delta on everything
-Last activity: 2026-03-07 -- Headless vs subagent comparison confirmed scaffold confound
+Status: IN PROGRESS — evals.json has non-schema fields to clean up, then ready to validate
+Last activity: 2026-03-07 -- Reworked eval verification: eval-browser for meaningful E2E (not curl), phpcs for static analysis, phpunit for testing skill
 
 Progress: [████░░░░░░] 37%
 
@@ -55,6 +55,13 @@ Progress: [████░░░░░░] 37%
 - [Phase 11]: Headless `claude -p` produces different (worse) baseline than agent subagent
 - [Phase 11]: ddev naming: pass `routing-with` not `d10-routing-with` to setup script (it prepends d10-)
 - [Phase 11]: Fixed caching evals.json expectation 3 (url.path accepted alongside route)
+- [Phase 11]: ALWAYS use eval-browser for E2E, NEVER curl — user preference
+- [Phase 11]: evals.json schema only supports `expectations` — no custom fields like browser_checks/static_checks
+- [Phase 11]: Only keep E2E checks that exercise actual code paths (Behat mindset) — drop "exists in admin" checks
+- [Phase 11]: phpcs --standard=Drupal,DrupalPractice as static analysis expectation for all skills
+- [Phase 11]: phpunit execution is the correct E2E for testing skill
+- [Phase 11]: Theming prompt updated to require page route for browser verification
+- [Phase 11]: Mega-module integrated eval approach deferred to next milestone
 
 ### Carried from v1.0
 
@@ -63,17 +70,17 @@ Progress: [████░░░░░░] 37%
 
 ### Pending Todos
 
-- Audit and rewrite ALL 13 evals.json for non-obvious patterns
-- Fix eval-executor scaffold (strip for without-skill or use headless)
+- Clean up evals.json: remove browser_checks/cli_checks, promote valuable E2E to expectations, add phpcs
 - Consider Group contrib module for harder eval scenarios
+- Next milestone: integrated mega-module eval with full browser UAT
 
 ### Blockers/Concerns
 
-- **BLOCKED**: Cannot run remaining evals until scaffold confound and expectations are fixed
-- Running with current setup will produce 0% delta on everything
+- evals.json files have non-schema fields — must clean up before eval runs
+- No content scaffolding for list-rendering evals (caching, theming, views) — deferred
 
 ## Session Continuity
 
-Last session: 2026-03-07T12:00:00Z
-Stopped at: Phase 11 paused — eval infrastructure redesign needed (scaffold confound + expectations audit)
+Last session: 2026-03-07T12:25:30Z
+Stopped at: evals.json needs schema cleanup (remove browser_checks/cli_checks, promote valuable E2E to expectations, add phpcs), then validate with caching re-run
 Resume file: .planning/phases/11-batch-execution/.continue-here.md
