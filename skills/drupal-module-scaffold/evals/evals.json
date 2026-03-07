@@ -7,14 +7,14 @@
       "expected_output": "A complete Drupal module scaffold with .info.yml, .module file, and src/ directory following PSR-4 conventions",
       "files": [],
       "expectations": [
-        "event_analytics.info.yml contains core_version_requirement with BOTH ^10 AND ^11: '^10 || ^11' (NOT just '^10', NOT 'core: 8.x')",
-        "Dependencies listed in 'drupal:node' format (NOT bare 'node' without the drupal: prefix)",
-        "PHP files include declare(strict_types=1)",
-        ".module file only created if hooks are actually needed (NOT an empty .module file with no hooks)",
-        "All PHP classes are in src/ directory following PSR-4 (NOT in the module root)",
-        ".info.yml has 'type: module' (required in D10+, was optional in D8)",
-        "The module enables successfully: ddev drush en event_analytics returns exit code 0",
-        "E2E: Module appears in /admin/modules list"
+        "event_analytics.info.yml contains core_version_requirement with BOTH ^10 AND ^11: '^10 || ^11' (NOT just '^10', NOT 'core: 8.x' which is the legacy D8 format removed in D10)",
+        "Dependencies listed in 'drupal:node' format with project prefix (NOT bare 'node' without the drupal: prefix -- project:module format is required for dependency resolution)",
+        ".module file only created if hooks are actually implemented inside it (NOT an empty .module file containing no function definitions -- many modern Drupal modules have no .module file at all)",
+        ".info.yml has 'type: module' explicitly set (required in D10+, was optional in D8 -- omitting causes the module to not appear in the module list)",
+        "The module enables successfully: ddev drush en event_analytics returns exit code 0"
+      ],
+      "browser_checks": [
+        "Log in as admin via drush uli, navigate to /admin/modules — verify event_analytics appears in the module list under the 'Events' package group and is shown as enabled"
       ]
     }
   ]

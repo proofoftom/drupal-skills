@@ -7,15 +7,16 @@
       "expected_output": "A block plugin with correct cache metadata - tags for each displayed node, route and user contexts, and NO max-age: 0",
       "files": [],
       "expectations": [
-        "build() returns render array with #cache key containing BOTH 'tags' AND 'contexts' (the golden rule: EVERY render array needs #cache)",
-        "Cache tags include node-specific tags (node:ID pattern) for data dependency invalidation",
-        "Cache contexts include 'route' or 'url.path' or 'url' for page variation AND 'user' or 'user.permissions' or 'user.roles' for per-user variation",
-        "Does NOT set max-age to 0 anywhere (max-age: 0 kills the ENTIRE page cache via bubbling -- use lazy_builder instead)",
-        "Does NOT use \\Drupal::cache() for render caching (render arrays use #cache, not manual cache API)",
-        "If the block varies per user, uses cache context 'user' (NOT max-age: 0 as a workaround for per-user variation)",
-        "#cache metadata is on the OUTERMOST render array element (not buried inside a child element where it won't bubble correctly)",
-        "The module enables successfully: ddev drush en related_content_block returns exit code 0",
-        "E2E: Block renders without errors after placement"
+        "Block class overrides getCacheContexts() method AND merges with parent: Cache::mergeContexts(parent::getCacheContexts(), [...]) (NOT just inline #cache contexts -- block-level cache methods are the canonical way, and parent merge preserves block placement contexts)",
+        "Block class overrides getCacheTags() method AND merges with parent: Cache::mergeTags(parent::getCacheTags(), [...]) (NOT just inline #cache tags -- overriding without parent merge loses tags from block configuration)",
+        "getCacheTags() or #cache tags include 'node_list' tag for list-level invalidation (when ANY node is created/updated/deleted, the list needs re-evaluation -- per-node tags alone miss new content)",
+        "Uses Cache::PERMANENT for max-age or omits max-age entirely (NOT a hardcoded number like 3600 -- content with proper cache tags should use PERMANENT and rely on tag invalidation, not time-based expiry)",
+        "Does NOT set max-age to 0 anywhere (max-age: 0 bubbles up and kills the ENTIRE page cache via Dynamic Page Cache -- use lazy_builder instead for per-user content)",
+        "Does NOT use \\Drupal::cache() or manual cache API for render caching (render arrays use #cache metadata for automatic caching, not manual cache get/set)",
+        "The module enables successfully: ddev drush en related_content_block returns exit code 0"
+      ],
+      "browser_checks": [
+        "Log in as admin via drush uli, navigate to /admin/structure/block/library — verify the 'Related content' block (or similar label) appears in the available blocks list (proves block plugin is discoverable by the block system)"
       ]
     }
   ]

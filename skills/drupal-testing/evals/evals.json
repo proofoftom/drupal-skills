@@ -4,17 +4,20 @@
     {
       "id": 1,
       "prompt": "Create a module called `calculator` that provides a Calculator service class with add() and subtract() methods accepting two numbers. Register the service in the module's services.yml file. Then write a kernel test that verifies the calculator service can be loaded from the Drupal service container and that its methods return correct results. Use the correct test base class for testing a service without browser interaction. Put the test in the proper directory following Drupal test conventions. We're running Drupal 10 and want D11 compatibility.",
-      "expected_output": "A calculator module with a service class, services.yml, and a kernel test extending KernelTestBase with correct module installation, service loading, and method assertions.",
+      "expected_output": "A calculator module with a service class, services.yml, and a kernel test extending KernelTestBase",
       "files": [],
       "expectations": [
-        "Test class extends KernelTestBase (NOT BrowserTestBase, NOT WebDriverTestBase) -- kernel tests are for service/API testing without browser, the LOWEST sufficient test type",
-        "Test class has protected static $modules array (NOT a setUp() module_enable call)",
-        "$modules includes all required modules: at minimum 'calculator'",
-        "setUp() calls parent::setUp() (required for KernelTestBase to initialize the container)",
-        "Test loads the calculator service from the container using $this->container->get('calculator.calculator') or similar service ID",
-        "Test has @group annotation (required for test discovery by PHPUnit)",
-        "Does NOT extend BrowserTestBase for a service test (over-testing -- BrowserTestBase boots full Drupal + browser, kernel test only needs container)",
-        "Test method uses assertion methods like assertEquals(), assertNotNull(), assertInstanceOf() to verify service behavior (NOT bare if/echo)"
+        "Test class extends KernelTestBase (NOT BrowserTestBase or WebDriverTestBase -- kernel tests are the LOWEST sufficient level for service testing, BrowserTestBase installs full Drupal + browser which is 10-100x slower and unnecessary for testing a service)",
+        "Test class has protected static $modules array including 'calculator' (NOT installing modules in setUp() via module_installer service -- the $modules property is the correct KernelTestBase pattern for declaring required modules)",
+        "setUp() calls parent::setUp() as the FIRST line (required for KernelTestBase to initialize the service container and database -- calling it after other setup or forgetting it causes cryptic 'service not found' errors)",
+        "Test loads the calculator service from the container using $this->container->get() with the registered service ID (NOT instantiating the class directly with new Calculator() which bypasses DI and doesn't test service registration)",
+        "Test class has @group annotation in the class-level PHPDoc (required for test discovery -- without @group, the test is invisible to both phpunit --group and Drupal's test runner)",
+        "Test file is in tests/src/Kernel/ directory with namespace Drupal\\Tests\\calculator\\Kernel (NOT in tests/src/Unit/ which would be wrong test type for service container testing, NOT in tests/src/Functional/ which is over-testing)",
+        "The module enables successfully: ddev drush en calculator returns exit code 0"
+      ],
+      "browser_checks": [],
+      "cli_checks": [
+        "Run the kernel test via ddev exec phpunit (or ddev drush test:run) — verify the test discovers, executes, and passes with green results (this IS the E2E verification for a testing skill — the test itself must actually work)"
       ]
     }
   ]

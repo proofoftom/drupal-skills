@@ -7,15 +7,17 @@
       "expected_output": "permissions.yml, route with _permission, controller with AccessResult",
       "files": [],
       "expectations": [
-        "Permission defined in restricted_reports.permissions.yml with 'title' key (permission string must match what route uses)",
-        "Route _permission requirement references the EXACT permission string defined in .permissions.yml",
-        "If custom access checking code exists, it returns AccessResult objects (AccessResult::allowed(), AccessResult::forbidden(), AccessResult::neutral()) -- NOT bare booleans (TRUE/FALSE)",
-        "If AccessResult objects are used, they include ->addCacheContexts(['user.permissions']) or ->addCacheTags() for cache-aware access",
-        "Does NOT use hook_permission() (D7 pattern) -- permissions are in .permissions.yml",
-        "Does NOT implement manual CSRF token checking -- would use _csrf_token route option if CSRF protection needed",
-        "The module enables successfully: ddev drush en restricted_reports returns exit code 0",
-        "E2E: Anonymous gets 403 -- navigate to /reports/restricted as anonymous and verify access denied",
-        "E2E: Admin gets 200 -- navigate to /reports/restricted as admin and verify page loads"
+        "Permission string in route _permission EXACTLY matches the string defined in .permissions.yml (orphaned/mismatched permission strings silently deny access to everyone -- no error, no warning, just a 403 for all users)",
+        "If custom access checking code exists, it returns AccessResult objects with ->addCacheContexts(['user.permissions']) or uses AccessResult::allowedIfHasPermission() which adds contexts automatically (bare AccessResult without cache contexts gets cached for the first user's result and applies to ALL subsequent users)",
+        "If AccessResult::allowedIf() or AccessResult::forbidden() is used directly, it includes ->addCacheContexts() call (NOT bare AccessResult without cache metadata -- this is a security and caching bug where access decisions bleed across users)",
+        "Does NOT use hook_permission() to define permissions (D7 pattern removed in D8 -- permissions must be in .permissions.yml)",
+        "Does NOT use _access: 'TRUE' on a route that should be permission-restricted (opens route to everyone including anonymous)",
+        "The module enables successfully: ddev drush en restricted_reports returns exit code 0"
+      ],
+      "browser_checks": [
+        "Navigate to /reports/restricted WITHOUT logging in — verify an Access Denied / 403 response is shown (proves anonymous access is properly blocked)",
+        "Log in as admin via drush uli, navigate to /reports/restricted — verify the page renders with content and HTTP 200 (proves permission-based access grants correctly)",
+        "Navigate to /admin/people/permissions — verify 'view restricted reports' permission appears in the permissions table under the module's group"
       ]
     }
   ]

@@ -3,18 +3,20 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Create a module called `featured_resources` for a Drupal 10 site that renders a themed list of featured learning resources. Implement hook_theme() with a template that displays resource items with titles and links. Attach a CSS library for styling the list. Use render arrays with #theme, NOT raw HTML strings. Use proper Drupal template naming conventions. We want D11 compatibility.",
+      "prompt": "Create a module called `featured_resources` for a Drupal 10 site that renders a themed list of featured learning resources. Implement hook_theme() with a template that displays resource items with titles and links. Attach a CSS library for styling the list. Use render arrays with #theme, NOT raw HTML strings. Use proper Drupal template naming conventions. Provide a page at a route (e.g., /featured-resources) that displays the themed output. We want D11 compatibility.",
       "expected_output": "A theming module with hook_theme(), a hyphen-named Twig template, render arrays using #theme, and an attached CSS library via .libraries.yml",
       "files": [],
       "expectations": [
-        "hook_theme() declares ALL template variables with default values in the 'variables' key (not leaving variables undeclared)",
-        "Template filename uses hyphens: e.g., featured-resources-list.html.twig (NOT underscores like featured_resources_list.html.twig) -- Drupal convention is underscores in hook name map to hyphens in filename",
-        "Render array uses #theme key referencing the hook_theme entry name (NOT building raw HTML strings with Markup::create())",
-        "CSS/JS attached via #attached['library'] array referencing featured_resources/{library-name} (NOT inline <script> or <style> tags, NOT drupal_add_css/drupal_add_js)",
-        "featured_resources.libraries.yml file exists defining the CSS library with relative path and optional dependencies",
-        "Controller or page callback returns a render array (NOT a plain string or Response object for themed content)",
-        "Template file exists in templates/ subdirectory of the module (correct location for module templates)",
+        "Template filename uses hyphens not underscores: e.g., featured-resources-list.html.twig (Drupal convention maps underscores in hook name to hyphens in filename -- wrong naming means template is silently never found and output falls back to empty)",
+        "hook_theme() declares ALL template variables with default values in the 'variables' key (undeclared variables are undefined in Twig causing silent rendering failures -- the variables array IS the template's API contract)",
+        "Render array uses #theme key referencing the hook_theme entry name (NOT building raw HTML strings with Markup::create() or concatenating HTML into #markup -- raw HTML bypasses theme overrides and security filtering)",
+        "CSS/JS attached via #attached['library'] referencing module_name/library_name format (NOT inline <script>/<style> tags, NOT drupal_add_css() which was removed in D8)",
+        "featured_resources.libraries.yml file exists defining the CSS library with a css key containing at least one file path",
+        "Template file exists in templates/ subdirectory of the module (correct standard location for module templates)",
         "The module enables successfully: ddev drush en featured_resources returns exit code 0"
+      ],
+      "browser_checks": [
+        "Log in as admin via drush uli, navigate to the module's page route (e.g., /featured-resources) — verify the themed template renders the featured resources list with visible styled output (not raw HTML, not PHP errors, not a blank page)"
       ]
     }
   ]

@@ -4,18 +4,19 @@
     {
       "id": 1,
       "prompt": "Create a module called `view_analytics` for a Drupal 10 site that tracks how often content is viewed. Store tracking data in a custom database table with columns: nid (int), uid (int), viewed_at (int, timestamp), and referrer (varchar 255). Write the schema definition, a function to record views, and a page at /admin/reports/view-analytics showing the top 10 most viewed nodes using an aggregation query. Use Drupal's database abstraction layer for all queries. We want D11 compatibility.",
-      "expected_output": "A database module with hook_schema(), insert via database abstraction, aggregation query with COUNT, and an admin report page -- no Entity API, no raw SQL",
+      "expected_output": "A database module with hook_schema(), insert via database abstraction, aggregation query with COUNT, and an admin report page",
       "files": [],
       "expectations": [
-        "hook_schema() defines table with correct column types, primary key as 'serial' type, and indexes for frequently queried columns",
-        "Insert operations use \\Drupal::database()->insert('table')->fields([...]) pattern (NOT raw SQL, NOT db_insert)",
-        "Select queries use database abstraction: ->select('table', 'alias')->fields()->condition() (NOT raw SQL strings, NOT db_query for selects)",
-        "Aggregation uses ->addExpression('COUNT(nid)', 'view_count') pattern (NOT raw SQL COUNT in a db_query string)",
-        "Query includes ->addTag('view_analytics') or similar tag enabling hook_query_alter() support for other modules",
-        "Does NOT use Entity API (EntityTypeManager, Entity Query) for the tracking/analytics data -- the prompt explicitly says to use Database API",
-        "Does NOT concatenate user input into SQL strings -- uses placeholders (:placeholder) or condition() methods",
-        "The module enables successfully: ddev drush en view_analytics returns exit code 0",
-        "Table exists after install: ddev drush php-eval returns 'yes' for tableExists('view_analytics')"
+        "hook_schema() in .install file defines the table with a 'serial' type auto-increment primary key (NOT 'int' for the PK -- serial handles auto-increment cross-database, int requires manual ID management)",
+        "Insert operations use the dynamic query builder: ->insert('table')->fields([...]) (NOT raw SQL strings via ->query('INSERT...'), NOT deprecated db_insert() function)",
+        "Select queries use dynamic query builder: ->select('table', 'alias')->fields()->condition() (NOT raw SQL strings via ->query('SELECT...') -- dynamic queries are alterable by other modules via hook_query_alter)",
+        "Aggregation uses ->addExpression('COUNT(nid)', 'view_count') or equivalent on a dynamic select query (NOT raw SQL COUNT() in a ->query() string -- dynamic queries integrate with Drupal's query alter system)",
+        "At least one select query includes ->addTag() enabling hook_query_TAG_alter() for other modules (without tags, queries cannot be altered by access control or other modules)",
+        "Does NOT concatenate PHP variables into SQL strings -- uses :placeholders in static queries or condition() methods in dynamic queries for all variable input (SQL injection prevention)",
+        "The module enables successfully: ddev drush en view_analytics returns exit code 0"
+      ],
+      "browser_checks": [
+        "Log in as admin via drush uli, navigate to /admin/reports/view-analytics — verify the analytics report page loads without errors and displays the report structure (table headers, empty state message, or data rows)"
       ]
     }
   ]

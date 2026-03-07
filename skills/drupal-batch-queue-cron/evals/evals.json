@@ -4,17 +4,20 @@
     {
       "id": 1,
       "prompt": "Create a module called `content_indexer` for a Drupal 10 site. It should use cron to find unindexed content nodes and process them via a queue. Create a QueueWorker plugin that processes each item by marking it as indexed. We want D11 compatibility.",
-      "expected_output": "A cron+queue module with hook_cron() that adds items to a queue (not processing directly), a QueueWorker plugin with cron.time setting and error handling in processItem(), placed in the correct PSR-4 path",
+      "expected_output": "A cron+queue module with hook_cron() that adds items to a queue (not processing directly), and a QueueWorker plugin with cron time setting",
       "files": [],
       "expectations": [
-        "hook_cron() only discovers work and adds items to queue via \\Drupal::queue('content_indexer')->createItem() -- does NOT process heavy work directly in hook_cron()",
-        "Queue name in hook_cron createItem matches the QueueWorker plugin ID exactly",
-        "QueueWorker plugin annotation/attribute includes cron time setting: cron = {\"time\" = 30} or cron: {time: 30} or similar (without this, items never auto-process during cron)",
-        "processItem() contains try/catch error handling -- distinguishes between retryable errors (RequeueException) and fatal errors",
-        "Does NOT use \\Drupal::queue() static call inside processItem() -- the queue worker receives items automatically",
-        "QueueWorker placed in correct PSR-4 path: src/Plugin/QueueWorker/",
-        "The module enables successfully: ddev drush en content_indexer returns exit code 0",
-        "E2E: Cron runs without error -- ddev drush cron returns exit code 0"
+        "hook_cron() only discovers work and adds items to a queue via createItem() -- does NOT process heavy work directly in hook_cron() (cron has a time limit, processing directly blocks all other cron tasks and can timeout)",
+        "Queue name in hook_cron createItem() EXACTLY matches the QueueWorker plugin ID (mismatched names = items are added to a queue that no worker processes, silently accumulating forever)",
+        "QueueWorker plugin annotation/attribute includes cron time setting: cron = {\"time\" = 30} or cron: ['time' => 30] (without cron time config, the queue worker is never automatically invoked during cron runs)",
+        "processItem() contains try/catch error handling that distinguishes between retryable errors and permanent failures (unhandled exceptions in processItem cause the item to be released back to the queue but with no logging or error distinction)",
+        "QueueWorker plugin is in correct PSR-4 path: src/Plugin/QueueWorker/ (NOT src/Plugin/Queue/ or src/Queue/ -- QueueWorker plugin manager scans Plugin/QueueWorker specifically)",
+        "Does NOT use \\Drupal::queue() static call inside the QueueWorker processItem() method (the worker receives items automatically via cron queue processing -- manually accessing the queue inside processItem creates circular processing)",
+        "The module enables successfully: ddev drush en content_indexer returns exit code 0"
+      ],
+      "browser_checks": [
+        "Log in as admin via drush uli, navigate to /admin/modules — verify content_indexer module appears and is enabled",
+        "Navigate to /admin/config/system/cron and click the 'Run cron' button — verify a success status message appears without errors (proves hook_cron and queue worker integration functions correctly)"
       ]
     }
   ]

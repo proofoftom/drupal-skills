@@ -7,15 +7,16 @@
       "expected_output": "Block with ContainerFactoryPluginInterface, 4-param create(), parent::__construct with 3 plugin params, blockForm/blockSubmit",
       "files": [],
       "expectations": [
-        "Block plugin create() method has exactly 4 parameters: $container, $configuration, $plugin_id, $plugin_definition (NOT 2 parameters like controller create())",
-        "Constructor calls parent::__construct($configuration, $plugin_id, $plugin_definition) with 3 plugin params before storing injected services",
-        "Block uses blockForm() for configuration form (NOT buildForm() or a generic form method)",
-        "Block uses blockSubmit() for saving config (NOT submitForm())",
-        "defaultConfiguration() method exists and returns an array of config defaults",
-        "Block plugin uses either D11 #[Block(...)] attribute with new TranslatableMarkup() for admin_label, OR D10 @Block annotation with @Translation() -- but NOT @Translation() inside a PHP attribute",
-        "build() method returns render array that includes #cache metadata (tags, contexts, or max-age)",
-        "The module enables successfully: ddev drush en content_recommendations returns exit code 0",
-        "E2E: Block can be placed without errors -- after placing via drush, front page loads without 'Broken' handler message"
+        "Block plugin create() method has exactly 4 parameters: $container, $configuration, $plugin_id, $plugin_definition (NOT 1 parameter like controller create() -- plugin manager passes 4 args, using controller signature causes fatal TypeError)",
+        "Constructor calls parent::__construct($configuration, $plugin_id, $plugin_definition) with the 3 plugin params BEFORE storing injected services (missing parent call breaks block configuration, default values, and plugin inspection)",
+        "Block uses blockForm() for configuration form (NOT buildForm() which is the standalone form method -- blockForm receives pre-built form from block admin UI)",
+        "Block uses blockSubmit() for saving config to $this->configuration (NOT submitForm(), NOT Config API -- block config is managed by the block placement system, not the Config API)",
+        "defaultConfiguration() method exists and returns an array with config defaults including the item count setting",
+        "Block plugin uses EITHER D11 #[Block(...)] attribute with new TranslatableMarkup() OR D10 @Block annotation with @Translation() -- but NOT @Translation() inside a PHP attribute (mixing annotation helpers in attributes causes fatal error)",
+        "The module enables successfully: ddev drush en content_recommendations returns exit code 0"
+      ],
+      "browser_checks": [
+        "Log in as admin via drush uli, navigate to /admin/structure/block/library — verify the Content Recommendations block (or similar admin label) appears in the available blocks list, confirming the block plugin is discoverable by Drupal's block system"
       ]
     }
   ]

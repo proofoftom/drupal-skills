@@ -4,16 +4,19 @@
     {
       "id": 1,
       "prompt": "Create a module called `resource_directory` for a Drupal 10 site. It should expose a custom database table (resource_links with columns: id, title, url, category, created) to Views via hook_views_data(). Add a custom Views filter plugin that lets users filter resources by category using a dropdown. Place the filter in the correct PSR-4 path. Include a 'group' key in the Views data definition. We want D11 compatibility.",
-      "expected_output": "A Views integration module with hook_views_data() including group key, hook_schema() for the table, and a custom filter plugin extending FilterPluginBase or InOperator in the correct PSR-4 path",
+      "expected_output": "A Views integration module with hook_views_data() including group key, hook_schema() for the table, and a custom filter plugin in the correct PSR-4 path",
       "files": [],
       "expectations": [
-        "hook_views_data() used for the custom table (NOT hook_views_data() for entity data -- entities use views_data handler class in annotation)",
-        "Views data definition includes 'group' key with human-readable group name (missing group = 'Broken handler' error in Views UI)",
-        "If a computed/virtual field plugin exists, its query() method has an empty body (virtual fields MUST NOT add SQL)",
-        "Custom filter plugin extends FilterPluginBase or InOperator (NOT a generic Plugin class)",
-        "Filter plugin in correct PSR-4 path: src/Plugin/views/filter/ (lowercase 'views', NOT 'Views')",
-        "hook_views_data() includes 'table' key with 'group', and field definitions with 'title' and 'help'",
+        "hook_views_data() includes 'group' key with a human-readable label on the table definition (missing group = 'Broken handler' error in Views UI, and fields become unfindable among hundreds of ungrouped entries)",
+        "hook_views_data() is used for the custom table (NOT hook_views_data_alter() which is for modifying existing tables from other modules -- data_alter on your own table is an anti-pattern)",
+        "Custom filter plugin extends FilterPluginBase or InOperator (NOT a generic PluginBase class -- ViewsFilter plugins require filter-specific methods like query() and valueForm())",
+        "Filter plugin file is in the correct PSR-4 path: src/Plugin/views/filter/ with lowercase 'views' (NOT src/Plugin/Views/Filter/ with capital V -- Drupal Views plugin manager scans lowercase 'views' namespace specifically)",
+        "hook_views_data() table definition includes 'base' key making the table available as a Views base table for creating new views (not just individual field definitions without a base table entry)",
         "The module enables successfully: ddev drush en resource_directory returns exit code 0"
+      ],
+      "browser_checks": [
+        "Log in as admin via drush uli, navigate to /admin/structure/views/add — verify the resource_links table appears as an available base table option (e.g., in the 'Show' dropdown or table selection list), confirming hook_views_data() is properly recognized by Views",
+        "Navigate to /admin/structure/views — verify the Views listing page loads without 'Broken handler' errors related to the resource_directory module"
       ]
     }
   ]

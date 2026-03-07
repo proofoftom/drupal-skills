@@ -7,15 +7,15 @@
       "expected_output": "config/install YAML, config/schema YAML, ConfigFormBase form",
       "files": [],
       "expectations": [
-        "config/install/site_announcements.settings.yml exists with default values",
-        "config/schema/site_announcements.schema.yml exists with typed mapping entries",
-        "Schema uses 'label' type for translatable human-readable text like announcement_text -- not 'string' for user-facing text",
-        "Schema uses correct types: 'boolean' for display_enabled (not 'string'), 'integer' for max_display_count",
-        "Form uses $this->config('site_announcements.settings') for reads and writes (NOT \\Drupal::config() which returns immutable)",
-        "Does NOT use variable_get/variable_set (D7 pattern) or State API for exportable settings",
-        "Does NOT use \\Drupal::state() for settings that should be config-exportable",
-        "The module enables successfully: ddev drush en site_announcements returns exit code 0",
-        "Config loads correctly: ddev drush config:get site_announcements.settings returns values without error"
+        "config/install/site_announcements.settings.yml exists with default values matching the prompt (config object must exist from install, not only after form is saved)",
+        "config/schema/site_announcements.schema.yml exists with typed mapping entries for all config keys (missing schema breaks config export/import validation and config translation)",
+        "Schema uses 'label' type for translatable human-readable text like announcement_text (NOT 'string' -- string type is never translated, label type enables config translation for multilingual sites)",
+        "Schema uses correct types: 'boolean' for display_enabled, 'integer' for max_display_count (NOT 'string' for everything -- wrong types cause silent type-casting bugs during config import)",
+        "Does NOT use \\Drupal::state() or State API for settings that need to be exported between environments (State is environment-specific and NOT included in config export)",
+        "The module enables successfully: ddev drush en site_announcements returns exit code 0"
+      ],
+      "browser_checks": [
+        "Log in as admin via drush uli, navigate to /admin/config/system/announcements — verify the settings form loads with fields for announcement_text (showing 'Welcome'), display_enabled (checked), and max_display_count (showing 3) with their correct default values from config/install"
       ]
     }
   ]

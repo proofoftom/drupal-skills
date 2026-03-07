@@ -4,18 +4,19 @@
     {
       "id": 1,
       "prompt": "Create a custom content entity type called KnowledgeResource for a Drupal 10 site. The entity is for organizing external learning resources (articles, papers, tools, documentation). It should have base fields for: related_topic (entity_reference to node), author (entity_reference to user), resource_type (list_string with allowed values: article, research_paper, tool, documentation), and created timestamp. Include all necessary handlers -- forms, list builder, access handler, and route provider. Put it in a module called knowledge_resource. We want D11 compatibility.",
-      "expected_output": "A complete content entity type with entity class, base fields, all handlers, and module scaffold that installs and creates entities successfully",
+      "expected_output": "A complete content entity type with entity class, base fields, all handlers, and module scaffold",
       "files": [],
       "expectations": [
-        "Entity class has baseFieldDefinitions() that calls AND MERGES parent::baseFieldDefinitions($entity_type) (MUST call parent or lose id/uuid/langcode fields)",
-        "Base fields that should appear in forms use setDisplayOptions('form', [...]) (without this, fields won't appear in entity forms)",
-        "Base fields that should appear in listings use setDisplayOptions('view', [...]) (without this, fields won't render in entity view)",
-        "If entity has admin UI, entity annotation/attribute includes route_provider handler for auto-generated CRUD routes (NOT hand-writing all entity routes)",
-        "Entity handlers declaration includes 'form' handlers for add/edit/delete operations",
-        "This is a content entity per the prompt -- verify it does NOT incorrectly include config_export (config_export is for config entities only)",
-        "The module enables successfully: ddev drush en knowledge_resource returns exit code 0",
-        "Entity type installed: ddev drush php-eval confirms hasDefinition('knowledge_resource')",
-        "Entity can be created: ddev drush php-eval creates and saves entity without error"
+        "Entity class baseFieldDefinitions() calls parent::baseFieldDefinitions($entity_type) and assigns/merges the result into $fields (MUST call parent or id/uuid/langcode base fields are lost, causing entity creation to silently fail with missing primary key)",
+        "Base fields that should appear in forms use setDisplayOptions('form', [...]) with widget type (without this call, fields are invisible in entity add/edit forms even though they exist in the database)",
+        "Base fields that should appear in entity view use setDisplayOptions('view', [...]) with formatter type (without this, entity view mode renders nothing for these fields)",
+        "Entity annotation/attribute includes route_provider handler pointing to AdminHtmlRouteProvider or DefaultHtmlRouteProvider (auto-generates CRUD routes from links array instead of hand-writing each entity route in .routing.yml)",
+        "This is a content entity per the prompt -- does NOT include config_export key in the annotation/attribute (config_export is for ConfigEntityType only, including it on a content entity causes errors)",
+        "The module enables successfully: ddev drush en knowledge_resource returns exit code 0"
+      ],
+      "browser_checks": [
+        "Log in as admin via drush uli, navigate to the KnowledgeResource entity add form (e.g., /admin/content/knowledge-resource/add or the path defined in entity links) — verify the form renders with fields for related_topic, author, resource_type (dropdown with article/research_paper/tool/documentation options), and created",
+        "Navigate to the KnowledgeResource entity list page (e.g., /admin/content/knowledge-resource) — verify the list builder page loads without errors"
       ]
     }
   ]
