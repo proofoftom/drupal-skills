@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "I have a block plugin on our Open Social Drupal 10 site that displays nodes related to the currently viewed page, filtered by the current user's group membership. The block loads specific node entities and renders their titles as links. Right now the block has no caching and it's hurting performance. Add proper cache tags and contexts to the block's build() method. The block should invalidate when any of the displayed nodes are updated, and it should vary by the current route (so different pages show different related content) and by user (so group filtering works per-user). Put this in a module called related_content_block. Do NOT use max-age: 0.",
+      "prompt": "Create a block plugin module called `related_content_block` for a Drupal 10 site. The block should display a list of related content nodes, showing their titles as links. It should load specific node entities based on the current page and current user. The block is causing performance issues because it has no caching configured. Add proper cache metadata to the block so it invalidates when the displayed content changes, varies correctly based on which page it appears on, and produces different output per user. We want D11 compatibility.",
       "expected_output": "A block plugin with correct cache metadata - tags for each displayed node, route and user contexts, and NO max-age: 0",
       "files": [],
       "expectations": [
