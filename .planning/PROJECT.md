@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A collection of 13 Claude skills extracted from the "Drupal 10 Module Development" book (Daniel Sipos, 4th ed, 2023). Each skill encapsulates a domain of Drupal module development knowledge — from scaffolding and routing to entities, theming, and testing — enabling Claude to produce correct, idiomatic Drupal code when developers ask for help.
+A collection of 13 Claude skills extracted from the "Drupal 10 Module Development" book (Daniel Sipos, 4th ed, 2023). Each skill encapsulates a domain of Drupal module development knowledge -- from scaffolding and routing to entities, theming, and testing -- enabling Claude to produce correct, idiomatic Drupal code when developers ask for help.
 
 ## Core Value
 
@@ -28,29 +28,36 @@ Claude can generate correct, production-ready Drupal module code across all majo
 
 ### Validated
 
-- [x] 13 skills covering all 18 book chapters, grouped by developer workflow
-- [x] Each skill follows skill-creator anatomy (frontmatter, <500 line body, reference files)
-- [x] Skills produce correct D10 code with D11 differences noted
-- [x] Skills cross-reference each other where relevant
-- [x] Skills published to GitHub (packaged in repo `skills/` folder)
+- [x] 13 skills covering all 18 book chapters, grouped by developer workflow -- v1.0
+- [x] Each skill follows skill-creator anatomy (frontmatter, <500 line body, reference files) -- v1.0
+- [x] Skills produce correct D10 code with D11 differences noted -- v1.0
+- [x] Skills cross-reference each other where relevant -- v1.0
+- [x] Skills published to GitHub (packaged in repo `skills/` folder) -- v1.0
+- [x] Eval infrastructure: setup/teardown scripts, evals.json, E2E helpers -- v1.0
+- [x] Live eval proved measurable skill impact (caching +75%, scaffold +43%) -- v1.0
+- [x] All 13 evals rewritten with differentiating assertions from source material -- v1.0
 
 ### Active
 
-(Defined in REQUIREMENTS.md for v2.0)
+(Defined in REQUIREMENTS.md for v2.0 -- pending creation)
 
 ### Out of Scope
 
-- Building a Drupal site or module directly — skills teach Claude how to build them
-- D11-only patterns without D10 baseline — book is D10, we note D11 differences
-- Real-time book updates — snapshot of 4th edition content
-- Rewriting SKILL.md content — skills are locked unless eval findings demand changes
-- Description/trigger optimization — deferred to after content evals prove value
+- Building a Drupal site or module directly -- skills teach Claude how to build them
+- D11-only patterns without D10 baseline -- book is D10, we note D11 differences
+- Real-time book updates -- snapshot of 4th edition content
+- Rewriting SKILL.md content -- skills are locked unless eval findings demand changes
+- Description/trigger optimization -- deferred to after content evals prove value
+- Migration API skill -- not in source book
+- Contrib module patterns -- stale quickly, not in book's scope
 
 ## Context
 
 **Book source:** `Sipos D. Drupal 10 Module Development. Develop...enterprise-level apps 4ed 2023.md` (11,787 lines, 18 chapters)
 
-**Test project:** `os-knowledge-garden/` — an Open Social + AI Drupal project with custom modules (`social_ai_indexing`, `localnodes_platform`, demo modules) exercising routes, services, blocks, event subscribers, templates, and Search API processors.
+**Test project:** `os-knowledge-garden/` -- an Open Social + AI Drupal project with custom modules exercising routes, services, blocks, event subscribers, templates, and Search API processors.
+
+**Shipped v1.0:** 13 skills, ~6,990 lines of Markdown/YAML, eval infrastructure with E2E helpers, benchmarks for 9/13 skills across 2 iterations.
 
 **13 Skills from 18 Chapters:**
 
@@ -71,8 +78,8 @@ Claude can generate correct, production-ready Drupal module code across all majo
 | 13 | `drupal-batch-queue-cron` | Ch 14 + Ch 3 (logging/mail) | 4 |
 
 **Output locations:**
-- `skills/` — packaged skills for GitHub publishing
-- `~/.claude/skills/` — installed skills for local Claude use
+- `skills/` -- packaged skills for GitHub publishing
+- `~/.claude/skills/` -- installed skills for local Claude use
 
 ## Constraints
 
@@ -80,15 +87,23 @@ Claude can generate correct, production-ready Drupal module code across all majo
 - **D10 baseline**: Code patterns must match book's D10 examples; D11 changes noted separately
 - **Eval framework**: Must use existing skill-creator eval loop (no custom pipeline)
 - **Book accuracy**: Skills must faithfully represent book content, not hallucinate Drupal APIs
+- **Skills locked**: No SKILL.md content changes unless eval data demands it
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Wave-based parallel creation | Foundational skills first so later skills can cross-reference | -- Pending |
-| D10 primary, D11 notes | Book is D10; D11 differences are additive not rewrite | -- Pending |
-| Dual output (repo + ~/.claude) | GitHub publishing + local use | -- Pending |
-| Use skill-creator for eval | Existing eval infrastructure, no need to build custom | -- Pending |
+| Wave-based parallel creation | Foundational skills first so later skills can cross-reference | Good -- clean dependency chain |
+| D10 primary, D11 notes | Book is D10; D11 differences are additive not rewrite | Good -- future-proof |
+| Dual output (repo + ~/.claude) | GitHub publishing + local use | Good |
+| skill-creator anatomy | <500 lines, frontmatter, references/, decision-guide format | Good -- consistent quality |
+| Wrong-way callouts | Target common Claude mistakes per domain | Good -- high-delta skills all have strong callouts |
+| Live eval with ddev | Real Drupal instances, not mocked | Good -- caught real bugs |
+| Differentiating assertions | Target non-obvious patterns from SKILL.md, not standard Drupal | Pending v2.0 re-run |
+| Skills LOCKED for v2.0 | Only change if eval data demands it | Active |
+| eval-executor subagent | model: sonnet in frontmatter, not /model switching | Pending v2.0 |
+| eval-browser for E2E | agent-browser + drush uli for UI verification | Pending v2.0 |
+| Fresh ddev instances | No os-kg, faster/controlled environments | Pending v2.0 |
 
 ---
-*Last updated: 2026-03-06 after v2.0 milestone start*
+*Last updated: 2026-03-07 after v1.0 milestone*
