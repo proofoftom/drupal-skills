@@ -3,22 +3,22 @@
   "eval_id": 1,
   "iteration": 1,
   "eval_name": "eval-api-status-endpoint",
-  "prompt": "Create a JSON API endpoint module for a Drupal 10 site. The module `api_status_endpoint` should provide a route at `/api/system/status` that returns a JSON response with site name and module count. The controller should use dependency injection to inject the module_handler and config.factory services. Use proper DI patterns with a create() factory method. We want D11 compatibility.",
-  "expected_output": "Controller extending ControllerBase with create() factory, DI services, JsonResponse, route with _permission",
+  "prompt": "Create a Drupal 10 module called `user_activity` that provides: 1) A custom service that retrieves activity data for a given user (number of nodes they authored, last access timestamp). 2) A page at `/user/{user}/activity` displaying the user's activity summary with a dynamic page title showing their display name. 3) A JSON endpoint at `/api/user/{user}/activity` returning the activity data as JSON. 4) Proper access control on both routes. 5) Use dependency injection. D11 compatible.",
+  "expected_output": "Custom service in .services.yml, controller with create() DI, {user} entity auto-upcasting, _title_callback for dynamic title, _permission access",
   "expectations": [
-    "Controller does NOT use \\Drupal::service() static calls anywhere -- all services injected via constructor DI",
-    "Constructor parameters are typed with interface types (e.g., ConfigFactoryInterface, ModuleHandlerInterface) and stored as private or protected properties (not public)",
-    "Route file uses _controller for the JSON endpoint route (not _form which is for form routes only)",
-    "Controller method returns a JsonResponse object (not a render array or plain string) for the API endpoint",
-    "If error handling exists, controller returns error Response objects (not throwing uncaught exceptions to the user)",
-    ".info.yml has core_version_requirement with both ^10 and ^11 (not just ^10, not core: 8.x)",
-    "The module enables successfully: ddev drush en api_status_endpoint returns exit code 0",
-    "E2E: The API endpoint returns JSON -- navigate to /api/system/status as admin and verify page contains JSON data (site name or module count)"
+    "A .services.yml file exists that registers a custom service with `arguments:` containing at least one @-prefixed core service reference (e.g., @entity_type.manager)",
+    "Route parameter is named `{user}` (matching the entity type machine name) for automatic entity upcasting -- the controller does NOT manually call User::load() or \\Drupal\\user\\Entity\\User::load()",
+    "Route file defines `_title_callback` pointing to a controller method for dynamic page title (not just a static `_title` string)",
+    "Controller injects the custom service via create() factory method -- the service is pulled from the container by its module-prefixed name (e.g., user_activity.something)",
+    "The custom service class does NOT extend ControllerBase -- it is a standalone class with constructor injection via .services.yml arguments",
+    "Routes use `_permission` for access control (not `_access: 'TRUE'` which bypasses all access checking)",
+    "The module enables successfully: ddev drush en user_activity -y returns exit code 0",
+    "E2E: curl to /user/1/activity as authenticated admin returns HTTP 200 with page content (not 404 or 403)"
   ],
   "configs": [
     "with_skill",
     "without_skill"
   ],
   "runs_per_config": 1,
-  "model": "claude-sonnet-4-6"
+  "model": "claude-haiku-4-5-20251001"
 }

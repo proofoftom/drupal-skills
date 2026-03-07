@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "skill": "drupal-routing-controllers",
+    "eval": "eval-api-status-endpoint",
+    "iteration": 1,
+    "executor_model": "haiku",
+    "grader_model": "sonnet",
+    "timestamp": "2026-03-07T10:30:00Z",
+    "notes": "Redesigned prompt with non-obvious patterns (_title_callback, {user} auto-upcasting, custom service). Haiku without-skill still achieved 100%. Routing/DI patterns too well-known even for Haiku."
+  },
+  "runs": {
+    "with_skill": {
+      "run-1": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8
+      }
+    },
+    "without_skill": {
+      "run-1": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8
+      }
+    }
+  },
+  "run_summary": {
+    "with_skill_avg": 1.0,
+    "without_skill_avg": 1.0,
+    "delta": 0.0,
+    "delta_pct": "0%"
+  }
+}

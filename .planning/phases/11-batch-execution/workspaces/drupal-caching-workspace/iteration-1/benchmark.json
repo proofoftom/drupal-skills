@@ -1,157 +1,36 @@
 {
   "metadata": {
-    "skill_name": "drupal-caching",
-    "skill_path": "/home/proofoftom/Code/drupal-skills/skills/drupal-caching",
-    "executor_model": "sonnet",
-    "analyzer_model": "opus",
-    "timestamp": "2026-03-07T05:37:41Z",
-    "evals_run": [1],
-    "runs_per_configuration": 1
+    "skill": "drupal-caching",
+    "eval": "eval-cache-block",
+    "iteration": 1,
+    "executor_model": "haiku",
+    "grader_model": "sonnet",
+    "timestamp": "2026-03-07T11:15:00Z",
+    "notes": "Fixed flawed expectation 3 (was requiring 'route' when SKILL.md teaches 'url.path'). Phase 10 +11% delta was artificial. Haiku without-skill gets full cache metadata correct.",
+    "supersedes": "Phase 10 calibration run (Sonnet executor, flawed route expectation)"
   },
-  "runs": [
-    {
-      "eval_id": 1,
-      "configuration": "with_skill",
-      "run_number": 1,
-      "result": {
+  "runs": {
+    "with_skill": {
+      "run-1": {
         "pass_rate": 1.0,
         "passed": 9,
         "failed": 0,
-        "total": 9,
-        "time_seconds": 0,
-        "tokens": 0,
-        "tool_calls": 0,
-        "errors": 0
-      },
-      "expectations": [
-  {
-    "text": "build() returns render array with #cache key containing BOTH 'tags' AND 'contexts' (the golden rule: EVERY render array needs #cache)",
-    "passed": true,
-    "evidence": "RelatedContentBlock.php lines 96-103 (empty case) and lines 126-140 (main return) both have '#cache' keys containing both 'tags' and 'contexts'. Line 98-100: '#cache' => ['tags' => ['node_list'], 'contexts' => ['route', 'user'], ...]. Lines 130-139: '#cache' => ['tags' => $tags, 'contexts' => ['route', 'user'], ...]."
-  },
-  {
-    "text": "Cache tags include node-specific tags (node:ID pattern) for data dependency invalidation",
-    "passed": true,
-    "evidence": "RelatedContentBlock.php lines 112-115: foreach ($nodes as $node) { $tags = Cache::mergeTags($tags, $node->getCacheTags()); } -- $node->getCacheTags() returns ['node:ID'] for each loaded node. These tags are then used in the #cache array at line 133."
-  },
-  {
-    "text": "Cache contexts include 'route' or 'route.name' AND 'user' or 'user.permissions' or 'user.roles'",
-    "passed": true,
-    "evidence": "RelatedContentBlock.php line 100: 'contexts' => ['route', 'user'] and line 136: 'contexts' => ['route', 'user']. Both return paths include 'route' AND 'user' cache contexts. Also getCacheContexts() at line 185 merges ['route', 'user']."
-  },
-  {
-    "text": "Does NOT set max-age to 0 anywhere (max-age: 0 kills the ENTIRE page cache via bubbling -- use lazy_builder instead)",
-    "passed": true,
-    "evidence": "grep for 'max-age.*0|max_age.*0' in the module directory returned only comment lines (line 137: '// Permanent: tag-based invalidation handles freshness -- never max-age 0.' and line 204: '// Never use max-age 0, ...'). Actual max-age values are Cache::PERMANENT (lines 101, 138, 205)."
-  },
-  {
-    "text": "Does NOT use \\Drupal::cache() for render caching (render arrays use #cache, not manual cache API)",
-    "passed": true,
-    "evidence": "grep for '\\\\Drupal::cache()' in the module directory returned 'No matches found'. The module uses #cache render array metadata exclusively."
-  },
-  {
-    "text": "If the block varies per user, uses cache context 'user' (NOT max-age: 0 as a workaround for per-user variation)",
-    "passed": true,
-    "evidence": "The block varies per user (line 171: accessCheck(TRUE) makes query results user-dependent). It uses 'user' cache context (lines 100, 136, 185) and Cache::PERMANENT for max-age (lines 101, 138, 205). No max-age: 0 is used anywhere."
-  },
-  {
-    "text": "#cache metadata is on the OUTERMOST render array element (not buried inside a child element where it won't bubble correctly)",
-    "passed": true,
-    "evidence": "RelatedContentBlock.php lines 96-103: empty case returns top-level array with '#cache' alongside '#markup'. Lines 126-140: main return has '#cache' at the same level as '#theme', '#items', '#title' -- the outermost render array element. The #cache is NOT inside any child element in #items."
-  },
-  {
-    "text": "The module enables successfully: ddev drush en related_content_block returns exit code 0",
-    "passed": true,
-    "evidence": "Command 'ddev drush en related_content_block -y' returned '[notice] Already installed: related_content_block' with EXIT_CODE: 0. Module status confirmed as 'Enabled' via ddev drush pm:list."
-  },
-  {
-    "text": "E2E: Block renders without errors after placement",
-    "passed": true,
-    "evidence": "After placing the block in the sidebar region and creating 3 test article nodes, curl -sk https://d10-caching-with.ddev.site/node/1 shows the block rendered: '<div id=\"block-related-content-block\" class=\"block block-related-content-block\"><h2 class=\"block__title\">Related Content</h2><h3>Related Content</h3><ul><li><a href=\"/node/2\" hreflang=\"en\">Test Article 2</a></li><li><a href=\"/node/3\" hreflang=\"en\">Test Article 3</a></li></ul>'. No PHP errors, warnings, or exceptions found in the output."
-  }
-],
-      "notes": []
-    },
-    {
-      "eval_id": 1,
-      "configuration": "without_skill",
-      "run_number": 1,
-      "result": {
-        "pass_rate": 0.89,
-        "passed": 8,
-        "failed": 1,
-        "total": 9,
-        "time_seconds": 0,
-        "tokens": 0,
-        "tool_calls": 0,
-        "errors": 0
-      },
-      "expectations": [
-  {
-    "text": "build() returns render array with #cache key containing BOTH 'tags' AND 'contexts' (the golden rule: EVERY render array needs #cache)",
-    "passed": true,
-    "evidence": "RelatedContentBlock.php lines 132-136: build() returns array with '#cache' => ['contexts' => ..., 'tags' => ..., 'max-age' => ...]. Both tags and contexts are present. Also verified at lines 107-111 for the empty-nids early return."
-  },
-  {
-    "text": "Cache tags include node-specific tags (node:ID pattern) for data dependency invalidation",
-    "passed": true,
-    "evidence": "RelatedContentBlock.php lines 161-174: getCacheTags() iterates over nids and adds 'node:' . $nid for each. Runtime verification via drush php-eval confirmed cache tags: 'node_list, node:1'."
-  },
-  {
-    "text": "Cache contexts include 'route' or 'route.name' AND 'user' or 'user.permissions' or 'user.roles'",
-    "passed": false,
-    "evidence": "RelatedContentBlock.php lines 147-152: getCacheContexts() adds 'url.path' and 'user'. The 'user' context satisfies the second requirement, but 'url.path' is NOT the same as 'route' or 'route.name'. url.path varies by URL path string while route/route.name varies by the Drupal route object. Runtime confirmed contexts: 'url.path, user' -- no 'route' or 'route.name' present."
-  },
-  {
-    "text": "Does NOT set max-age to 0 anywhere (max-age: 0 kills the ENTIRE page cache via bubbling -- use lazy_builder instead)",
-    "passed": true,
-    "evidence": "RelatedContentBlock.php line 181: getCacheMaxAge() returns Cache::PERMANENT (which is -1). grep for 'max-age.*0|max_age.*0' across all module files returned no matches."
-  },
-  {
-    "text": "Does NOT use \\Drupal::cache() for render caching (render arrays use #cache, not manual cache API)",
-    "passed": true,
-    "evidence": "grep for '\\Drupal::cache()' across all module files returned no matches. The module correctly uses #cache render array metadata."
-  },
-  {
-    "text": "If the block varies per user, uses cache context 'user' (NOT max-age: 0 as a workaround for per-user variation)",
-    "passed": true,
-    "evidence": "RelatedContentBlock.php line 149-151: getCacheContexts() includes 'user' in the merged contexts. Line 181: getCacheMaxAge() returns Cache::PERMANENT, not 0. The block correctly varies per user via cache context."
-  },
-  {
-    "text": "#cache metadata is on the OUTERMOST render array element (not buried inside a child element where it won't bubble correctly)",
-    "passed": true,
-    "evidence": "RelatedContentBlock.php lines 127-137: The #cache key is a direct property of the returned render array (same level as #theme, #items, #title). It is NOT nested inside a child element. Same at lines 106-113 for empty case."
-  },
-  {
-    "text": "The module enables successfully: ddev drush en related_content_block returns exit code 0",
-    "passed": true,
-    "evidence": "Command 'ddev drush en related_content_block -y' returned '[notice] Already installed: related_content_block' with EXIT_CODE: 0."
-  },
-  {
-    "text": "E2E: Block renders without errors after placement",
-    "passed": true,
-    "evidence": "After placing block via Block::create() and cache rebuild, curl -sk https://d10-caching-without.ddev.site/ shows: '<div id=\"block-related-content-test\" class=\"block block-related-content-block\"><h2 class=\"block__title\">Related Content</h2><h3>Related Content</h3><ul><li><a href=\"/node/1\" hreflang=\"en\">Test Page for Related Content</a></li></ul>'. No errors, warnings, or exceptions in output."
-  }
-],
-      "notes": []
-    }
-  ],
-  "run_summary": {
-    "with_skill": {
-      "pass_rate": { "mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0 },
-      "time_seconds": { "mean": 0, "stddev": 0, "min": 0, "max": 0 },
-      "tokens": { "mean": 0, "stddev": 0, "min": 0, "max": 0 }
+        "total": 9
+      }
     },
     "without_skill": {
-      "pass_rate": { "mean": 0.89, "stddev": 0.0, "min": 0.89, "max": 0.89 },
-      "time_seconds": { "mean": 0, "stddev": 0, "min": 0, "max": 0 },
-      "tokens": { "mean": 0, "stddev": 0, "min": 0, "max": 0 }
-    },
-    "delta": {
-      "pass_rate": "+.11",
-      "time_seconds": "+0.0",
-      "tokens": "+0"
+      "run-1": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9
+      }
     }
   },
-  "notes": []
+  "run_summary": {
+    "with_skill_avg": 1.0,
+    "without_skill_avg": 1.0,
+    "delta": 0.0,
+    "delta_pct": "0%"
+  }
 }

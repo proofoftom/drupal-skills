@@ -1,0 +1,5 @@
+name: User Activity
+description: 'Provides user activity summary pages and a JSON API endpoint.'
+type: module
+core_version_requirement: ^10 || ^11
+package: Custom

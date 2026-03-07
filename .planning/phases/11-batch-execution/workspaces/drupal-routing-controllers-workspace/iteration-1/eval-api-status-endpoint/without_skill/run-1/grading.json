@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "A .services.yml file exists that registers a custom service with `arguments:` containing at least one @-prefixed core service reference (e.g., @entity_type.manager)",
+      "passed": true,
+      "evidence": "user_activity.services.yml lines 4-6 show: arguments: ['@database', '@entity_type.manager'] -- two @-prefixed core service references."
+    },
+    {
+      "text": "Route parameter is named `{user}` (matching the entity type machine name) for automatic entity upcasting -- the controller does NOT manually call User::load() or \\Drupal\\user\\Entity\\User::load()",
+      "passed": true,
+      "evidence": "user_activity.routing.yml line 2 uses path '/user/{user}/activity' with parameter type 'entity:user' (lines 11-12). grep for 'User::load' in the controller returned no matches. Controller methods accept UserInterface $user directly (lines 51, 81, 94)."
+    },
+    {
+      "text": "Route file defines `_title_callback` pointing to a controller method for dynamic page title (not just a static `_title` string)",
+      "passed": true,
+      "evidence": "user_activity.routing.yml line 5: _title_callback: '\\Drupal\\user_activity\\Controller\\UserActivityController::activityPageTitle'. The activityPageTitle method is defined in the controller at line 81."
+    },
+    {
+      "text": "Controller injects the custom service via create() factory method -- the service is pulled from the container by its module-prefixed name (e.g., user_activity.something)",
+      "passed": true,
+      "evidence": "UserActivityController.php lines 36-40 show create() method calling $container->get('user_activity.activity_service') which is the module-prefixed service name."
+    },
+    {
+      "text": "The custom service class does NOT extend ControllerBase -- it is a standalone class with constructor injection via .services.yml arguments",
+      "passed": true,
+      "evidence": "UserActivityService.php line 12: 'class UserActivityService {' -- no extends clause. Constructor at line 36 accepts Connection $database and EntityTypeManagerInterface $entity_type_manager, matching the .services.yml arguments ['@database', '@entity_type.manager']."
+    },
+    {
+      "text": "Routes use `_permission` for access control (not `_access: 'TRUE'` which bypasses all access checking)",
+      "passed": true,
+      "evidence": "user_activity.routing.yml line 7: _permission: 'access content' for user_activity.page route, and line 19: _permission: 'access content' for user_activity.api route. No '_access: TRUE' found anywhere."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en user_activity -y returns exit code 0",
+      "passed": true,
+      "evidence": "ddev drush en user_activity -y returned '[notice] Already installed: user_activity' with EXIT_CODE=0."
+    },
+    {
+      "text": "E2E: curl to /user/1/activity as authenticated admin returns HTTP 200 with page content (not 404 or 403)",
+      "passed": true,
+      "evidence": "Authenticated via drush uli, then curl -sk to https://d10-routing-without.ddev.site/user/1/activity returned HTTP 200. Page title in HTML: 'Activity for admin | Drush Site-Install'. Content includes rendered activity data."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  }
+}

@@ -4,7 +4,7 @@ description: |
   Execute Drupal module development tasks for skill evaluation.
   Spawned by the eval orchestrator with a specific task prompt.
   Creates Drupal modules in a ddev environment.
-model: sonnet
+model: haiku
 permissionMode: bypassPermissions
 tools: Read, Write, Edit, Bash, Glob, Grep
 ---
