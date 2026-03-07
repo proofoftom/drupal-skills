@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Create a module called `content_indexer` for our Drupal 10 Open Social site. It should have a hook_cron() that finds unindexed content nodes and adds them to a queue for processing. Create a QueueWorker plugin that processes each item by marking it as indexed. The queue worker must have a cron.time setting so items are processed during cron runs. Do NOT process items directly in hook_cron -- use the queue pattern. We want D11 compatibility.",
+      "prompt": "Create a module called `content_indexer` for a Drupal 10 site. It should use cron to find unindexed content nodes and process them via a queue. Create a QueueWorker plugin that processes each item by marking it as indexed. We want D11 compatibility.",
       "expected_output": "A cron+queue module with hook_cron() that adds items to a queue (not processing directly), a QueueWorker plugin with cron.time setting and error handling in processItem(), placed in the correct PSR-4 path",
       "files": [],
       "expectations": [
