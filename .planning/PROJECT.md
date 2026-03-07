@@ -8,28 +8,43 @@ A collection of 13 Claude skills extracted from the "Drupal 10 Module Developmen
 
 Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
 
+## Current Milestone: v2.0 Eval & Optimization Loop
+
+**Goal:** Build a robust, autonomous eval pipeline following skill-creator methodology -- proving all 13 Drupal skills produce measurably better code than baseline Sonnet, with clean empirical data.
+
+**Target features:**
+- Custom `eval-executor` subagent with `model: sonnet` for controlled A/B runs
+- Custom `eval-browser` subagent with agent-browser for automated E2E/UAT (drush uli + UI verification + claims verification for theming/frontend evals)
+- Fresh Drupal 10 ddev instances per eval run (no os-kg, faster/controlled)
+- Content quality evals for all 13 skills (with-skill vs without-skill)
+- Skill-creator methodology: spawn runs, draft expectations while waiting, grade with skill-creator grader agent
+- Autonomous batch loop -- orchestrator runs full eval cycles with minimal manual intervention
+- Eval viewer integration (skill-creator's `generate_review.py`)
+- Final analysis with tier classifications and delta data
+
+**Deferred:** Description/trigger optimization (separate step after content evals prove value)
+
 ## Requirements
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] 13 skills covering all 18 book chapters, grouped by developer workflow
+- [x] Each skill follows skill-creator anatomy (frontmatter, <500 line body, reference files)
+- [x] Skills produce correct D10 code with D11 differences noted
+- [x] Skills cross-reference each other where relevant
+- [x] Skills published to GitHub (packaged in repo `skills/` folder)
 
 ### Active
 
-- [ ] 13 skills covering all 18 book chapters, grouped by developer workflow
-- [ ] Each skill follows skill-creator anatomy (frontmatter, <500 line body, reference files)
-- [ ] Skills produce correct D10 code with D11 differences noted
-- [ ] Skills cross-reference each other where relevant
-- [ ] Skills tested against os-knowledge-garden project via skill-creator eval
-- [ ] Skills published to GitHub (packaged in repo `skills/` folder)
-- [ ] Skills installed to `~/.claude/skills/` for local use
+(Defined in REQUIREMENTS.md for v2.0)
 
 ### Out of Scope
 
 - Building a Drupal site or module directly — skills teach Claude how to build them
 - D11-only patterns without D10 baseline — book is D10, we note D11 differences
 - Real-time book updates — snapshot of 4th edition content
-- Custom eval pipeline — using existing skill-creator workflow
+- Rewriting SKILL.md content — skills are locked unless eval findings demand changes
+- Description/trigger optimization — deferred to after content evals prove value
 
 ## Context
 
@@ -76,4 +91,4 @@ Claude can generate correct, production-ready Drupal module code across all majo
 | Use skill-creator for eval | Existing eval infrastructure, no need to build custom | -- Pending |
 
 ---
-*Last updated: 2026-03-05 after initialization*
+*Last updated: 2026-03-06 after v2.0 milestone start*
