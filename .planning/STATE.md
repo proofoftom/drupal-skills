@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Eval & Optimization Loop
-status: executing
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-03-07T03:45:33.028Z"
-last_activity: 2026-03-07 -- Completed 08-01 eval pipeline infrastructure
+status: completed
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-03-07T04:25:36.585Z"
+last_activity: 2026-03-07 -- Completed 08-02 eval pipeline validation
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
-  percent: 50
+  completed_plans: 2
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-07)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** v2.0 -- Eval & Optimization Loop (Phase 8 executing)
+**Current focus:** v2.0 -- Eval & Optimization Loop (Phase 8 complete, Phase 9 next)
 
 ## Current Position
 
-Phase: 8 of 12 -- Eval Infrastructure (executing)
-Plan: 1 of 2 complete
-Status: Plan 08-01 complete, Plan 08-02 next
-Last activity: 2026-03-07 -- Completed 08-01 eval pipeline infrastructure
+Phase: 8 of 12 -- Eval Infrastructure (complete)
+Plan: 2 of 2 complete
+Status: Phase 8 complete, ready for Phase 9
+Last activity: 2026-03-07 -- Completed 08-02 eval pipeline validation
 
-Progress: [█████░░░░░] 50%
+Progress: [██████████] 100%
 
 ## Accumulated Context
 
@@ -39,6 +39,9 @@ Progress: [█████░░░░░] 50%
 - 08-01: Used Read-based skill loading instead of skills: frontmatter (deferred validation to Plan 02)
 - 08-01: eval-grader uses model: inherit for flexible Opus grading
 - 08-01: Single teardown script auto-detects both d10- and os-kg- prefixes
+- 08-02: Read-based loading confirmed over skills: frontmatter (empirically validated)
+- 08-02: Grader validated via bash/jq simulation; real subagent grading deferred to Phase 10
+- 08-02: Production eval runs orchestrated directly from Opus session (no gsd-executor wrapper)
 
 ### Carried from v1.0
 
@@ -57,6 +60,6 @@ None -- clean slate for v2.0.
 
 ## Session Continuity
 
-Last session: 2026-03-07T03:45:20.103Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-03-07T04:25:00Z
+Stopped at: Completed 08-02-PLAN.md (Phase 8 complete)
 Resume file: None
