@@ -1,9 +1,9 @@
 {
   "skill_name": "drupal-access-security",
   "eval_id": 1,
-  "iteration": 1,
+  "iteration": 2,
   "eval_name": "eval-restricted-reports",
-  "prompt": "Create a module called `restricted_reports` for a Drupal 10 site. It should define a custom permission 'view restricted reports' and provide a route at /reports/restricted that shows a simple page. Only users with the 'view restricted reports' permission should be able to access it. Anonymous users should get a 403 Access Denied response. Use AccessResult objects for access checking, not bare booleans. We want D11 compatibility.",
+  "prompt": "Create a module called `restricted_reports` for a Drupal 10 site. It should define a custom permission 'view restricted reports' and provide a route at /reports/restricted that shows a simple page. Only users with the 'view restricted reports' permission should be able to access it. Anonymous users should get a 403 Access Denied response. We want D11 compatibility.",
   "expected_output": "permissions.yml, route with _permission, controller with AccessResult",
   "expectations": [
     "Permission defined in restricted_reports.permissions.yml with 'title' key (permission string must match what route uses)",
