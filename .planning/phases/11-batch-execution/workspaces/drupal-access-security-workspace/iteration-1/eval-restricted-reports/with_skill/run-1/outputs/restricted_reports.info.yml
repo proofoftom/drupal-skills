@@ -1,0 +1,5 @@
+name: 'Restricted Reports'
+type: module
+description: 'Provides a restricted reports page with custom permission-based access control.'
+package: Custom
+core_version_requirement: ^10 || ^11
