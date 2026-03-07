@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Eval & Optimization Loop
 status: completed
-stopped_at: Completed 08-02-PLAN.md (Phase 8 complete)
-last_updated: "2026-03-07T04:30:09.079Z"
-last_activity: 2026-03-07 -- Completed 08-02 eval pipeline validation
+stopped_at: Completed 09-02-PLAN.md (Phase 9 complete)
+last_updated: "2026-03-07T04:55:00Z"
+last_activity: 2026-03-07 -- Completed 09-02 complex prompt rewrites (Phase 9 complete)
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  completed_phases: 2
+  total_plans: 4
+  completed_plans: 4
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-07)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** v2.0 -- Eval & Optimization Loop (Phase 8 complete, Phase 9 next)
+**Current focus:** v2.0 -- Eval & Optimization Loop (Phase 9 complete, Phase 10 next)
 
 ## Current Position
 
-Phase: 8 of 12 -- Eval Infrastructure (complete)
+Phase: 9 of 12 -- Eval Prompt Rewrite (complete)
 Plan: 2 of 2 complete
-Status: Phase 8 complete, ready for Phase 9
-Last activity: 2026-03-07 -- Completed 08-02 eval pipeline validation
+Status: Phase 9 complete, ready for Phase 10
+Last activity: 2026-03-07 -- Completed 09-02 complex prompt rewrites (Phase 9 complete)
 
 Progress: [██████████] 100%
 
@@ -42,6 +42,7 @@ Progress: [██████████] 100%
 - 08-02: Read-based loading confirmed over skills: frontmatter (empirically validated)
 - 08-02: Grader validated via bash/jq simulation; real subagent grading deferred to Phase 10
 - 08-02: Production eval runs orchestrated directly from Opus session (no gsd-executor wrapper)
+- [Phase 09]: 09-01: Text-only prompt replacement, expectations byte-identical, consistent 'a Drupal 10 site' phrasing
 
 ### Carried from v1.0
 
@@ -60,6 +61,6 @@ None -- clean slate for v2.0.
 
 ## Session Continuity
 
-Last session: 2026-03-07T04:25:00Z
-Stopped at: Completed 08-02-PLAN.md (Phase 8 complete)
+Last session: 2026-03-07T04:55:31.680Z
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None
