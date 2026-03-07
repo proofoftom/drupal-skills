@@ -1,379 +1,295 @@
-# Pitfalls Research
+# Domain Pitfalls
 
-**Domain:** Encoding Drupal module development knowledge into Claude skills
-**Researched:** 2026-03-05
-**Confidence:** MEDIUM (novel domain -- few public precedents for framework-specific Claude skill authoring at this scale)
+**Domain:** Automated eval pipeline for Claude Code skills (subagents, ddev, agent-browser, batch execution)
+**Researched:** 2026-03-06
+**Overall confidence:** HIGH (derived from v1.0 empirical evidence across 9+ eval runs, project memory, source code analysis)
+
+**Scope:** This document covers pitfalls specific to ADDING an automated eval pipeline (v2.0) to the existing Drupal skills project. v1.0 skill-authoring pitfalls are preserved in the appendix for reference but are not the focus.
+
+---
 
 ## Critical Pitfalls
 
-### Pitfall 1: Annotation-Only Code Examples in a D11 World
+Mistakes that produce invalid eval data, waste entire sessions, or require full reruns.
 
-**What goes wrong:**
-The source book (Sipos, 4th ed, 2023) was written for Drupal 10 and uses Doctrine annotations exclusively for plugin definitions (`@Block`, `@ContentEntityType`, etc.). Drupal 11 deprecated annotations in favor of PHP 8 attributes (`#[Block(...)]`). A skill that only shows annotation syntax will produce code that triggers deprecation notices on D11 and will stop working entirely when annotations are removed in a future major release.
+### Pitfall 1: Subagent Model Inheritance is Invisible and Uncontrollable
 
-**Why it happens:**
-The book explicitly acknowledges this transition: "Annotations are very similar in concept to PHP 8 attributes, which will someday replace the Doctrine annotations. The plan is, in fact, to deprecate the latter over the course of the Drupal 10 release cycle." Skill authors who extract code examples verbatim from the book will embed annotation-only patterns.
+**What goes wrong:** The Agent tool has no `model` parameter (schema enforces `additionalProperties: false`). Subagents silently inherit the main session's active model. If the orchestrator runs on Opus, eval-executor agents also run on Opus -- producing inflated without-skill scores that invalidate the entire A/B comparison.
 
-**How to avoid:**
-Every skill that covers plugin types (blocks, entities, field types, views plugins, mail plugins, etc.) must show BOTH annotation and attribute syntax. The attribute syntax should be presented as the primary/preferred form, with annotation syntax noted as D10 legacy. The `drupal-plugins-blocks`, `drupal-entities-fields`, `drupal-views-dev`, and `drupal-batch-queue-cron` skills are all affected.
+**Why it happens:** The assumption that subagent model can be configured per-call (like temperature or system prompt) is natural but wrong. Claude Code's Agent tool does not expose model selection. GSD's `model_profile` system also does NOT control Agent tool model -- this was verified empirically in v1.0 session 1.
 
-**Warning signs:**
-- Code examples contain `@Block`, `@ContentEntityType`, `@FieldType` without corresponding `#[Block]`, `#[ContentEntityType]`, `#[FieldType]` equivalents
-- No mention of PHP 8 attributes anywhere in the skill
-- D11 compatibility section is absent or marked "TODO"
+**Consequences:** Eval data is invalid but looks valid. Without-skill Opus scores match with-skill Opus scores, producing false 0% deltas. You cannot detect this from grading results alone because both runs produce high-quality code.
 
-**Phase to address:**
-Wave 1 -- must be established as a pattern in the very first skills (`drupal-entities-fields`, `drupal-plugins-blocks`). All subsequent waves inherit the convention.
+**Prevention:**
+- v1.0 workaround: Use `/model sonnet` in the main session before spawning eval agents, then `/model opus` after for grading. This is manual and error-prone -- easy to forget the switch-back.
+- v2.0 solution: Build a dedicated `eval-executor` subagent with `model: sonnet` in its `.md` frontmatter. This locks the model at the subagent definition level, not the call site. The orchestrator stays on Opus throughout.
+- Validation gate: After each eval run, compare code style. If without-skill code shows Opus-level sophistication (detailed comments, edge case handling, non-obvious patterns), the model was wrong.
 
----
+**Detection:** Compare code verbosity and quality between with/without runs. Sonnet produces shorter, more formulaic code. Opus produces more detailed, context-aware code. If without-skill output reads like Opus, model inheritance leaked.
 
-### Pitfall 2: Skills That Are Reference Docs Instead of Decision Guides
-
-**What goes wrong:**
-Skills become exhaustive API reference dumps -- listing every hook, every render element, every form element type. Claude already knows Drupal APIs from training data. What it lacks is judgment: when to use a config entity vs. a content entity, when to use State API vs. TempStore, when a custom plugin type is warranted vs. using an existing one. A skill that restates API surface produces no improvement over baseline Claude.
-
-**Why it happens:**
-The book is structured as a teaching reference. The natural extraction approach is to compress each chapter into a smaller version of itself. This produces mini-reference-docs, not decision-making frameworks.
-
-**How to avoid:**
-Structure each skill around decision trees and "when to use what" guidance, not API listings. Each skill should answer: "Given a developer's request, what is the RIGHT approach and what are the WRONG approaches that Claude might otherwise suggest?" Include anti-patterns and common mistakes, not just correct patterns.
-
-**Warning signs:**
-- Skill reads like a compressed book chapter
-- No "when to use" / "when NOT to use" sections
-- Eval shows with-skill output is barely different from no-skill output
-- Skill contains lists of all available options without prioritization
-
-**Phase to address:**
-Wave 1 -- the skill template/structure must enforce decision-guide format from the start. The eval loop (Step 7) will expose this if the template does not.
+**Phase to address:** Subagent architecture phase -- must be solved before any eval runs begin.
 
 ---
 
-### Pitfall 3: Trigger Description Too Broad or Too Narrow
+### Pitfall 2: Knowledge Contamination Defeats the Entire Eval
 
-**What goes wrong:**
-A skill's `description` frontmatter field determines when Claude loads it. Too broad: "Drupal module development" triggers on every Drupal question, wasting context window on irrelevant skills. Too narrow: "Creating custom block plugins with PHP annotations" never triggers when someone asks "add a block that shows recent content."
+**What goes wrong:** The without-skill agent has indirect access to SKILL.md content through leak paths, producing artificially high without-skill scores and false 0% deltas.
 
-**Why it happens:**
-Description optimization is treated as an afterthought. The natural instinct is to describe what the skill contains rather than what user prompts should activate it. With 13 skills, overlapping triggers are almost guaranteed without deliberate tuning.
+**Why it happens:** Multiple contamination vectors exist, and any single leak invalidates results:
+1. **Same agent, two calls:** A single agent that runs with-skill first retains SKILL.md knowledge for the without-skill run. Context cannot be "unlearned."
+2. **Project-level files:** CLAUDE.md, `.claude/settings.json`, or installed skills in `~/.claude/skills/` contain or reference skill content.
+3. **GSD executor discovery:** The GSD executor proactively scans the project for skills and loads them into context -- confirmed in v1.0.
+4. **Eval prompt leakage:** The eval prompt itself (evals.json expectations) contains implementation hints that teach the agent what patterns to produce.
+5. **Workspace cross-contamination:** If with-skill and without-skill agents share a workspace directory, generated files from the first run are visible to the second.
 
-**How to avoid:**
-- Write descriptions from the user's perspective: what will the developer ASK that should trigger this skill?
-- Use the description optimization loop (Step 8 in plan) seriously -- do not skip it
-- Test each skill's trigger against a matrix of realistic prompts
-- Test for NON-triggering: ensure `drupal-caching` does NOT trigger on "create a form" prompts
-- Consider prompt categories and ensure each maps to exactly one primary skill
+**Consequences:** The fundamental A/B comparison is invalid. Skills that genuinely add value show 0% delta. This was the MOST damaging pitfall in v1.0 -- though ultimately the 0% deltas were attributed to non-discriminating assertions (#3), contamination had to be ruled out first, consuming significant debugging time.
 
-**Warning signs:**
-- Multiple skills trigger simultaneously on simple prompts (context window bloat)
-- Skill never triggers in eval despite relevant prompts
-- Description uses internal/technical vocabulary instead of developer-intent language
+**Prevention:**
+- **Two separate Agent subagent calls per skill.** Never reuse an agent across with/without.
+- **No skills installed globally.** Skills must NOT be in `~/.claude/skills/`. Verify before each batch with `ls ~/.claude/skills/drupal-* 2>/dev/null`.
+- **No CLAUDE.md skill references.** The project CLAUDE.md must not mention skill content or paths.
+- **Skip GSD executor.** Orchestrate eval runs directly from the main session; the GSD executor layer auto-discovers skills.
+- **Minimal eval prompts.** The prompt given to without-skill agents should describe WHAT to build, not HOW. No Drupal-specific implementation hints.
+- **Separate workspace directories.** Each agent gets its own `/tmp/os-kg-*` directory.
+- **Pre-flight contamination check:** Before spawning without-skill agent, verify no SKILL.md in agent context, no `~/.claude/skills/drupal-*`, no skill references in CLAUDE.md.
 
-**Phase to address:**
-Wave 1 for initial drafts, but primarily Step 8 (description optimization) after all skills exist. Must be done holistically across all 13 skills, not per-skill.
+**Detection:** If without-skill code contains patterns that are non-obvious and specific to SKILL.md (e.g., cache max-age 0 avoidance, D11 Hook attribute syntax, specific entity annotation field ordering from Sipos), contamination occurred.
 
----
-
-### Pitfall 4: Cross-Reference Loops and Circular Dependencies
-
-**What goes wrong:**
-Skill A says "see drupal-entities-fields for entity definitions" and Skill B says "see drupal-routing-controllers for route registration." When Claude encounters a task spanning both (e.g., "create a custom entity with an admin page"), it loads both skills and gets conflicting or redundant guidance. Worse, if skills assume the other skill's content is loaded, they each omit critical context.
-
-**Why it happens:**
-The 13 skills are derived from overlapping book chapters. Entities need routes. Routes need forms. Forms need entities. Blocks need plugins and entities. The dependency graph is dense. The project plan explicitly calls for cross-references, but without a clear ownership model, this produces ambiguity.
-
-**How to avoid:**
-- Define clear ownership: each Drupal concept belongs to exactly ONE skill
-- Cross-references should be directional: "this skill covers X; if you also need Y, the drupal-Y skill covers that" -- never assume both are loaded
-- Each skill must be self-contained enough to produce correct code for its domain without requiring another skill to be active
-- Create a concept-to-skill mapping table and verify no concept is claimed by two skills
-
-**Warning signs:**
-- Two skills contain overlapping code examples for the same pattern
-- A skill says "as described in drupal-X" without providing enough inline context to function alone
-- Eval prompts that span two domains produce confused or contradictory output
-
-**Phase to address:**
-Wave 1 planning -- the concept ownership table must exist before any skill is drafted. Verified during each wave's review step (Steps 3, 4, 5, 6).
+**Phase to address:** Subagent architecture phase. Must be validated in the first eval run before proceeding to batch execution.
 
 ---
 
-### Pitfall 5: 500-Line Limit Forces Shallow Coverage of Deep Topics
+### Pitfall 3: Non-Discriminating Assertions Produce Meaningless Evals
 
-**What goes wrong:**
-The `drupal-entities-fields` skill covers content entities, config entities, TypedData, custom fields, file/image handling, and entity CRUD -- sourced from 4 book chapters spanning ~3000 lines. Compressing this into 500 lines forces either: (a) shallow coverage of everything, producing a skill that is correct but unhelpful, or (b) deep coverage of some topics and omission of others, producing a skill with blind spots.
+**What goes wrong:** Assertions test patterns that Sonnet already knows from training data. Both with-skill and without-skill produce identical correct code, yielding 0% delta across the board.
 
-**Why it happens:**
-The 500-line constraint is a skill-creator anatomy rule, likely tied to context window efficiency. The entity/field system is the most complex domain in Drupal development. The skill plan groups it as one skill because it represents one conceptual domain, but the source material is vastly larger than other skills.
+**Why it happens:** This is the single most impactful finding from v1.0. Eval authors (often Sonnet-powered agents) naturally write assertions for patterns they know -- which are exactly the patterns Sonnet already handles correctly. This is circular: testing "what I know" guarantees passing without the skill. v1.0 empirical data:
+- 9 of 13 skills showed 0% delta with standard assertions (routing, forms, plugins, config, access, theming, database, views, batch)
+- Only 4 skills with genuinely non-obvious assertions showed meaningful deltas (caching +75%, scaffold +43%, entities +21%, testing +19%)
 
-**How to avoid:**
-- Use reference files aggressively: the skill body covers decision logic and core patterns; reference files (`references/config-entities.md`, `references/field-types.md`, `references/file-handling.md`) contain detailed API patterns
-- The body should be a routing layer: "For content entities, follow this pattern [core example]. For config entities, see references/config-entities.md"
-- Prioritize ruthlessly: content entities with fields are the 80% case; config entities and TypedData are 20%
-- Apply the same strategy to other large skills: `drupal-theming` (Ch 4 + Ch 12), `drupal-access-security` (Ch 10 + Ch 18)
+**Consequences:** Skills that genuinely add value appear worthless. The entire eval investment produces no actionable data.
 
-**Warning signs:**
-- Skill body exceeds 500 lines and gets truncated or stripped
-- Eval shows correct output for simple entity tasks but wrong/incomplete output for complex ones (config entities, custom field widgets)
-- Reference files exist but are never loaded because the body does not guide Claude to them
+**Prevention:**
+- **Assertions MUST come from SKILL.md non-obvious patterns, not general Drupal knowledge.** Read each SKILL.md and identify patterns that are counter-intuitive, book-specific, or conflict with common practice.
+- **Target "golden rules" and "gotchas":** Caching golden rule (never set max-age 0), entity annotation field ordering requirements, hook_theme render array structure, config schema strictness, proper test base class selection.
+- **Anti-test before finalizing:** For each assertion, ask: "Would Sonnet without this specific book knowledge produce this pattern?" If yes, the assertion is non-discriminating. Remove it.
+- **Calibration skills:** Use caching (75% delta in v1.0) and scaffold (43% delta) as calibration benchmarks. If the new pipeline produces lower deltas on these skills, something is wrong with the pipeline, not the skills.
+- **Empirical validation:** Run one calibration skill's eval before batch execution. If delta is unexpectedly 0%, assertions need more work before running all 13.
 
-**Phase to address:**
-Wave 1 -- `drupal-entities-fields` is the hardest skill and is scheduled first precisely to establish the reference-file pattern. If this skill's structure is wrong, all complex skills in later waves will inherit the problem.
+**Detection:** 0% delta on skills whose SKILL.md contains clearly non-obvious patterns. All skills scoring 100%/100% is a red flag, not a success.
 
----
-
-### Pitfall 6: Drupal Version Confusion in Generated Code
-
-**What goes wrong:**
-Claude's training data contains Drupal 7, 8, 9, 10, and 11 code. Without strong version anchoring, skills may reinforce D7/D8 patterns (e.g., `hook_menu()` instead of routing YAML, `db_query()` instead of database service injection, `variable_get()` instead of State API). A skill that does not forcefully override legacy patterns will produce a mix of correct and incorrect code.
-
-**Why it happens:**
-Drupal has undergone radical architectural changes across major versions. D7-to-D8 was a complete rewrite (procedural to OOP/Symfony). D8-to-D10 was evolutionary. D10-to-D11 introduced PHP attributes. Claude's training over-represents D7/D8 content because there are more blog posts, StackOverflow answers, and tutorials for older versions. The book is D10, but Claude may blend in older patterns.
-
-**How to avoid:**
-- Each skill must explicitly state: "This skill covers Drupal 10.x and 11.x. Do NOT use patterns from Drupal 7 or 8."
-- Include explicit anti-patterns: "Do NOT use `db_query()` -- use `\Drupal::database()->query()` or inject the database service"
-- Include a "legacy patterns to avoid" section in every skill listing the D7/D8 equivalents that Claude should never generate
-- Test evals specifically for version regression: prompt with tasks that have different solutions in D7 vs D10
-
-**Warning signs:**
-- Generated code uses procedural hooks that were replaced by plugins/services in D8+
-- `hook_menu()`, `db_select()`, `variable_get()`, `drupal_set_message()` appear in output
-- Services are accessed via `\Drupal::service()` static calls instead of dependency injection
-
-**Phase to address:**
-Wave 1 -- version anchoring must be in every skill from the start. The eval loop should include at least one "regression bait" prompt per skill.
+**Phase to address:** Eval design phase. Must be complete before any eval runs. This is the highest-leverage pitfall -- getting assertions right is worth more than any other pipeline improvement.
 
 ---
 
-### Pitfall 7: Ignoring the .info.yml / .routing.yml / .services.yml Ecosystem
+### Pitfall 4: ddev-router Health Check Failures Stall the Pipeline
 
-**What goes wrong:**
-A skill teaches how to write a controller class but forgets that the developer also needs a `.routing.yml` entry, a `.services.yml` entry for dependency injection, and possibly a `.permissions.yml` and `.links.menu.yml`. Drupal modules are defined by a constellation of YAML files plus PHP classes. A skill that only covers the PHP side produces code that does not actually work.
+**What goes wrong:** `ddev start` fails with traefik/ddev-router health check errors on approximately 50% of first starts. The error looks like a configuration problem but is a Docker networking race condition.
 
-**Why it happens:**
-Book chapters often present YAML and PHP together, but when extracting into skills, it is easy to focus on the "interesting" PHP logic and treat YAML as boilerplate. Claude can generate YAML but often gets the structure wrong (wrong indentation, wrong keys, wrong service class paths).
+**Why it happens:** The ddev-router (traefik) container needs time to register new project routes. When multiple ddev projects start in sequence, the router can get into a bad state. The os-knowledge-garden install compounds this with heavy Drupal install (`--demo=cascadia`) taking 2-5 minutes.
 
-**How to avoid:**
-- Every skill that produces PHP code must also specify the corresponding YAML files
-- Use complete, copy-pasteable examples: "To create a route, you need BOTH the .routing.yml entry AND the controller class"
-- The `drupal-module-scaffold` skill should establish the full file map for a module
-- Other skills should reference back to scaffold for the file structure and add their domain-specific YAML
+**Consequences:** Eval setup fails, requiring manual intervention. In a batch execution loop, one failure stalls the entire session. v1.0 experienced this on roughly half of all environment setups.
 
-**Warning signs:**
-- Skill contains PHP classes but no YAML examples
-- Generated code works in isolation but fails because routing/services/permissions YAML is missing
-- Eval prompts ask "create a block" and get a Block plugin class but no mention of module .info.yml
+**Prevention:**
+- **Auto-retry with router restart built into setup script:** After a failed `ddev start`, automatically run `docker restart ddev-router && sleep 20 && ddev start`. This should be in the script, not manual.
+- **Serialize ddev starts:** The setup script already uses `flock -x 200` on `/tmp/ddev-start.lock`. Keep this.
+- **Fresh Drupal 10 over os-knowledge-garden:** v2.0 targets fresh D10 installs. This eliminates os-kg-specific traefik complexity (Qdrant, Solr, extra services). Faster startup, fewer failure modes.
+- **Health check before proceeding:** After `ddev start` succeeds, run `curl -sk https://<project>.ddev.site/` and verify 200 before declaring environment ready.
+- **Parallel instance limit:** Never run more than 2 ddev instances simultaneously.
 
-**Phase to address:**
-Wave 1 -- `drupal-module-scaffold` must establish the file-ecosystem pattern. All skills in subsequent waves inherit and extend it.
+**Detection:** `ddev start` exits non-zero with health check timeout in stderr. Easy to detect programmatically.
+
+**Phase to address:** Environment setup phase. Build retry logic into the setup script itself.
+
+---
+
+### Pitfall 5: Context Window Overflow During Batch Execution
+
+**What goes wrong:** The orchestrating session accumulates context from multiple eval runs until it hits the context window limit. The session becomes sluggish, loses state, or silently drops early context (including grading methodology).
+
+**Why it happens:** Each skill eval involves: reading evals.json, reading SKILL.md (for with-skill), spawning 2 agents (whose outputs return to context), reading generated files for grading, writing grading results. For 13 skills, this is ~26 agent outputs plus ~50+ file reads. v1.0 limited sessions to 3-4 skills for this reason.
+
+**Consequences:** Late-session evals get worse grading quality because grading criteria from early context has been evicted. The orchestrator may forget completed skills and re-run them, or skip incomplete ones.
+
+**Prevention:**
+- **Hard limit: 3-4 skills per orchestrator session.** Do not attempt all 13 in one session.
+- **Externalize state to disk:** Write `benchmark.json` and `grading.json` after each skill. The next session reads disk state, not memory.
+- **Minimize context consumption:** Have the grading agent read files and return only pass/fail per assertion, not entire file contents.
+- **Session handoff via `.continue-here.md`:** Write completed/remaining skills, iteration numbers, and anomalies after each session.
+- **Stateless orchestrator:** Each session should be able to start from scratch by reading disk state. No implicit memory dependencies between sessions.
+
+**Detection:** Model responses become shorter, less detailed, or repeat questions already answered. Context warning messages appear (like the ones this session is generating).
+
+**Phase to address:** Batch execution architecture phase. Design the session boundary strategy before starting eval runs.
 
 ---
 
 ## Moderate Pitfalls
 
-### Pitfall 8: Eval Prompts Not Grounded in Real Projects
+### Pitfall 6: agent-browser Unreliability for E2E Assertions
 
-**What goes wrong:**
-Test prompts are abstract ("create a custom block plugin") instead of grounded in the `os-knowledge-garden` codebase ("add a block to social_ai_indexing that shows the indexing queue status"). Abstract prompts test whether Claude can generate generic Drupal code, which it can already do. They do not test whether the skill improves Claude's ability to write code that fits into a real project's patterns, services, and conventions.
+**What goes wrong:** agent-browser times out, fails to render JavaScript-heavy pages, or cannot handle ddev's self-signed certificates. E2E assertions fail not because the code is wrong but because the test tool is flaky.
 
-**Why it happens:**
-Writing grounded prompts requires understanding the test project's architecture, existing services, and realistic tasks. Abstract prompts are faster to write.
+**Prevention:**
+- **Prefer curl for simple assertions:** `curl -sk` handles self-signed certs and non-standard ports reliably. Use it for status checks, page-contains (with grep), and API responses.
+- **Reserve agent-browser for UI-specific tests:** Only use when JavaScript execution is required (Ajax forms, dynamic blocks) or visual verification.
+- **Always use `--ignore-https-errors`** flag with agent-browser.
+- **Wrap calls with `timeout 30s`** to prevent indefinite hangs.
+- **Session cleanup in trap handler** to prevent leaked Chromium processes consuming RAM.
+- **drush uli for authenticated pages:** Use `drush uli` to get one-time login URLs instead of managing cookies.
 
-**How to avoid:**
-- Every skill must have 2-3 eval prompts that reference specific modules, services, or patterns from `os-knowledge-garden`
-- Prompts should require Claude to integrate with existing code (e.g., "add a route to the localnodes_platform module that...")
-- Include at least one prompt that tests a common mistake Claude makes without the skill
-
-**Warning signs:**
-- All eval prompts could apply to any Drupal project
-- Eval prompts do not mention any file, service, or module from `os-knowledge-garden`
-
-**Phase to address:**
-Wave 1 drafting, verified during review steps (Steps 3, 4, 5, 6).
+**Phase to address:** E2E assertion tooling phase. Decide curl vs agent-browser per assertion type upfront.
 
 ---
 
-### Pitfall 9: Skill Content Contradicts Claude's Training Data
+### Pitfall 7: Drupal Registry Corruption on Unclean Module Removal
 
-**What goes wrong:**
-A skill states a pattern that directly contradicts what Claude "knows" from training. For example, if the skill says "always use `\Drupal::service()` for service access" but Claude's training strongly favors constructor injection, Claude may ignore the skill or produce a confused hybrid. Skills must work WITH Claude's existing knowledge, correcting only where it is wrong.
+**What goes wrong:** Removing module files with `rm -rf` before running `drush pm:uninstall` leaves Drupal's module registry pointing at nonexistent files. All subsequent operations throw fatal PHP errors.
 
-**Why it happens:**
-Skill authors may not know what Claude already knows about Drupal. They write skills as if teaching from scratch, potentially including advice that conflicts with correct patterns Claude already has.
+**Prevention:**
+- **Always `drush pm:uninstall <module>` before deleting files.** This is non-negotiable for reusable environments.
+- **For eval, prefer tearing down the entire ddev env** rather than selectively uninstalling. Faster and more reliable.
+- **v2.0 with fresh D10 instances:** Each eval gets a fresh environment, making module removal unnecessary.
 
-**How to avoid:**
-- Before drafting each skill, run a baseline (no-skill) test to see what Claude generates
-- Skills should CORRECT mistakes in Claude's baseline, not restate what Claude already does correctly
-- Frame corrections as explicit overrides: "Claude may suggest X -- instead, do Y because Z"
-- The eval loop is specifically designed to reveal this; do not skip baseline comparisons
-
-**Warning signs:**
-- Skill restates common Drupal patterns that Claude already generates correctly
-- With-skill output quality is the same as no-skill output
-- Skill advice contradicts Drupal.org best practices
-
-**Phase to address:**
-Step 7 (eval loop) -- baseline comparison is the primary detection mechanism. But skill drafters in Waves 1-4 should run informal baseline checks before writing.
+**Phase to address:** Environment lifecycle phase. Already addressed in teardown script; maintain in v2.0.
 
 ---
 
-### Pitfall 10: Monolithic Skills That Should Be Split
+### Pitfall 8: Grader Bias Toward Generous Scoring
 
-**What goes wrong:**
-A skill tries to cover too many sub-domains and becomes a grab-bag of loosely related patterns. Example: `drupal-batch-queue-cron` combines batch processing, queue workers, cron hooks, logging, mail sending, and token handling. These are distinct developer tasks with different trigger prompts. A developer asking "how to send email" should not have to load batch processing guidance.
+**What goes wrong:** The grading agent (Opus) tends toward generous interpretation. It marks assertions as "PASS" when code is close but not exactly right, or when the pattern exists in a different form than expected.
 
-**Why it happens:**
-The skill groupings were designed around book chapter proximity, not developer workflow. Ch 14 (batch/queue/cron) and Ch 3 (logging/mail) are separate chapters folded into one skill.
+**Prevention:**
+- **Binary assertions only:** Each assertion should be verifiable with grep/AST check, not subjective judgment. "File contains `CacheBackendInterface`" not "code uses proper caching patterns."
+- **Automated grading where possible:** Use grep, jq, `php -l` (syntax check), drush commands for objective verification. Reserve LLM grading for semantic checks only.
+- **Explicit rubric in evals.json:** Each assertion specifies exact strings, patterns, or file structures. The grader applies the rubric, not judgment.
+- **Separate grader from skill author:** Fresh agent with only the rubric, no skill context.
+- **Suspicious perfection check:** Any skill scoring 100%/100% with/without should be manually reviewed -- likely indicates non-discriminating assertions.
 
-**How to avoid:**
-- Validate each skill grouping against real developer prompts: would a developer ever ask about ALL these topics together?
-- If sub-topics always appear independently, consider splitting
-- Use reference files to isolate secondary topics: the main skill body covers the primary topic, and reference files cover adjacent concerns
-- The 13-skill count is not sacred -- 14 or 15 skills may be better if splitting improves trigger precision
-
-**Warning signs:**
-- A skill's description is a compound sentence with "and" linking unrelated concepts
-- The skill triggers on prompts where only 20% of its content is relevant
-- Eval shows that loading the skill for a narrow prompt adds noise
-
-**Phase to address:**
-Wave 4 (when these compound skills are drafted), but the question should be asked during Wave 1 planning for all skill groupings.
+**Phase to address:** Grading methodology phase. Define rubric format before eval runs.
 
 ---
 
-### Pitfall 11: Not Testing Skill Interactions
+### Pitfall 9: Stale Docker/ddev State Between Runs
 
-**What goes wrong:**
-Each skill is evaluated independently, but in real usage, multiple skills may be loaded simultaneously. Skill A says "define services in .services.yml" and Skill B says "register event subscribers in .services.yml with tags." These are compatible, but if both skills provide complete .services.yml examples, Claude may generate two separate files or duplicate entries.
+**What goes wrong:** Docker containers, volumes, or network configs from previous eval runs persist and interfere with new runs. Port conflicts, stale databases, or orphaned containers cause setup failures.
 
-**Why it happens:**
-The eval plan (Step 7) tests each skill independently with specific prompts. There is no step for testing multi-skill scenarios.
+**Prevention:**
+- **Full teardown between skills:** Run `teardown-drupal-env.sh` and verify via `ddev list`.
+- **Pre-run cleanup:** `ddev list | grep -o 'os-kg-[^ ]*' | xargs -I{} ddev delete -O {}` to catch orphans.
+- **Docker prune on session start:** `docker container prune -f && docker network prune -f` at beginning of each session.
+- **Unique naming per eval run:** `os-kg-caching-with-iter3` -- never reuse names within a session.
 
-**How to avoid:**
-- Add a multi-skill eval phase: prompts that span 2-3 skills ("create a module with a custom entity, an admin form, and proper caching")
-- Verify that skills do not produce conflicting file structures
-- Ensure skills use additive patterns ("add this to .services.yml") not replacement patterns ("your .services.yml should look like this")
+**Phase to address:** Environment setup phase. Build into setup/teardown scripts.
 
-**Warning signs:**
-- Individual skill evals pass but real-world usage produces broken modules
-- Two skills provide complete examples of the same file (.module, .services.yml)
-- Developer reports that Claude generates contradictory advice
+---
 
-**Phase to address:**
-Step 9 (ad-hoc audit) -- but should be formalized as a multi-skill eval step between Steps 7 and 8.
+### Pitfall 10: Port Conflicts with Non-Standard ddev Ports
+
+**What goes wrong:** ddev assigns dynamic HTTPS ports when default (443) is taken. Hardcoded URLs in e2e-assert.sh and eval scripts assume standard ports, causing all E2E assertions to fail against valid running sites.
+
+**Prevention:**
+- **Use `ddev describe -j | jq -r '.raw.httpurl'`** to get actual URL with correct port.
+- **Pass full base URL to assertion scripts** rather than constructing from project name.
+- **Use `ddev exec curl localhost`** (inside container) to bypass port issues entirely for simple checks.
+- **Configure explicit ports** in ddev config.yaml for eval environments if consistency is needed.
+
+**Phase to address:** Environment setup phase. Bake URL discovery into setup script output.
+
+---
+
+### Pitfall 11: Eval Prompt Wording Overfits to Specific Implementation
+
+**What goes wrong:** Assertions pass only when the eval prompt uses specific wording. Minor prompt rephrasing causes different (but equally valid) code that fails assertions. This means the eval measures prompt sensitivity, not skill value.
+
+**Prevention:**
+- **Assert patterns, not exact code:** Check for `use Drupal\Core\Cache\CacheBackendInterface` not a specific import order or line number.
+- **Accept multiple valid patterns:** Where Drupal allows alternatives (annotation vs attribute, YAML vs PHP config), accept both.
+- **Test invariants, not implementation:** "Module installs without error" and "route responds 200" are robust. "File line 42 contains X" is brittle.
+- **Run each eval with 2+ prompt variations** during validation to ensure assertions are prompt-independent.
+
+**Phase to address:** Eval design phase.
 
 ---
 
 ## Minor Pitfalls
 
-### Pitfall 12: Neglecting Drupal Coding Standards in Examples
+### Pitfall 12: CLAUDECODE Environment Variable Blocks Nested Sessions
 
-**What goes wrong:**
-Code examples in skills use inconsistent formatting, non-standard naming conventions, or missing doc blocks. Claude reproduces these in generated code. Drupal has strict coding standards (Drupal CS) that differ from PSR-12 in several ways (e.g., array syntax, comment formatting, function naming).
+**What goes wrong:** Nested Claude sessions fail because the `CLAUDECODE` env var from the parent session interferes with child processes.
 
-**Prevention:**
-All code examples in skills must pass `phpcs --standard=Drupal`. Include a note in each skill: "Follow Drupal coding standards (drupal.org/docs/develop/standards)."
+**Prevention:** `unset CLAUDECODE` at the top of any script that runs inside a Claude session. Already implemented in `setup-drupal-env.sh`. Ensure all new scripts follow the same pattern.
 
----
-
-### Pitfall 13: Hardcoded Module Names in Examples
-
-**What goes wrong:**
-Skills use `hello_world` or `mymodule` as example module names. Claude then generates code with these placeholder names instead of adapting to the developer's actual module name. This is especially problematic for namespaces, service IDs, and YAML keys.
-
-**Prevention:**
-Use descriptive but clearly-placeholder names like `{module_name}` or use the test project's actual module names (e.g., `social_ai_indexing`) in examples. Explicitly instruct Claude to adapt names to the developer's context.
+**Phase to address:** Already addressed. Verify in all new scripts.
 
 ---
 
-### Pitfall 14: Missing Error Handling and Edge Cases
+### Pitfall 13: Forgetting to Switch Model Back After Eval Spawning (v1.0 only)
 
-**What goes wrong:**
-Book examples are pedagogical and omit error handling, access checks, and edge cases. Skills that reproduce these clean examples produce code that works in demos but fails in production (missing null checks, no try/catch around external calls, no access control on routes).
+**What goes wrong:** After spawning eval agents on Sonnet via `/model`, the orchestrator forgets to switch back to Opus for grading. Grading runs on Sonnet, producing lower-quality analysis.
 
-**Prevention:**
-Add a "production checklist" to each skill: access checks, input validation, error handling, logging. The `drupal-access-security` skill should be cross-referenced from every other skill.
+**Prevention:** v2.0 eliminates this entirely -- eval-executor subagent is locked to Sonnet via frontmatter, orchestrator stays on Opus throughout. No manual model switching needed.
+
+**Phase to address:** Subagent architecture phase. Solved by design in v2.0.
 
 ---
 
-## Technical Debt Patterns
+### Pitfall 14: RAM Exhaustion from Leaked Browser Processes
 
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Annotation-only examples (skip attributes) | Faster skill drafting, direct book extraction | Skills produce deprecated code on D11; requires rewrite | Never -- D11 is already released |
-| Skipping eval loop for "simple" skills | Ships faster | No evidence the skill improves over baseline; may waste context window | Never -- even simple skills need baseline comparison |
-| Copy-pasting book code verbatim | Ensures accuracy to source | Code may use deprecated APIs, lacks context for when/why to use it | Only for reference files, never for skill body |
-| Single eval prompt per skill | Minimum viable validation | Misses edge cases and alternative trigger patterns | Only for MVP wave; must expand before Step 8 |
-| Skipping description optimization (Step 8) | Saves time | Skills trigger incorrectly, overlap, or never activate | Never -- this is the highest-ROI step for 13 co-existing skills |
+**What goes wrong:** Each agent-browser call spawns a Chromium process. If sessions are not properly closed (e.g., script crashes before cleanup), Chromium processes accumulate and consume all available RAM. After 3-4 leaked sessions, the system becomes unresponsive.
 
-## Integration Gotchas
+**Prevention:**
+- **Always use trap handlers** to close agent-browser sessions on script exit.
+- **Monitor with `pgrep -c chromium`** before each eval run. If count > 2, kill orphans.
+- **Prefer curl over agent-browser** to minimize browser process usage.
 
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| Skill + Claude training data | Skill restates what Claude knows, wasting tokens | Use baseline eval to identify gaps; skill corrects only what Claude gets wrong |
-| Skill + reference files | Reference files exist but skill body never directs Claude to load them | Skill body must contain explicit "see references/X.md for Y" directives |
-| Skill + skill (multi-skill) | Skills assume exclusive context, produce conflicting advice | Each skill must be additive; never produce complete file replacements |
-| Skill + os-knowledge-garden | Eval prompts are generic, not grounded in test project | Prompts must reference specific modules, services, and files from the test project |
-| Skill + skill-creator eval | Eval assertions are too loose ("output contains PHP") | Assertions must check for specific patterns, correct service injection, proper YAML structure |
+**Phase to address:** E2E assertion tooling phase.
 
-## "Looks Done But Isn't" Checklist
+---
 
-- [ ] **Skill body:** Contains decision logic, not just API reference -- verify by checking for "when to use" sections
-- [ ] **D11 compatibility:** Every plugin example shows both annotation AND attribute syntax -- verify by searching for `#[`
-- [ ] **YAML files:** Every PHP class example has corresponding YAML config -- verify by checking for `.routing.yml`, `.services.yml` mentions
-- [ ] **Anti-patterns:** Skill explicitly lists what NOT to do -- verify by searching for "do not" / "avoid" / "instead"
-- [ ] **Version anchoring:** Skill states "Drupal 10.x/11.x" and lists legacy patterns to avoid -- verify top-of-skill version statement
-- [ ] **Cross-references:** References to other skills are informational, not load-bearing -- verify skill works without the referenced skill loaded
-- [ ] **Description field:** Written from developer-intent perspective, not skill-content perspective -- verify it describes prompts, not topics
-- [ ] **Eval prompts:** At least one prompt references os-knowledge-garden specifically -- verify module/service names appear
-- [ ] **Reference files:** If skill has reference files, body contains explicit "see references/X" directives -- verify linkage
-- [ ] **Coding standards:** Code examples follow Drupal CS (not PSR-12) -- verify array syntax, doc blocks, naming
+## Phase-Specific Warnings
 
-## Recovery Strategies
+| Phase Topic | Likely Pitfall | Mitigation |
+|-------------|---------------|------------|
+| Subagent architecture | Model inheritance (#1), knowledge contamination (#2), model switch-back (#13) | Lock model in subagent frontmatter, separate agents per run, pre-flight contamination check |
+| Eval design (assertions) | Non-discriminating assertions (#3), overfitting to prompts (#11) | Source assertions from SKILL.md non-obvious patterns, assert patterns not exact code, calibrate against known-good skills |
+| Environment setup | ddev-router failures (#4), port conflicts (#10), stale state (#9) | Auto-retry in script, URL discovery via ddev describe, full teardown between runs |
+| Batch execution | Context overflow (#5), stale state (#9), RAM exhaustion (#14) | 3-4 skills per session, externalize state to disk, monitor Chromium processes |
+| E2E verification | agent-browser flakiness (#6), port conflicts (#10), RAM leaks (#14) | Prefer curl, reserve agent-browser for JS-only tests, trap cleanup handlers |
+| Grading | Grader bias (#8), non-discriminating assertions (#3) | Binary assertions, automated grep/drush checks, suspicious perfection review |
+| Module lifecycle | Registry corruption (#7), CLAUDECODE env (#12) | Tear down entire ddev env, unset CLAUDECODE in all scripts |
 
-| Pitfall | Recovery Cost | Recovery Steps |
-|---------|---------------|----------------|
-| Annotation-only examples | LOW | Add `#[Attribute]` variants next to each `@Annotation` -- mechanical transformation |
-| Reference-doc-style skills | HIGH | Requires full rewrite around decision trees; cannot be patched incrementally |
-| Bad trigger descriptions | LOW | Run description optimization loop (Step 8); automated process |
-| Cross-reference loops | MEDIUM | Build concept ownership table, audit all cross-references, rewrite overlapping sections |
-| 500-line overflow | MEDIUM | Extract to reference files; requires restructuring body as routing layer |
-| Version confusion | LOW | Add version anchoring header and legacy-pattern blacklist to each skill |
-| Missing YAML examples | MEDIUM | Audit each skill for PHP-without-YAML gaps; add YAML examples |
-| Non-grounded eval prompts | LOW | Write new prompts referencing os-knowledge-garden; no skill changes needed |
-| Training data conflicts | HIGH | Requires baseline testing and careful reframing of skill guidance |
-| Monolithic skills | HIGH | Splitting a published skill breaks user installations; must get grouping right initially |
-| No multi-skill testing | MEDIUM | Add multi-skill eval prompts; may reveal skill conflicts requiring edits |
+---
 
-## Pitfall-to-Phase Mapping
+## Appendix: v1.0 Skill-Authoring Pitfalls (preserved for reference)
 
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| Annotation-only code (P1) | Wave 1 skill drafting | Search all skills for `#[` attribute syntax |
-| Reference-doc skills (P2) | Wave 1 template design | Eval with-skill vs no-skill diff shows meaningful improvement |
-| Bad trigger descriptions (P3) | Step 8 (description optimization) | Cross-skill trigger matrix with no overlaps |
-| Cross-reference loops (P4) | Pre-Wave 1 planning | Concept ownership table with no duplicate claims |
-| 500-line overflow (P5) | Wave 1 (`drupal-entities-fields`) | All skill bodies under 500 lines; reference files linked |
-| Version confusion (P6) | Wave 1 template design | No D7/D8 patterns in eval output |
-| Missing YAML (P7) | Wave 1 (`drupal-module-scaffold`) | Every PHP example has corresponding YAML |
-| Non-grounded evals (P8) | All wave review steps | Eval prompts mention os-knowledge-garden files |
-| Training conflicts (P9) | Step 7 (eval loop) | Baseline comparison shows improvement, not regression |
-| Monolithic skills (P10) | Pre-Wave 1 planning | Each skill maps to a distinct developer intent |
-| No multi-skill testing (P11) | Post-Step 7, before Step 8 | Multi-domain prompts produce coherent output |
-| Coding standards (P12) | All wave drafting | Code passes phpcs --standard=Drupal |
-| Hardcoded names (P13) | All wave drafting | Examples use placeholder or real project names |
-| Missing error handling (P14) | All wave drafting | Production checklist present in each skill |
+The following pitfalls from v1.0 research remain relevant to the skills themselves but are not the focus of v2.0 pipeline work:
+
+1. **Annotation-Only Code Examples** -- Skills must show both D10 annotations and D11 PHP attributes
+2. **Skills as Reference Docs** -- Skills must be decision guides, not API dumps
+3. **Trigger Description Tuning** -- Descriptions must match developer intent, not skill content
+4. **Cross-Reference Loops** -- Each Drupal concept owned by exactly one skill
+5. **500-Line Limit on Deep Topics** -- Use reference files for overflow
+6. **Drupal Version Confusion** -- Explicitly anchor to D10/D11, blacklist D7/D8 patterns
+7. **Missing YAML Ecosystem** -- Every PHP example needs corresponding YAML files
+8. **Non-Grounded Eval Prompts** -- Prompts should reference real project code
+9. **Training Data Conflicts** -- Skills must work with Claude's existing knowledge, not against it
+10. **Monolithic Skills** -- Validate groupings against real developer prompts
+
+These are documented in detail in the git history of this file (v1.0 research, 2026-03-05).
+
+---
 
 ## Sources
 
-- Sipos D. "Drupal 10 Module Development" 4th ed, 2023 -- source material analysis (line 674 on annotations/attributes transition)
-- `polished-tickling-owl.md` -- existing project execution plan with wave structure and eval workflow
-- `os-knowledge-garden/CLAUDE.md` -- test project context and Drupal conventions
-- `~/.claude/skills/context7/SKILL.md` -- existing Claude skill as reference for anatomy and structure
-- PROJECT.md -- project constraints (500-line limit, 13 skills, skill-creator eval framework)
-- Direct analysis of Claude's known Drupal training data tendencies (version mixing, annotation defaults)
+- v1.0 empirical eval results: `.planning/phases/07-full-eval-optimize-loop/.continue-here.md` (HIGH confidence -- 9 skills evaluated, direct observations)
+- v1.0 phase 6 eval results: `.planning/phases/06-live-eval-loop/.continue-here.md` (HIGH confidence -- 4 skills with meaningful deltas)
+- Project memory: MEMORY.md eval execution rules (HIGH confidence -- validated across 7+ sessions)
+- Setup/teardown source code: `eval/setup-drupal-env.sh`, `eval/teardown-drupal-env.sh` (HIGH confidence)
+- e2e-assert.sh source code: `eval/e2e-assert.sh` (HIGH confidence)
+- Claude Code Agent tool schema: empirically verified `additionalProperties: false`, no model parameter (HIGH confidence)
+- ddev-router behavior: consistent with observed 50% failure rate across v1.0 sessions (HIGH confidence)
 
 ---
-*Pitfalls research for: Claude skills for Drupal module development*
-*Researched: 2026-03-05*
+*Pitfalls research for: Automated eval pipeline for Claude Code Drupal skills*
+*Researched: 2026-03-06*

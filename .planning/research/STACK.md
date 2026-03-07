@@ -1,236 +1,290 @@
 # Technology Stack
 
-**Project:** Drupal Skills for Claude
-**Researched:** 2026-03-05
+**Project:** Drupal Skills v2.0 -- Eval & Optimization Pipeline
+**Researched:** 2026-03-06
+**Scope:** NEW stack additions for automated eval pipeline only. Existing skill/SKILL.md stack is unchanged.
 
-## Recommended Stack
+## Recommended Stack Additions
 
-### Skill Framework: Claude Skill-Creator Plugin (Official)
+### 1. Custom Subagents (Claude Code Native)
 
-| Component | Version/Source | Purpose | Why |
-|-----------|---------------|---------|-----|
-| skill-creator plugin | `skill-creator@claude-plugins-official` | Skill drafting, eval loop, description optimization | Already installed locally; official Anthropic tooling with grader, comparator, and analyzer agents built in |
-| SKILL.md format | Frontmatter + Markdown body | Core skill definition | Only format Claude Code recognizes; three-level progressive disclosure (metadata -> body -> references) |
-| `~/.claude/skills/` | Local install target | Runtime skill loading | Claude Code auto-discovers skills here; instant availability without plugin install |
-| `skills/` repo directory | GitHub publish target | Distribution and versioning | Standard pattern for sharing skills; users clone and copy to `~/.claude/skills/` |
+| Component | Version | Purpose | Why |
+|-----------|---------|---------|-----|
+| `eval-executor` subagent | Claude Code native (`.claude/agents/eval-executor.md`) | Run skill eval prompts against Drupal env with controlled model | Frontmatter `model: sonnet` ensures consistent, cost-effective eval execution without manual `/model` switching. Replaces fragile Agent-tool-based approach from Phase 6/7 |
+| `eval-browser` subagent | Claude Code native (`.claude/agents/eval-browser.md`) | Automated E2E/UAT assertions via browser | Runs agent-browser commands against ddev sites for page-contains, element-exists, form validation. Replaces bash-only e2e-assert.sh with AI-driven browser interaction |
 
-**Confidence: HIGH** -- Verified from installed skill-creator plugin source code and multiple official example skills on this machine.
+**Confidence: HIGH** -- Verified from official Claude Code docs at code.claude.com/docs/en/sub-agents.
 
-### Skill Anatomy Rules
+#### Subagent File Format (Verified)
 
-Each Drupal skill follows this exact structure:
+```yaml
+---
+name: eval-executor
+description: >-
+  Execute Drupal skill eval prompts in an isolated ddev environment.
+  Use when running with-skill or without-skill eval comparisons.
+tools: Read, Write, Edit, Bash, Glob, Grep
+model: sonnet
+permissionMode: bypassPermissions
+maxTurns: 50
+skills:
+  - drupal-routing-controllers  # Only for with-skill runs
+---
 
-```
-drupal-{domain}/
-  SKILL.md              # Required. YAML frontmatter + Markdown body
-  references/           # Domain-specific Drupal API docs, code patterns
-    {topic}.md          # Loaded by Claude on-demand, not upfront
-  examples/             # Optional. Complete working code examples
-    {example}.php       # Copy-paste ready Drupal code
-```
-
-**Confidence: HIGH** -- Derived from official skill-creator SKILL.md (lines 76-84), skill-development reference, and 15+ example skills examined on disk.
-
-#### SKILL.md Requirements
-
-| Rule | Specification | Rationale |
-|------|--------------|-----------|
-| **Frontmatter fields** | `name` (required), `description` (required) only | Claude Code parses only these two fields; `version` is tolerated but ignored by runtime |
-| **Frontmatter max** | 1024 characters total | Hard limit in Claude Code's skill loader |
-| **Name format** | Letters, numbers, hyphens only | No spaces, underscores, or special characters; e.g., `drupal-routing-controllers` |
-| **Description style** | Pushy, third-person, trigger-focused | skill-creator docs explicitly say to make descriptions "a little bit pushy" to combat under-triggering; include specific user phrases that should activate the skill |
-| **Description content** | When to use ONLY, never workflow summary | Writing-skills research proved Claude follows description shortcuts and skips body content if description summarizes the workflow |
-| **Body size** | <500 lines (~3,000-5,000 words max) | skill-creator says "<500 lines ideal"; skill-development says "1,500-2,000 words ideal, <5k max" |
-| **Writing style** | Imperative/infinitive form, not second person | "Create the route file" not "You should create the route file" -- consistency for AI consumption |
-| **Reference pointers** | Explicit references to `references/*.md` with guidance on when to read | Claude does not auto-discover reference files; SKILL.md must tell it they exist and when to consult them |
-
-**Confidence: HIGH** -- Cross-verified across skill-creator SKILL.md, writing-skills SKILL.md, and skill-development SKILL.md.
-
-#### Progressive Disclosure (Three Levels)
-
-This is the most important architectural concept for Drupal skills. Drupal's API surface is enormous; cramming everything into SKILL.md will blow context windows and degrade performance.
-
-| Level | What | When Loaded | Size Target | Drupal Application |
-|-------|------|-------------|-------------|-------------------|
-| 1. Metadata | `name` + `description` | Always in context | ~100 words | Skill name + trigger phrases ("create a Drupal route", "build a custom entity") |
-| 2. SKILL.md body | Core workflow, decision trees, quick reference | When skill triggers | <500 lines | Drupal patterns overview, when-to-use guidance, common code structures, pointers to references |
-| 3. References | Detailed API docs, code examples, edge cases | On-demand when Claude needs them | Unlimited (2,000-5,000+ words each) | Full entity annotation reference, form API element catalog, hook signatures, D10 vs D11 differences |
-
-**Why this matters for Drupal skills specifically:** Each of the 13 skills covers multiple Drupal subsystems. For example, `drupal-entities-fields` spans content entities, config entities, field types, field widgets, field formatters, and the Entity API -- easily 10,000+ words of reference material. Without progressive disclosure, the skill would consume the entire context window and leave no room for the user's actual code.
-
-**Confidence: HIGH** -- Progressive disclosure documented identically in skill-creator, skill-development, and writing-skills sources.
-
-### Reference File Organization
-
-For Drupal skills specifically, organize references by sub-domain within each skill:
-
-```
-drupal-routing-controllers/
-  SKILL.md
-  references/
-    route-definitions.md       # .routing.yml patterns, parameters, requirements
-    controllers.md             # Controller class patterns, DI, response types
-    services-di.md             # services.yml, dependency injection, service tags
-    menu-links.md              # Menu plugin types, derivatives
-
-drupal-entities-fields/
-  SKILL.md
-  references/
-    content-entities.md        # Entity type annotations, base fields, handlers
-    config-entities.md         # Config entity patterns, schema, list builders
-    field-types.md             # FieldType plugin, widget, formatter annotations
-    entity-api-patterns.md     # Entity queries, access, storage
+You are a Drupal module developer. Given a prompt and a ddev project directory,
+implement the requested Drupal module code. Do NOT ask questions -- just create the code.
 ```
 
-**Why this pattern:** The claude-api skill (examined on disk) uses exactly this approach -- language-specific subdirectories under a single skill. The mcp-builder skill does the same with `reference/aws.md`, `reference/gcp.md`. For Drupal, the sub-domains are Drupal API subsystems rather than programming languages.
+**Critical fields for eval pipeline:**
 
-**Key rule:** Each reference file should be self-contained for its sub-domain. Claude reads only the relevant reference file, not all of them.
+| Field | Value | Why |
+|-------|-------|-----|
+| `model` | `sonnet` | Controls cost and ensures consistent eval executor model. Accepts `sonnet`, `opus`, `haiku`, or `inherit` |
+| `permissionMode` | `bypassPermissions` | Eval agents must run unattended without permission prompts |
+| `skills` | list of skill names | Injects SKILL.md content into subagent context at startup. Use for with-skill runs; omit for without-skill runs |
+| `maxTurns` | `50` | Prevents runaway agents; Drupal module creation typically takes 15-30 turns |
+| `tools` | explicit list | Restrict to needed tools only. Subagents cannot spawn other subagents |
 
-**For large reference files (>10k words):** Include grep search patterns in SKILL.md so Claude can search rather than read the entire file. Example: "For entity annotation details, grep `references/content-entities.md` for `@ContentEntityType`".
+**Two-agent pattern for knowledge isolation:**
+- `eval-executor` (without skills field) -- baseline runs
+- `eval-executor-skilled` (with `skills: [drupal-X]`) -- with-skill runs
+- OR: use `--agents` CLI flag to pass JSON config dynamically per run, toggling skills field
 
-**Confidence: HIGH** -- Pattern verified in claude-api, mcp-builder, and hook-development example skills.
+**Dynamic agent via CLI (recommended for flexibility):**
 
-### Eval Framework
+```bash
+claude --agent eval-executor --agents '{
+  "eval-executor": {
+    "description": "Execute Drupal eval prompt in ddev environment",
+    "prompt": "You are a Drupal module developer...",
+    "tools": ["Read", "Write", "Edit", "Bash", "Glob", "Grep"],
+    "model": "sonnet",
+    "permissionMode": "bypassPermissions",
+    "maxTurns": 50,
+    "skills": ["drupal-caching"]
+  }
+}'
+```
 
-Use the skill-creator plugin's built-in eval loop. Do NOT build a custom pipeline.
+This avoids maintaining two separate agent files per skill. The orchestrator generates the JSON dynamically, including or excluding the `skills` field.
 
-#### Eval Workflow Per Skill
+#### Environment Variable Alternative
+
+```bash
+export CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-4-5-20250929
+```
+
+Sets the model for ALL subagents globally. Less granular than per-agent `model` field but useful as a fallback.
+
+### 2. agent-browser (Already Installed)
+
+| Component | Version | Purpose | Why |
+|-----------|---------|---------|-----|
+| agent-browser | 0.16.3 (globally installed via npm) | Headless browser automation for E2E assertions | Already used by e2e-assert.sh. CLI-first design fits bash scripting. Provides `open`, `snapshot`, `eval`, `click`, `type`, `fill`, `screenshot` commands |
+
+**Confidence: HIGH** -- Verified installed at `/home/proofoftom/.nvm/versions/node/v24.12.0/bin/agent-browser`, version 0.16.3.
+
+**No changes needed.** agent-browser is already integrated via `eval/e2e-assert.sh`. The eval-browser subagent will use it for more complex E2E scenarios (login flows, multi-page navigation, form submission verification).
+
+#### Key CLI Commands for Eval
+
+| Command | Use Case |
+|---------|----------|
+| `agent-browser --session S open <url>` | Navigate to Drupal page |
+| `agent-browser --session S snapshot` | Get accessibility tree (AI-readable page content) |
+| `agent-browser --session S eval <js>` | Run JS assertions (querySelector, etc.) |
+| `agent-browser --session S get text <sel>` | Extract text from specific elements |
+| `agent-browser --session S get title` | Check page title for errors |
+| `agent-browser --session S screenshot [path]` | Capture visual state for debugging |
+| `agent-browser --session S --ignore-https-errors open <url>` | Handle ddev self-signed certs |
+| `agent-browser --session S close` | Clean up browser process |
+
+**Critical flag:** `--ignore-https-errors` is required for ddev HTTPS sites with self-signed certificates.
+
+**Session management:** Use unique session names (`eval-{skill}-{run}`) to prevent collisions during parallel eval runs.
+
+### 3. ddev for Fresh Drupal 10 Environments
+
+| Component | Version | Purpose | Why |
+|-----------|---------|---------|-----|
+| ddev | v1.24.8 (installed) | Isolated Drupal 10 environments per eval run | Fast, reproducible, supports `--project-type=drupal10`. Replaces os-knowledge-garden cloning with fresh D10 installs for cleaner eval baselines |
+
+**Confidence: HIGH** -- Verified installed, `--project-type=drupal10` confirmed in help output.
+
+#### Fresh D10 Setup (Replaces os-knowledge-garden Cloning)
+
+The existing `eval/setup-drupal-env.sh` clones os-knowledge-garden. The new pipeline should use fresh Drupal 10 instead:
+
+```bash
+#!/usr/bin/env bash
+# eval/setup-fresh-drupal10.sh <unique-name>
+set -euo pipefail
+unset CLAUDECODE 2>/dev/null || true
+
+NAME="${1:?Usage: setup-fresh-drupal10.sh <unique-name>}"
+TARGET_DIR="/tmp/drupal10-${NAME}"
+
+# Clean up stale environment
+if [ -d "$TARGET_DIR" ]; then
+  (yes | ddev delete -O "drupal10-${NAME}" 2>/dev/null) || true
+  rm -rf "$TARGET_DIR"
+fi
+
+mkdir -p "$TARGET_DIR"
+cd "$TARGET_DIR"
+
+# Configure ddev for Drupal 10
+ddev config --project-name="drupal10-${NAME}" \
+  --project-type=drupal10 \
+  --docroot=web \
+  --php-version=8.2
+
+# Start ddev (serialized to prevent router conflicts)
+(flock -x 200; ddev start) 200>/tmp/ddev-start.lock
+
+# Create Drupal project via composer
+ddev composer create drupal/recommended-project:^10 --no-interaction
+
+# Install Drupal with minimal profile (fast, clean baseline)
+ddev drush site:install minimal --account-name=admin --account-pass=admin -y
+
+# Enable common modules that eval tasks may need
+ddev drush pm:install node,block,field_ui,views,views_ui,path -y
+
+echo "$TARGET_DIR"
+```
+
+**Why fresh D10 instead of os-knowledge-garden:**
+- Cleaner baseline: no pre-existing modules/config to interfere with eval
+- Faster setup: ~2 min for fresh D10 vs ~4 min for os-kg with cascadia demo
+- Reproducible: same starting state every time
+- Simpler teardown: no root-owned files from Docker volumes
+
+**Why `--project-type=drupal10` specifically:**
+- Skills are based on Sipos book (D10, 4th ed 2023)
+- D10 requires PHP 8.1+ (use 8.2 for stability)
+- D10 uses `drupal/recommended-project` composer template
+
+### 4. skill-creator Scripts (Already Available)
+
+| Script | Path | Purpose | Integration |
+|--------|------|---------|-------------|
+| `aggregate_benchmark.py` | `~/.claude/plugins/cache/claude-plugins-official/skill-creator/205b6e0b3036/skills/skill-creator/scripts/aggregate_benchmark.py` | Aggregate grading.json files into benchmark.json with stats | Run after all eval runs complete. Reads workspace layout: `eval-N/{with,without}_skill/run-N/grading.json` |
+| `generate_review.py` | `~/.claude/plugins/cache/claude-plugins-official/skill-creator/205b6e0b3036/skills/skill-creator/eval-viewer/generate_review.py` | Generate HTML eval viewer for human review | Run after aggregate_benchmark. Opens browser with side-by-side comparison |
+| `run_eval.py` | (same cache path)/scripts/run_eval.py | Run trigger evaluation (description testing) | For Phase 2 (description optimization), NOT content eval |
+| `grader.md` | (same cache path)/agents/grader.md | Grader agent specification | Load into grader subagent. Grades transcripts + outputs against expectations |
+
+**Confidence: HIGH** -- All scripts verified on disk, source code read and analyzed.
+
+#### Workspace Directory Layout (Required by aggregate_benchmark.py)
 
 ```
-1. Draft SKILL.md + references
-2. Write 2-3 test prompts in evals/evals.json
-   - Realistic Drupal development requests
-   - Example: "Create a custom block plugin that displays recent articles with a config form for the count"
-3. Spawn parallel subagents:
-   - WITH skill: Claude + SKILL.md -> outputs/
-   - WITHOUT skill (baseline): Claude alone -> outputs/
-4. Grade outputs with grader agent (agents/grader.md)
-5. Aggregate benchmark (scripts/aggregate_benchmark)
-6. Launch eval viewer (eval-viewer/generate_review.py)
-7. Review outputs qualitatively + quantitatively
-8. Iterate on skill based on feedback
+drupal-{skill}-workspace/
+  iteration-{N}/
+    eval-{eval-name}/
+      with_skill/
+        run-1/
+          outputs/          # Files created by eval-executor
+          transcript.md     # Execution log
+          grading.json      # Written by grader agent
+          timing.json       # Optional: wall-clock timing
+        run-2/
+          ...
+      without_skill/
+        run-1/
+          ...
+    benchmark.json          # Generated by aggregate_benchmark.py
+    benchmark.md            # Human-readable summary
 ```
 
-#### Eval Test Prompt Design for Drupal
+This layout is already in use from Phase 6/7 iterations. No changes needed.
 
-| Quality | Characteristic | Example |
-|---------|---------------|---------|
-| Realistic | What a developer would actually ask | "Add a route that shows user profiles at /user/{uid}/profile with access checking" |
-| Multi-step | Requires multiple Drupal concepts | "Create a config entity with a list builder, add/edit forms, and menu links" |
-| Verifiable | Output can be checked against Drupal conventions | Generated .routing.yml follows correct schema, controller extends ControllerBase, services.yml has correct syntax |
-| Specific | Not vague or abstract | Include file paths, module names, specific Drupal APIs |
+#### grading.json Schema (Required by aggregate_benchmark.py)
 
-#### Assertions for Drupal Skills
+```json
+{
+  "expectations": [
+    {"text": "...", "passed": true, "evidence": "..."}
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 1,
+    "total": 6,
+    "pass_rate": 0.83
+  }
+}
+```
 
-Drupal code has highly verifiable structure. Good assertions include:
+The `summary.pass_rate` field is what aggregate_benchmark.py uses for delta calculations.
 
-- File existence: `.module`, `.routing.yml`, `.services.yml`, `.info.yml` created
-- Namespace correctness: `\Drupal\{module}\Controller\{Class}` pattern followed
-- Annotation validity: `@Block`, `@ContentEntityType` annotations present with required keys
-- Service definitions: Correct class, arguments with `@` service references
-- Hook signatures: Correct parameters for `hook_theme()`, `hook_form_alter()`, etc.
+### 5. Orchestrator Script (New)
 
-**Confidence: HIGH** -- Eval framework documented in detail in skill-creator SKILL.md with schemas for all JSON structures.
+| Component | Purpose | Why |
+|-----------|---------|-----|
+| `eval/run-skill-eval.sh` | Orchestrate single-skill eval cycle: setup ddev, spawn with/without agents, grade, aggregate | Replaces manual orchestration from main Claude session. Reduces context window pressure. Can be called in a loop for batch processing |
 
-### Drupal-Specific Considerations
+**Not a new dependency** -- this is a bash script that ties existing components together. Details belong in ARCHITECTURE.md.
 
-| Consideration | Approach | Rationale |
-|--------------|----------|-----------|
-| **D10 baseline, D11 notes** | All code patterns use D10 APIs from the book; D11 differences noted in dedicated section per reference file | Book is D10 (2023); D11 adds attributes-based routing, new hooks, etc. Noting differences prevents confusion without rewriting everything |
-| **API complexity** | Use reference files heavily; SKILL.md provides decision trees, references provide API details | Drupal's annotation-based plugin system alone has dozens of required/optional keys per plugin type |
-| **Namespace conventions** | Include PSR-4 namespace patterns in every reference file | Drupal's directory structure IS its namespace; wrong directory = broken code |
-| **YAML-heavy configuration** | Reference files should include complete YAML examples, not fragments | Drupal routes, services, permissions, schema all use YAML with strict indentation requirements |
-| **Cross-skill references** | Use skill name only: "Consult `drupal-routing-controllers` for route setup" | Do NOT use `@` file links (burns context); do NOT summarize the other skill's content |
-| **Book accuracy** | Skill content must be traceable to specific book chapters | Source material is `Sipos D. Drupal 10 Module Development` (4th ed, 2023); skills should not hallucinate APIs |
+## What NOT to Add
 
-**Confidence: MEDIUM** -- Drupal-specific patterns based on training knowledge of D10 architecture. D11 differences should be verified against official Drupal.org docs during skill creation.
-
-### Test Project Integration
-
-The `os-knowledge-garden/` project provides real-world validation material:
-
-| Module | Drupal Concepts Exercised | Useful For Validating |
-|--------|--------------------------|----------------------|
-| `social_ai_indexing` | Search API processors, services, configuration | `drupal-config-storage`, `drupal-plugins-blocks` |
-| `localnodes_platform` | Routes, controllers, services, DI | `drupal-routing-controllers`, `drupal-module-scaffold` |
-| Demo modules | Blocks, event subscribers, templates | `drupal-plugins-blocks`, `drupal-theming` |
-
-Use these modules as input for eval prompts: "Given this existing module structure, add X feature" tests whether the skill produces code consistent with real project conventions.
-
-**Confidence: MEDIUM** -- Module names from PROJECT.md; actual module contents not verified during this research.
+| Technology | Why NOT |
+|------------|---------|
+| Playwright/Puppeteer directly | agent-browser already wraps Playwright with AI-friendly CLI. Adding raw Playwright adds complexity without benefit |
+| pytest/PHPUnit for assertions | skill-creator's grader agent + expectations model is the standard. Custom test frameworks diverge from skill-creator methodology |
+| Docker Compose for Drupal | ddev already manages Docker. Adding compose files duplicates ddev's job |
+| Custom eval dashboard | skill-creator's generate_review.py provides HTML viewer. Build custom only if generate_review proves insufficient |
+| claude -p (headless CLI) | Unreliable in nested sessions (hangs, black box). Custom subagents with `--agent` flag provide observability |
+| os-knowledge-garden for evals | Pre-existing modules contaminate eval baselines. Fresh D10 is cleaner |
+| Multiple runs per eval (3+) | Start with 1 run per config. Add multi-run only after pipeline is stable and delta signal is clear |
+| CLAUDE_CODE_SUBAGENT_MODEL env var | Per-agent `model: sonnet` in frontmatter is more precise. Global env var would affect ALL subagents including grader (which should run on opus) |
 
 ## Alternatives Considered
 
 | Category | Recommended | Alternative | Why Not |
 |----------|-------------|-------------|---------|
-| Eval framework | skill-creator plugin eval loop | Custom pytest/PHPUnit pipeline | Unnecessary complexity; skill-creator handles the full draft-test-grade-iterate cycle with built-in viewer |
-| Skill format | SKILL.md + references/ | Single monolithic SKILL.md | Drupal API surface too large; would exceed 500-line body limit and degrade Claude's performance |
-| Skill format | SKILL.md + references/ | CLAUDE.md project instructions | Skills are portable across projects; CLAUDE.md is project-specific. Skills also get progressive disclosure which CLAUDE.md does not |
-| Description style | Pushy/trigger-focused | Conservative/minimal | skill-creator explicitly warns about under-triggering; Drupal skills need aggressive trigger phrases because developers may not say "Drupal" in every prompt |
-| Reference organization | Sub-domain files (one per API area) | Single large reference file | Claude reads entire reference files; smaller focused files = less context waste |
-| D11 handling | Notes within D10 reference files | Separate D11 skill variants | D11 changes are additive, not rewrites; separate skills would duplicate 90% of content |
+| Model control | `model: sonnet` in agent frontmatter | `CLAUDE_CODE_SUBAGENT_MODEL` env var | Env var is global; we need sonnet for executor but opus for grader |
+| Eval execution | Custom subagent files | `claude -p` headless CLI | Headless CLI hangs in nested sessions, no observability, documented failure mode from Phase 6 |
+| Knowledge isolation | Two agent configs (with/without skills field) | Single agent + prompt manipulation | `skills` field in frontmatter injects full SKILL.md content at startup; cannot be "un-injected" mid-session |
+| Browser testing | agent-browser CLI (installed) | Playwright MCP server | agent-browser already works, is simpler, and is designed for AI agent use. No MCP overhead |
+| Drupal env | Fresh D10 via ddev | os-knowledge-garden clone | Fresh D10 = clean baseline, faster setup, no interference from pre-existing modules |
+| Dynamic agent config | `--agents` CLI flag with JSON | Two static .md files per skill | CLI flag avoids 26 agent files (2 per 13 skills). Orchestrator generates JSON dynamically |
 
-## Skill Naming Convention
+## Version Summary
 
-All 13 skills use the `drupal-` prefix for consistent discovery:
-
-```
-drupal-module-scaffold
-drupal-routing-controllers
-drupal-forms-api
-drupal-plugins-blocks
-drupal-entities-fields
-drupal-config-storage
-drupal-access-security
-drupal-theming
-drupal-caching
-drupal-testing
-drupal-database-api
-drupal-views-dev
-drupal-batch-queue-cron
-```
-
-**Why `drupal-` prefix:** Ensures Claude discovers these skills whenever a user mentions Drupal. Without the prefix, a skill named `routing-controllers` might not trigger for "help me build a Drupal route."
+| Tool | Installed Version | Status |
+|------|-------------------|--------|
+| ddev | v1.24.8 | Already installed, no update needed |
+| agent-browser | 0.16.3 | Already installed globally, no update needed |
+| Node.js | v24.12.0 | Already installed (agent-browser host) |
+| Python 3 | System | Required for skill-creator scripts (aggregate_benchmark.py, generate_review.py) |
+| Claude Code | Current | Custom subagent support via `.claude/agents/` and `--agents` flag |
+| skill-creator plugin | Installed at marketplace path | Provides grader.md, aggregate_benchmark.py, generate_review.py |
 
 ## Installation
 
-No package installation required. Skills are plain Markdown files.
+No new packages to install. All dependencies are already present.
 
 ```bash
-# Development: skills live in the repo
-ls skills/drupal-module-scaffold/SKILL.md
+# Verify everything is in place
+which ddev           # v1.24.8
+which agent-browser  # 0.16.3
+python3 --version    # 3.x
 
-# Local install: copy to Claude's skills directory
-cp -r skills/drupal-* ~/.claude/skills/
+# Verify skill-creator scripts
+ls ~/.claude/plugins/cache/claude-plugins-official/skill-creator/*/skills/skill-creator/scripts/aggregate_benchmark.py
+ls ~/.claude/plugins/cache/claude-plugins-official/skill-creator/*/skills/skill-creator/eval-viewer/generate_review.py
+ls ~/.claude/plugins/cache/claude-plugins-official/skill-creator/*/skills/skill-creator/agents/grader.md
 
-# Verification: check skill is discovered
-# (Claude Code auto-discovers on next session start)
-```
-
-## Description Template for Drupal Skills
-
-Based on skill-creator's guidance to be "pushy" about triggering:
-
-```yaml
----
-name: drupal-{domain}
-description: >-
-  Guide for {specific Drupal capability}. Use this skill when building
-  Drupal modules that need {capability 1}, {capability 2}, or {capability 3}.
-  Also use when the user mentions {specific Drupal terms like "routing.yml",
-  ".module file", "block plugin"}, asks to create {specific artifacts},
-  or needs help with {related Drupal APIs}. Covers Drupal 10 patterns
-  with Drupal 11 differences noted.
----
+# Only new file to create:
+# eval/setup-fresh-drupal10.sh (replaces os-kg-based setup for eval pipeline)
+# .claude/agents/eval-executor.md (optional if using --agents CLI flag)
 ```
 
 ## Sources
 
-- **skill-creator SKILL.md** (PRIMARY): `/home/proofoftom/.claude/plugins/cache/claude-plugins-official/skill-creator/205b6e0b3036/skills/skill-creator/SKILL.md` -- Official skill creation workflow, anatomy rules, eval framework, description optimization
-- **skill-creator schemas.md**: `/home/proofoftom/.claude/plugins/cache/claude-plugins-official/skill-creator/205b6e0b3036/skills/skill-creator/references/schemas.md` -- JSON schemas for evals.json, grading.json, benchmark.json
-- **skill-creator grader.md**: `/home/proofoftom/.claude/plugins/cache/claude-plugins-official/skill-creator/205b6e0b3036/skills/skill-creator/agents/grader.md` -- Grading agent specification
-- **writing-skills SKILL.md**: `/home/proofoftom/.claude/plugins/cache/claude-plugins-official/superpowers/4.3.1/skills/writing-skills/SKILL.md` -- TDD approach to skills, CSO (Claude Search Optimization), anti-patterns
-- **skill-development SKILL.md**: `/home/proofoftom/.claude/plugins/marketplaces/claude-plugins-official/plugins/plugin-dev/skills/skill-development/SKILL.md` -- Plugin-specific skill patterns, progressive disclosure details
-- **claude-api SKILL.md** (example): `/home/proofoftom/.claude/plugins/cache/anthropic-agent-skills/example-skills/7029232b9212/skills/claude-api/SKILL.md` -- Reference-heavy skill with language-specific subdirectories (pattern model for Drupal sub-domain references)
-- **mcp-builder SKILL.md** (example): `/home/proofoftom/.claude/plugins/cache/anthropic-agent-skills/example-skills/7029232b9212/skills/mcp-builder/SKILL.md` -- Multi-phase skill with reference file organization (pattern model)
-- **context7 SKILL.md** (example): `/home/proofoftom/.claude/skills/context7/SKILL.md` -- Locally installed skill showing real-world structure
+- **Claude Code subagent docs** (PRIMARY): https://code.claude.com/docs/en/sub-agents -- Verified 2026-03-06. Frontmatter fields, model control, skills injection, permissionMode, --agents CLI flag, tool restrictions
+- **agent-browser CLI**: Verified locally via `agent-browser --help` and `agent-browser --version` (0.16.3). Source: https://github.com/vercel-labs/agent-browser
+- **ddev docs**: Verified locally via `ddev config --help`. `--project-type=drupal10` confirmed
+- **skill-creator scripts**: Verified on disk at `~/.claude/plugins/cache/claude-plugins-official/skill-creator/205b6e0b3036/skills/skill-creator/scripts/`. Source code for aggregate_benchmark.py and run_eval.py read and analyzed
+- **skill-creator grader.md**: Verified on disk. Grading schema with expectations/summary/claims/eval_feedback structure documented
+- **Phase 6/7 eval results**: From MEMORY.md. Documents known issues with claude -p, knowledge isolation requirements, and eval execution rules
