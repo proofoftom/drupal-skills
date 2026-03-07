@@ -24,7 +24,7 @@ Full details: milestones/v1.0-ROADMAP.md
 
 ### v2.0 Eval & Optimization Loop
 
-- [ ] **Phase 8: Eval Infrastructure** - Create subagent definitions (eval-executor, eval-grader, eval-browser), fresh D10 setup script with auto-retry, validate subagent model control
+- [x] **Phase 8: Eval Infrastructure** - Create subagent definitions (eval-executor, eval-grader, eval-browser), fresh D10 setup script with auto-retry, validate subagent model control
 - [ ] **Phase 9: Eval Prompt Rewrite** - Rewrite all 13 eval prompts for fresh Drupal 10 instances (replace os-kg references), adjust assertions if needed for new prompt context
 - [ ] **Phase 10: Pipeline Validation** - Run 2-3 calibration skills (caching, scaffold) end-to-end through new pipeline, validate grading.json/benchmark.json schemas, confirm meaningful deltas
 - [ ] **Phase 11: Batch Execution** - Run all 13 skills through eval pipeline in batches of 3-4 per session, produce graded benchmarks for every skill
@@ -38,8 +38,8 @@ Full details: milestones/v1.0-ROADMAP.md
 **Requirements**: INFRA-01, INFRA-02, INFRA-03, INFRA-04
 **Plans:** 2 plans
 Plans:
-- [ ] 08-01-PLAN.md -- Create subagent definitions, setup script, and teardown update
-- [ ] 08-02-PLAN.md -- End-to-end pipeline validation with smoke test
+- [x] 08-01-PLAN.md -- Create subagent definitions, setup script, and teardown update
+- [x] 08-02-PLAN.md -- End-to-end pipeline validation with smoke test
 **Success Criteria** (what must be TRUE):
   1. `.claude/agents/eval-executor.md` exists with `model: sonnet` and spawns correctly
   2. `.claude/agents/eval-grader.md` exists and produces compliant grading.json
@@ -94,7 +94,7 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-7 | v1.0 | 26/28 | Shipped | 2026-03-07 |
-| 8. Eval Infrastructure | v2.0 | 0/2 | Planned | - |
+| 8. Eval Infrastructure | v2.0 | 2/2 | Complete | 2026-03-07 |
 | 9. Eval Prompt Rewrite | v2.0 | 0/? | Not started | - |
 | 10. Pipeline Validation | v2.0 | 0/? | Not started | - |
 | 11. Batch Execution | v2.0 | 0/? | Not started | - |

@@ -47,10 +47,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 8 | Planned |
-| INFRA-02 | Phase 8 | Planned |
-| INFRA-03 | Phase 8 | Planned |
-| INFRA-04 | Phase 8 | Planned |
+| INFRA-01 | Phase 8 | Complete |
+| INFRA-02 | Phase 8 | Complete |
+| INFRA-03 | Phase 8 | Complete |
+| INFRA-04 | Phase 8 | Complete |
 | EVAL-01 | Phase 9 | Planned |
 | EVAL-02 | Phase 9 | Planned |
 | PIPE-01 | Phase 10 | Planned |
