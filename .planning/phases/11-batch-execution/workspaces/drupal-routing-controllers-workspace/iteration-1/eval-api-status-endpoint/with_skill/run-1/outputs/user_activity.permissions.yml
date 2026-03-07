@@ -1,0 +1,3 @@
+view user activity:
+  title: 'View user activity'
+  description: 'Allows users to view activity summaries for other users.'

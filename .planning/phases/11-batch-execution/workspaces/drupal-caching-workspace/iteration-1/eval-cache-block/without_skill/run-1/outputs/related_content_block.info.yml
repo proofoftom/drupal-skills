@@ -1,5 +1,5 @@
-name: Related Content Block
+name: 'Related Content Block'
 type: module
-description: Provides a block displaying related content nodes for the current page and user.
+description: 'Displays a block of related content nodes with proper cache metadata.'
 package: Custom
 core_version_requirement: ^10 || ^11

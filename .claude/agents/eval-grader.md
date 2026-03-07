@@ -4,7 +4,7 @@ description: |
   Grade Drupal module eval output against expectations.
   Reads generated code files and produces a compliant grading JSON result.
   Spawned by the eval orchestrator after module generation is complete.
-model: inherit
+model: sonnet
 permissionMode: bypassPermissions
 tools: Read, Bash, Glob, Grep
 ---

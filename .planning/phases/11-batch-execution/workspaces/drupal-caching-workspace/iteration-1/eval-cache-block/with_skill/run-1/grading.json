@@ -3,47 +3,47 @@
     {
       "text": "build() returns render array with #cache key containing BOTH 'tags' AND 'contexts' (the golden rule: EVERY render array needs #cache)",
       "passed": true,
-      "evidence": "RelatedContentBlock.php lines 96-103 (empty case) and lines 126-140 (main return) both have '#cache' keys containing both 'tags' and 'contexts'. Line 98-100: '#cache' => ['tags' => ['node_list'], 'contexts' => ['route', 'user'], ...]. Lines 130-139: '#cache' => ['tags' => $tags, 'contexts' => ['route', 'user'], ...]."
+      "evidence": "RelatedContentBlock.php lines 164-167: the main return array has '#cache' => ['tags' => $node_tags, 'contexts' => ['url.path', 'user'], 'max-age' => Cache::PERMANENT]. The empty-state return (lines 129-135) also includes both 'tags' and 'contexts' in #cache."
     },
     {
       "text": "Cache tags include node-specific tags (node:ID pattern) for data dependency invalidation",
       "passed": true,
-      "evidence": "RelatedContentBlock.php lines 112-115: foreach ($nodes as $node) { $tags = Cache::mergeTags($tags, $node->getCacheTags()); } -- $node->getCacheTags() returns ['node:ID'] for each loaded node. These tags are then used in the #cache array at line 133."
+      "evidence": "RelatedContentBlock.php line 153: $node_tags = Cache::mergeTags($node_tags, $node->getCacheTags()); -- iterates over loaded nodes and collects their cache tags. Drupal's Node::getCacheTags() returns ['node:ID'] for each node entity. These are accumulated and used in the #cache tags at line 165."
     },
     {
-      "text": "Cache contexts include 'route' or 'route.name' AND 'user' or 'user.permissions' or 'user.roles'",
+      "text": "Cache contexts include 'route' or 'url.path' or 'url' for page variation AND 'user' or 'user.permissions' or 'user.roles' for per-user variation",
       "passed": true,
-      "evidence": "RelatedContentBlock.php line 100: 'contexts' => ['route', 'user'] and line 136: 'contexts' => ['route', 'user']. Both return paths include 'route' AND 'user' cache contexts. Also getCacheContexts() at line 185 merges ['route', 'user']."
+      "evidence": "RelatedContentBlock.php line 166: 'contexts' => ['url.path', 'user'] -- includes 'url.path' for page variation and 'user' for per-user variation. Also in getCacheContexts() at line 180: Cache::mergeContexts(parent::getCacheContexts(), ['url.path', 'user'])."
     },
     {
       "text": "Does NOT set max-age to 0 anywhere (max-age: 0 kills the ENTIRE page cache via bubbling -- use lazy_builder instead)",
       "passed": true,
-      "evidence": "grep for 'max-age.*0|max_age.*0' in the module directory returned only comment lines (line 137: '// Permanent: tag-based invalidation handles freshness -- never max-age 0.' and line 204: '// Never use max-age 0, ...'). Actual max-age values are Cache::PERMANENT (lines 101, 138, 205)."
+      "evidence": "Grep for 'max-age.*0|max_age.*0' in the module directory returned no matches. The only max-age values are Cache::PERMANENT at lines 134, 167, and getCacheMaxAge() returns Cache::PERMANENT at line 198."
     },
     {
       "text": "Does NOT use \\Drupal::cache() for render caching (render arrays use #cache, not manual cache API)",
       "passed": true,
-      "evidence": "grep for '\\\\Drupal::cache()' in the module directory returned 'No matches found'. The module uses #cache render array metadata exclusively."
+      "evidence": "Grep for '\\Drupal::cache()' in the module directory returned no matches. The module correctly uses #cache render array metadata instead of manual cache API calls."
     },
     {
       "text": "If the block varies per user, uses cache context 'user' (NOT max-age: 0 as a workaround for per-user variation)",
       "passed": true,
-      "evidence": "The block varies per user (line 171: accessCheck(TRUE) makes query results user-dependent). It uses 'user' cache context (lines 100, 136, 185) and Cache::PERMANENT for max-age (lines 101, 138, 205). No max-age: 0 is used anywhere."
+      "evidence": "RelatedContentBlock.php line 166: 'contexts' => ['url.path', 'user'] -- uses 'user' cache context for per-user variation. Lines 120-122 show per-user logic (authenticated users see their own authored content). No max-age: 0 is used anywhere."
     },
     {
       "text": "#cache metadata is on the OUTERMOST render array element (not buried inside a child element where it won't bubble correctly)",
       "passed": true,
-      "evidence": "RelatedContentBlock.php lines 96-103: empty case returns top-level array with '#cache' alongside '#markup'. Lines 126-140: main return has '#cache' at the same level as '#theme', '#items', '#title' -- the outermost render array element. The #cache is NOT inside any child element in #items."
+      "evidence": "RelatedContentBlock.php lines 160-169: the #cache key is at the same level as #theme, #items, and #title in the returned render array -- the outermost level. It is not nested inside #items or any child element. Same pattern for the empty-state return at lines 127-136."
     },
     {
       "text": "The module enables successfully: ddev drush en related_content_block returns exit code 0",
       "passed": true,
-      "evidence": "Command 'ddev drush en related_content_block -y' returned '[notice] Already installed: related_content_block' with EXIT_CODE: 0. Module status confirmed as 'Enabled' via ddev drush pm:list."
+      "evidence": "Command 'ddev drush en related_content_block -y' returned '[notice] Already installed: related_content_block' with exit code 0."
     },
     {
       "text": "E2E: Block renders without errors after placement",
       "passed": true,
-      "evidence": "After placing the block in the sidebar region and creating 3 test article nodes, curl -sk https://d10-caching-with.ddev.site/node/1 shows the block rendered: '<div id=\"block-related-content-block\" class=\"block block-related-content-block\"><h2 class=\"block__title\">Related Content</h2><h3>Related Content</h3><ul><li><a href=\"/node/2\" hreflang=\"en\">Test Article 2</a></li><li><a href=\"/node/3\" hreflang=\"en\">Test Article 3</a></li></ul>'. No PHP errors, warnings, or exceptions found in the output."
+      "evidence": "After placing the block programmatically, curl -sk https://d10-caching-with.ddev.site/ shows the block rendering correctly: '<div id=\"block-related-content\" class=\"block block-related-content-block\">...<h2 class=\"block__title\">Related Content</h2>...<ul><li><a href=\"/node/1\" hreflang=\"en\">Test Article 1</a></li></ul>'. On node/1 page, block renders 'No related content found.' (correct for single-node scenario). No PHP errors, exceptions, or warnings found in page output."
     }
   ],
   "summary": {

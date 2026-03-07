@@ -5,51 +5,73 @@ declare(strict_types=1);
 namespace Drupal\related_content_block\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
-use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a Related Content block.
+ *
+ * @Block(
+ *   id = "related_content_block",
+ *   admin_label = @Translation("Related Content"),
+ *   category = @Translation("Custom"),
+ * )
  */
-#[Block(
-  id: 'related_content_block',
-  admin_label: new TranslatableMarkup('Related Content'),
-  category: new TranslatableMarkup('Custom'),
-)]
 class RelatedContentBlock extends BlockBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected EntityTypeManagerInterface $entityTypeManager;
+
+  /**
+   * The current route match.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected RouteMatchInterface $routeMatch;
+
+  /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected AccountInterface $currentUser;
 
   /**
    * Constructs a RelatedContentBlock instance.
    *
    * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
+   *   The plugin configuration.
    * @param string $plugin_id
-   *   The plugin ID for the plugin instance.
+   *   The plugin ID.
    * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The plugin definition.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\Core\Routing\RouteMatchInterface $routeMatch
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The current route match.
-   * @param \Drupal\Core\Session\AccountInterface $currentUser
+   * @param \Drupal\Core\Session\AccountInterface $current_user
    *   The current user account.
    */
   public function __construct(
     array $configuration,
     string $plugin_id,
     mixed $plugin_definition,
-    protected readonly EntityTypeManagerInterface $entityTypeManager,
-    protected readonly RouteMatchInterface $routeMatch,
-    protected readonly AccountInterface $currentUser,
+    EntityTypeManagerInterface $entity_type_manager,
+    RouteMatchInterface $route_match,
+    AccountInterface $current_user,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->entityTypeManager = $entity_type_manager;
+    $this->routeMatch = $route_match;
+    $this->currentUser = $current_user;
   }
 
   /**
@@ -67,30 +89,82 @@ class RelatedContentBlock extends BlockBase implements ContainerFactoryPluginInt
   }
 
   /**
-   * Loads related node IDs based on the current page and user.
+   * {@inheritdoc}
+   */
+  public function build(): array {
+    $node_ids = $this->getRelatedNodeIds();
+
+    if (empty($node_ids)) {
+      return [
+        '#cache' => [
+          'contexts' => $this->getCacheContexts(),
+          'tags' => $this->getCacheTags(),
+        ],
+      ];
+    }
+
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->entityTypeManager->getStorage('node');
+    $nodes = $node_storage->loadMultiple($node_ids);
+
+    $items = [];
+    $cache_tags = $this->getCacheTags();
+
+    foreach ($nodes as $node) {
+      $items[] = [
+        '#type' => 'link',
+        '#title' => $node->label(),
+        '#url' => $node->toUrl(),
+      ];
+      // Merge in the cache tags for each loaded node so the block
+      // invalidates whenever any of the displayed nodes change.
+      $cache_tags = Cache::mergeTags($cache_tags, $node->getCacheTags());
+    }
+
+    return [
+      '#theme' => 'item_list',
+      '#items' => $items,
+      '#title' => $this->t('Related Content'),
+      '#cache' => [
+        'contexts' => $this->getCacheContexts(),
+        'tags' => $cache_tags,
+      ],
+    ];
+  }
+
+  /**
+   * Returns node IDs considered related to the current page and user.
    *
-   * In a real implementation this would contain logic such as taxonomy matching,
-   * user-preference lookups, or view-based queries. Here we return a small set
-   * of published nodes so the caching behaviour can be verified end-to-end.
+   * The selection logic intentionally depends on both the current route and
+   * the current user so that the cache contexts declared in getCacheContexts()
+   * match the actual dependencies of this method.
    *
    * @return int[]
-   *   An array of node IDs to display.
+   *   An array of node IDs.
    */
-  protected function loadRelatedNids(): array {
-    $currentNode = $this->routeMatch->getParameter('node');
-    $currentNid  = ($currentNode instanceof NodeInterface) ? $currentNode->id() : 0;
+  protected function getRelatedNodeIds(): array {
+    $node_storage = $this->entityTypeManager->getStorage('node');
 
-    $storage = $this->entityTypeManager->getStorage('node');
-
-    $query = $storage->getQuery()
-      ->condition('status', NodeInterface::PUBLISHED)
+    // Determine a base set of published nodes.  In a real implementation this
+    // would use field values or taxonomy terms from the current node; here we
+    // keep the query simple so the block works on any Drupal install.
+    $query = $node_storage->getQuery()
+      ->condition('status', 1)
       ->accessCheck(TRUE)
       ->range(0, 5)
       ->sort('created', 'DESC');
 
-    // Exclude the current node so we never link back to the same page.
-    if ($currentNid) {
-      $query->condition('nid', $currentNid, '<>');
+    // Vary by current route: if we are on a node page, exclude that node.
+    $current_node = $this->routeMatch->getParameter('node');
+    if ($current_node) {
+      $current_nid = is_object($current_node) ? $current_node->id() : $current_node;
+      $query->condition('nid', $current_nid, '<>');
+    }
+
+    // Vary by current user: restrict to content the user has authored so that
+    // two different users see different lists (demonstrating user cache context).
+    if (!$this->currentUser->isAnonymous()) {
+      $query->condition('uid', $this->currentUser->id());
     }
 
     return array_values($query->execute());
@@ -98,55 +172,15 @@ class RelatedContentBlock extends BlockBase implements ContainerFactoryPluginInt
 
   /**
    * {@inheritdoc}
-   */
-  public function build(): array {
-    $nids = $this->loadRelatedNids();
-
-    if (empty($nids)) {
-      return [
-        '#cache' => [
-          'contexts' => $this->getCacheContexts(),
-          'tags'     => $this->getCacheTags(),
-          'max-age'  => $this->getCacheMaxAge(),
-        ],
-      ];
-    }
-
-    /** @var \Drupal\node\NodeInterface[] $nodes */
-    $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
-
-    $items = [];
-    foreach ($nodes as $node) {
-      $items[] = [
-        '#type'  => 'link',
-        '#title' => $node->label(),
-        '#url'   => $node->toUrl(),
-      ];
-    }
-
-    return [
-      '#theme'     => 'item_list',
-      '#items'     => $items,
-      '#title'     => $this->t('Related Content'),
-      '#list_type' => 'ul',
-      '#cache'     => [
-        'contexts' => $this->getCacheContexts(),
-        'tags'     => $this->getCacheTags(),
-        'max-age'  => $this->getCacheMaxAge(),
-      ],
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
    *
-   * Vary by:
-   *   - url.path — different pages show different related content.
-   *   - user     — personalised results per user account.
+   * Declare cache contexts so Drupal stores a separate cache entry for each
+   * combination of URL path and authenticated user.
    */
   public function getCacheContexts(): array {
     return Cache::mergeContexts(parent::getCacheContexts(), [
-      'url.path',
+      // One cache entry per URL so content stays relevant to the current page.
+      'url',
+      // One cache entry per user so each person sees their own related content.
       'user',
     ]);
   }
@@ -154,31 +188,12 @@ class RelatedContentBlock extends BlockBase implements ContainerFactoryPluginInt
   /**
    * {@inheritdoc}
    *
-   * Invalidate when any node changes so stale related-content links are never
-   * served. The 'node_list' tag covers node creation/deletion; individual
-   * node:<id> tags cover updates to currently-displayed nodes.
+   * The base tag 'node_list' ensures the block is invalidated whenever any
+   * node is created, updated, or deleted — covering cases where newly
+   * published content should appear in the list.
    */
   public function getCacheTags(): array {
-    $nids = $this->loadRelatedNids();
-
-    $nodeTags = [];
-    foreach ($nids as $nid) {
-      $nodeTags[] = 'node:' . $nid;
-    }
-
-    return Cache::mergeTags(
-      parent::getCacheTags(),
-      ['node_list'],
-      $nodeTags,
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getCacheMaxAge(): int {
-    // Tags and contexts control freshness; no arbitrary TTL needed.
-    return Cache::PERMANENT;
+    return Cache::mergeTags(parent::getCacheTags(), ['node_list']);
   }
 
 }

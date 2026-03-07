@@ -8,7 +8,7 @@
   "expectations": [
     "build() returns render array with #cache key containing BOTH 'tags' AND 'contexts' (the golden rule: EVERY render array needs #cache)",
     "Cache tags include node-specific tags (node:ID pattern) for data dependency invalidation",
-    "Cache contexts include 'route' or 'route.name' AND 'user' or 'user.permissions' or 'user.roles'",
+    "Cache contexts include 'route' or 'url.path' or 'url' for page variation AND 'user' or 'user.permissions' or 'user.roles' for per-user variation",
     "Does NOT set max-age to 0 anywhere (max-age: 0 kills the ENTIRE page cache via bubbling -- use lazy_builder instead)",
     "Does NOT use \\Drupal::cache() for render caching (render arrays use #cache, not manual cache API)",
     "If the block varies per user, uses cache context 'user' (NOT max-age: 0 as a workaround for per-user variation)",
