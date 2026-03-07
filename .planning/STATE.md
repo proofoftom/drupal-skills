@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Eval & Optimization Loop
-status: completed
-stopped_at: Completed 09-02-PLAN.md (Phase 9 complete)
-last_updated: "2026-03-07T05:01:21.888Z"
-last_activity: 2026-03-07 -- Completed 09-02 complex prompt rewrites (Phase 9 complete)
+status: in-progress
+stopped_at: Completed 10-01-PLAN.md
+last_updated: "2026-03-07T05:33:13.470Z"
+last_activity: 2026-03-07 -- Completed 10-01 caching calibration pipeline (+11% delta)
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
-  percent: 100
+  total_plans: 6
+  completed_plans: 5
+  percent: 83
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-07)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** v2.0 -- Eval & Optimization Loop (Phase 9 complete, Phase 10 next)
+**Current focus:** v2.0 -- Eval & Optimization Loop (Phase 10 in progress)
 
 ## Current Position
 
-Phase: 9 of 12 -- Eval Prompt Rewrite (complete)
-Plan: 2 of 2 complete
-Status: Phase 9 complete, ready for Phase 10
-Last activity: 2026-03-07 -- Completed 09-02 complex prompt rewrites (Phase 9 complete)
+Phase: 10 of 12 -- Pipeline Validation (in progress)
+Plan: 1 of 2 complete
+Status: Plan 10-01 complete (caching calibration), Plan 10-02 next (scaffold calibration)
+Last activity: 2026-03-07 -- Completed 10-01 caching calibration pipeline (+11% delta)
 
-Progress: [██████████] 100%
+Progress: [████████░░] 83%
 
 ## Accumulated Context
 
@@ -45,6 +45,9 @@ Progress: [██████████] 100%
 - [Phase 09]: 09-01: Text-only prompt replacement, expectations byte-identical, consistent 'a Drupal 10 site' phrasing
 - [Phase 09]: 09-02: Removed 3 high-impact hints (max-age:0, queue pattern, Entity API ban) to maximize differentiation
 - [Phase 09]: 09-02: Redesigned testing eval with calculator module (self-contained, no external deps)
+- [Phase 10]: Caching delta +11% (9/9 with vs 8/9 without) -- pipeline validated, delta below 30% threshold indicates assertions need tuning (Phase 12 work)
+- [Phase 10]: eval-grader subagent produces compliant grading.json on first real run (no schema fixes needed)
+- [Phase 10]: Only 1 differentiating expectation: route vs url.path cache context -- Sonnet without skill is highly competent at caching patterns
 
 ### Carried from v1.0
 
@@ -63,6 +66,6 @@ None -- clean slate for v2.0.
 
 ## Session Continuity
 
-Last session: 2026-03-07T04:56:16.201Z
-Stopped at: Completed 09-02-PLAN.md (Phase 9 complete)
+Last session: 2026-03-07T05:33:13.468Z
+Stopped at: Completed 10-01-PLAN.md
 Resume file: None
