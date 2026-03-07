@@ -1,0 +1,25 @@
+{
+  "skill_name": "drupal-config-storage",
+  "eval_id": 1,
+  "iteration": 1,
+  "eval_name": "eval-site-announcements",
+  "prompt": "Create a module called `site_announcements` for a Drupal 10 site that stores announcement configuration. The module should have config/install default YAML with settings for: announcement_text (string, default 'Welcome'), display_enabled (boolean, default true), and max_display_count (integer, default 3). Create the matching config schema file. Add a settings form at /admin/config/system/announcements that allows editing these values and saves them to config. We want D11 compatibility.",
+  "expected_output": "config/install YAML, config/schema YAML, ConfigFormBase form",
+  "expectations": [
+    "config/install/site_announcements.settings.yml exists with default values",
+    "config/schema/site_announcements.schema.yml exists with typed mapping entries",
+    "Schema uses 'label' type for translatable human-readable text like announcement_text -- not 'string' for user-facing text",
+    "Schema uses correct types: 'boolean' for display_enabled (not 'string'), 'integer' for max_display_count",
+    "Form uses $this->config('site_announcements.settings') for reads and writes (NOT \\Drupal::config() which returns immutable)",
+    "Does NOT use variable_get/variable_set (D7 pattern) or State API for exportable settings",
+    "Does NOT use \\Drupal::state() for settings that should be config-exportable",
+    "The module enables successfully: ddev drush en site_announcements returns exit code 0",
+    "Config loads correctly: ddev drush config:get site_announcements.settings returns values without error"
+  ],
+  "configs": [
+    "with_skill",
+    "without_skill"
+  ],
+  "runs_per_config": 1,
+  "model": "claude-sonnet-4-6"
+}

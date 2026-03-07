@@ -1,0 +1,25 @@
+{
+  "skill_name": "drupal-access-security",
+  "eval_id": 1,
+  "iteration": 1,
+  "eval_name": "eval-restricted-reports",
+  "prompt": "Create a module called `restricted_reports` for a Drupal 10 site. It should define a custom permission 'view restricted reports' and provide a route at /reports/restricted that shows a simple page. Only users with the 'view restricted reports' permission should be able to access it. Anonymous users should get a 403 Access Denied response. Use AccessResult objects for access checking, not bare booleans. We want D11 compatibility.",
+  "expected_output": "permissions.yml, route with _permission, controller with AccessResult",
+  "expectations": [
+    "Permission defined in restricted_reports.permissions.yml with 'title' key (permission string must match what route uses)",
+    "Route _permission requirement references the EXACT permission string defined in .permissions.yml",
+    "If custom access checking code exists, it returns AccessResult objects (AccessResult::allowed(), AccessResult::forbidden(), AccessResult::neutral()) -- NOT bare booleans (TRUE/FALSE)",
+    "If AccessResult objects are used, they include ->addCacheContexts(['user.permissions']) or ->addCacheTags() for cache-aware access",
+    "Does NOT use hook_permission() (D7 pattern) -- permissions are in .permissions.yml",
+    "Does NOT implement manual CSRF token checking -- would use _csrf_token route option if CSRF protection needed",
+    "The module enables successfully: ddev drush en restricted_reports returns exit code 0",
+    "E2E: Anonymous gets 403 -- navigate to /reports/restricted as anonymous and verify access denied",
+    "E2E: Admin gets 200 -- navigate to /reports/restricted as admin and verify page loads"
+  ],
+  "configs": [
+    "with_skill",
+    "without_skill"
+  ],
+  "runs_per_config": 1,
+  "model": "claude-sonnet-4-6"
+}
