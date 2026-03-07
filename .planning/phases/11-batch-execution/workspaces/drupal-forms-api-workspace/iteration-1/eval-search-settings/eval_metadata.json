@@ -1,0 +1,26 @@
+{
+  "skill_name": "drupal-forms-api",
+  "eval_id": 1,
+  "iteration": 1,
+  "eval_name": "eval-search-settings",
+  "prompt": "Create a settings form module called `search_settings` for configuring search parameters on a Drupal 10 site. The form at `/admin/config/search/search-settings` should have fields for: similarity_threshold (number, default 0.7), result_limit (number, default 5), and cache_ttl (number, default 300). Save all settings to config. Include a config schema file. We want D11 compatibility.",
+  "expected_output": "ConfigFormBase with getEditableConfigNames, config schema, route with _form key",
+  "expectations": [
+    "Form class extends ConfigFormBase (not FormBase or ControllerBase) for the settings form",
+    "Form implements getEditableConfigNames() returning an array with the config object name",
+    "Config schema file exists at config/schema/search_settings.schema.yml with typed entries for each field",
+    "Schema uses appropriate types: 'integer' for numeric fields like result_limit and cache_ttl (not 'string' for everything)",
+    "If validation exists, it uses $form_state->setErrorByName() (not throwing exceptions or using drupal_set_message)",
+    "buildForm() calls parent::buildForm($form, $form_state) to get automatic submit button",
+    "submitForm() calls parent::submitForm($form, $form_state) for automatic status message",
+    "submitForm() uses $this->config() to get editable config (not \\Drupal::configFactory()->getEditable())",
+    "The module enables successfully: ddev drush en search_settings returns exit code 0",
+    "E2E: Settings form renders -- navigate to /admin/config/search/search-settings as admin and verify form fields are present"
+  ],
+  "configs": [
+    "with_skill",
+    "without_skill"
+  ],
+  "runs_per_config": 1,
+  "model": "claude-sonnet-4-6"
+}

@@ -1,0 +1,4 @@
+services:
+  event_analytics.attendance_manager:
+    class: Drupal\event_analytics\Service\AttendanceManager
+    arguments: ['@database', '@current_user']

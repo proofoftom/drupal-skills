@@ -1,0 +1,24 @@
+{
+  "skill_name": "drupal-testing",
+  "eval_id": 1,
+  "iteration": 1,
+  "eval_name": "eval-calculator",
+  "prompt": "Create a module called `calculator` that provides a Calculator service class with add() and subtract() methods accepting two numbers. Register the service in the module's services.yml file. Then write a kernel test that verifies the calculator service can be loaded from the Drupal service container and that its methods return correct results. Use the correct test base class for testing a service without browser interaction. Put the test in the proper directory following Drupal test conventions. We're running Drupal 10 and want D11 compatibility.",
+  "expected_output": "A calculator module with a service class, services.yml, and a kernel test extending KernelTestBase with correct module installation, service loading, and method assertions.",
+  "expectations": [
+    "Test class extends KernelTestBase (NOT BrowserTestBase, NOT WebDriverTestBase) -- kernel tests are for service/API testing without browser, the LOWEST sufficient test type",
+    "Test class has protected static $modules array (NOT a setUp() module_enable call)",
+    "$modules includes all required modules: at minimum 'calculator'",
+    "setUp() calls parent::setUp() (required for KernelTestBase to initialize the container)",
+    "Test loads the calculator service from the container using $this->container->get('calculator.calculator') or similar service ID",
+    "Test has @group annotation (required for test discovery by PHPUnit)",
+    "Does NOT extend BrowserTestBase for a service test (over-testing -- BrowserTestBase boots full Drupal + browser, kernel test only needs container)",
+    "Test method uses assertion methods like assertEquals(), assertNotNull(), assertInstanceOf() to verify service behavior (NOT bare if/echo)"
+  ],
+  "configs": [
+    "with_skill",
+    "without_skill"
+  ],
+  "runs_per_config": 1,
+  "model": "claude-sonnet-4-6"
+}

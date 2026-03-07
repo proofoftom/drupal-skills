@@ -1,0 +1,5 @@
+name: Related Content Block
+type: module
+description: Provides a block displaying related content nodes for the current page and user.
+package: Custom
+core_version_requirement: ^10 || ^11

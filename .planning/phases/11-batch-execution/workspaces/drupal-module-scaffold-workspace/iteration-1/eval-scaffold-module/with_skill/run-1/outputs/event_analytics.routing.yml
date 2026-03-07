@@ -1,0 +1,7 @@
+event_analytics.dashboard:
+  path: '/event-analytics'
+  defaults:
+    _controller: '\Drupal\event_analytics\Controller\EventAnalyticsController::dashboard'
+    _title: 'Event Analytics Dashboard'
+  requirements:
+    _permission: 'access content'
