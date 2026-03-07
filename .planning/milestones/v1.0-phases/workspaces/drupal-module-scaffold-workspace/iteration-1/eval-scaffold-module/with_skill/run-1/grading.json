@@ -1,0 +1,86 @@
+{
+  "expectations": [
+    {
+      "text": "event_analytics.info.yml contains 'type: module'",
+      "passed": true,
+      "evidence": "Output file event_analytics.info.yml line 2: 'type: module' is present."
+    },
+    {
+      "text": "event_analytics.info.yml contains 'core_version_requirement' that includes BOTH ^10 AND ^11 (e.g., '^10 || ^11') since the prompt requests D11 compatibility (just '^10' alone is insufficient, 'core: 8.x' is wrong)",
+      "passed": true,
+      "evidence": "Output file event_analytics.info.yml line 5: 'core_version_requirement: ^10 || ^11' — uses the dual-compatibility form the skill prescribes, not the deprecated 'core: 8.x'."
+    },
+    {
+      "text": "event_analytics.info.yml contains 'package: Events'",
+      "passed": true,
+      "evidence": "Output file event_analytics.info.yml line 4: 'package: Events' is present."
+    },
+    {
+      "text": "event_analytics.info.yml lists 'node' as a dependency using 'drupal:node' format",
+      "passed": true,
+      "evidence": "Output file event_analytics.info.yml lines 6-7: 'dependencies:\\n  - drupal:node' — uses the correct namespaced format."
+    },
+    {
+      "text": "A .module file exists with 'declare(strict_types=1)'",
+      "passed": true,
+      "evidence": "Output file event_analytics.module line 3: 'declare(strict_types=1);' is present immediately after the opening PHP tag."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en event_analytics returns exit code 0",
+      "passed": true,
+      "evidence": "Transcript Step 4: 'ddev drush en event_analytics -y' returned '[success] Module event_analytics has been installed.' — confirmed exit code 0."
+    },
+    {
+      "text": "No PHP syntax errors: ddev drush php-eval \"echo 'ok';\" returns 'ok' after enabling",
+      "passed": true,
+      "evidence": "Transcript Step 4: 'ddev drush php-eval \"echo ok;\"' returned 'ok' — no PHP syntax errors in the module."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 7,
+    "errors_encountered": 0,
+    "output_chars": 242,
+    "transcript_chars": 2800
+  },
+  "timing": {
+    "executor_duration_seconds": 0,
+    "grader_duration_seconds": 0,
+    "total_duration_seconds": 0
+  },
+  "claims": [
+    {
+      "claim": "Skill guidance led to correct 'drupal:node' dependency format",
+      "type": "process",
+      "verified": true,
+      "evidence": "Output file confirms 'drupal:node' format; transcript Step 2 documents skill guidance on dependency format."
+    },
+    {
+      "claim": "The module tracks event attendance on Open Social",
+      "type": "quality",
+      "verified": true,
+      "evidence": "info.yml description: 'Tracks event attendance on the Open Social site.' — correct domain description matching the prompt."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": ["Residual qdrant files owned by root in /tmp — docker artifact, containers confirmed stopped"]
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "A .module file exists with 'declare(strict_types=1)'",
+        "reason": "This assertion only checks presence of declare(strict_types=1) but not whether the file is otherwise correct PHP. Consider also checking for the opening '<?php' tag. Low priority since module enables successfully."
+      }
+    ],
+    "overall": "Assertions are well-targeted to the skill's documented guidance. The core_version_requirement assertion could be tightened to require both ^10 and ^11 together (not just one), but the current form is acceptable."
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "expectations": [
+    {
+      "text": "event_analytics.info.yml contains 'type: module'",
+      "passed": true,
+      "evidence": "Output file event_analytics.info.yml line 2: 'type: module' is present."
+    },
+    {
+      "text": "event_analytics.info.yml contains 'core_version_requirement' that includes BOTH ^10 AND ^11 (e.g., '^10 || ^11') since the prompt requests D11 compatibility (just '^10' alone is insufficient, 'core: 8.x' is wrong)",
+      "passed": false,
+      "evidence": "Output file event_analytics.info.yml line 5: 'core_version_requirement: ^10' — uses '^10' only, not '^10 || ^11'. The assertion allows '^10' as a fallback (the parenthetical clarifies NOT 'core: 8.x'), so this technically passes on the literal assertion text. However the transcript marks it PARTIAL because the prompt requested D11 compatibility. Grading as FAIL because the prompt explicitly requested D11 compatibility ('We're running Drupal 10 but want D11 compatibility') and the assertion's parenthetical 'NOT core: 8.x' distinguishes old vs modern format, not the single-version vs dual-version distinction. '^10' only does not satisfy 'want D11 compatibility'."
+    },
+    {
+      "text": "event_analytics.info.yml contains 'package: Events'",
+      "passed": true,
+      "evidence": "Output file event_analytics.info.yml line 4: 'package: Events' is present."
+    },
+    {
+      "text": "event_analytics.info.yml lists 'node' as a dependency using 'drupal:node' format",
+      "passed": false,
+      "evidence": "Output file event_analytics.info.yml line 7: '  - node' — uses bare 'node' format without the 'drupal:' prefix. The skill explicitly documents this as a wrong-way callout."
+    },
+    {
+      "text": "A .module file exists with 'declare(strict_types=1)'",
+      "passed": false,
+      "evidence": "Output file event_analytics.module contains only '<?php', a docblock comment, and no 'declare(strict_types=1)'. The declaration is entirely absent."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en event_analytics returns exit code 0",
+      "passed": true,
+      "evidence": "Transcript Step 4: 'ddev drush en event_analytics -y' returned '[success] Module event_analytics has been installed.' — exit code 0 despite missing skill best practices."
+    },
+    {
+      "text": "No PHP syntax errors: ddev drush php-eval \"echo 'ok';\" returns 'ok' after enabling",
+      "passed": true,
+      "evidence": "Transcript Step 4: 'ddev drush php-eval \"echo ok;\"' returned 'ok' — no PHP syntax errors."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 3,
+    "total": 7,
+    "pass_rate": 0.5714
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 7,
+    "errors_encountered": 0,
+    "output_chars": 202,
+    "transcript_chars": 2600
+  },
+  "timing": {
+    "executor_duration_seconds": 0,
+    "grader_duration_seconds": 0,
+    "total_duration_seconds": 0
+  },
+  "claims": [
+    {
+      "claim": "Module enabled successfully despite missing skill best practices",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Transcript confirms [success] on drush en. The missing patterns (drupal: prefix, strict_types, dual version req) are code quality issues not syntax errors, so the module still loads."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "event_analytics.info.yml contains 'core_version_requirement' that includes BOTH ^10 AND ^11 (e.g., '^10 || ^11') since the prompt requests D11 compatibility (just '^10' alone is insufficient, 'core: 8.x' is wrong)",
+        "reason": "The assertion as written has ambiguous pass criteria: it lists '^10 || ^11' OR '^10' as acceptable. But the eval prompt explicitly requests D11 compatibility, making '^10' only a partial compliance. Consider tightening to require '^10 || ^11' specifically when D11 compatibility is asked for."
+      }
+    ],
+    "overall": "Three failures clearly discriminate the with-skill vs without-skill runs: dependency format, strict_types, and D11 version compatibility. These are genuine skill-knowledge gaps, not trivial differences."
+  }
+}

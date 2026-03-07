@@ -1,0 +1,16 @@
+administer event enrollment entities:
+  title: 'Administer Event Enrollment entities'
+  description: 'Allow full administration of Event Enrollment entities.'
+  restrict access: true
+
+view event enrollment entities:
+  title: 'View Event Enrollment entities'
+
+add event enrollment entities:
+  title: 'Create new Event Enrollment entities'
+
+edit event enrollment entities:
+  title: 'Edit Event Enrollment entities'
+
+delete event enrollment entities:
+  title: 'Delete Event Enrollment entities'

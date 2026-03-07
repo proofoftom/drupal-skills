@@ -1,0 +1,60 @@
+{
+  "skill": "drupal-routing-controllers",
+  "eval_id": 1,
+  "run": 1,
+  "config": "without_skill",
+  "model": "claude-sonnet-4-6",
+  "timestamp": "2026-03-06T16:03:00Z",
+  "expectations": [
+    {
+      "id": 1,
+      "description": "Controller does NOT use \\Drupal::service() static calls -- all services injected via constructor DI",
+      "result": "PASS",
+      "evidence": "No \\Drupal::service() calls in StatusController.php. Uses create() + constructor DI."
+    },
+    {
+      "id": 2,
+      "description": "Constructor parameters typed with interface types, stored as protected properties",
+      "result": "PASS",
+      "evidence": "Constructor takes ConfigFactoryInterface $configFactory, ModuleHandlerInterface $moduleHandler. Stored via $this->configFactory/$this->moduleHandler (inherits ControllerBase protected properties)."
+    },
+    {
+      "id": 3,
+      "description": "Route file uses _controller (not _form)",
+      "result": "PASS",
+      "evidence": "routing.yml uses _controller: '\\Drupal\\api_status_endpoint\\Controller\\StatusController::status'"
+    },
+    {
+      "id": 4,
+      "description": "Controller returns JsonResponse",
+      "result": "PASS",
+      "evidence": "status() method returns new JsonResponse(['site_name' => ..., 'module_count' => ...])"
+    },
+    {
+      "id": 5,
+      "description": "Error handling returns Response objects (if exists)",
+      "result": "PASS",
+      "evidence": "No error handling present (N/A -- vacuously true)"
+    },
+    {
+      "id": 6,
+      "description": ".info.yml has core_version_requirement ^10 || ^11",
+      "result": "PASS",
+      "evidence": "core_version_requirement: ^10 || ^11"
+    },
+    {
+      "id": 7,
+      "description": "Module enables successfully",
+      "result": "PASS",
+      "evidence": "Agent confirmed module enabled. Note: Drupal reported 'Already installed' due to stale registry from prior run."
+    },
+    {
+      "id": 8,
+      "description": "E2E: API endpoint returns JSON with site_name",
+      "result": "PASS",
+      "evidence": "curl http://os-kg-routing-without.ddev.site:33000/api/system/status returns {\"site_name\":\"Drush Site-Install\",\"module_count\":138}"
+    }
+  ],
+  "score": "8/8",
+  "percentage": 100
+}
