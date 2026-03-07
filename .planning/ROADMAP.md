@@ -36,6 +36,10 @@ Full details: milestones/v1.0-ROADMAP.md
 **Goal**: Build the subagent-based eval pipeline foundation so that a single skill can be evaluated end-to-end without manual model switching or environment hacks
 **Depends on**: v1.0 (skills, evals.json, teardown scripts)
 **Requirements**: INFRA-01, INFRA-02, INFRA-03, INFRA-04
+**Plans:** 2 plans
+Plans:
+- [ ] 08-01-PLAN.md -- Create subagent definitions, setup script, and teardown update
+- [ ] 08-02-PLAN.md -- End-to-end pipeline validation with smoke test
 **Success Criteria** (what must be TRUE):
   1. `.claude/agents/eval-executor.md` exists with `model: sonnet` and spawns correctly
   2. `.claude/agents/eval-grader.md` exists and produces compliant grading.json
@@ -90,7 +94,7 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-7 | v1.0 | 26/28 | Shipped | 2026-03-07 |
-| 8. Eval Infrastructure | v2.0 | 0/? | Not started | - |
+| 8. Eval Infrastructure | v2.0 | 0/2 | Planned | - |
 | 9. Eval Prompt Rewrite | v2.0 | 0/? | Not started | - |
 | 10. Pipeline Validation | v2.0 | 0/? | Not started | - |
 | 11. Batch Execution | v2.0 | 0/? | Not started | - |
