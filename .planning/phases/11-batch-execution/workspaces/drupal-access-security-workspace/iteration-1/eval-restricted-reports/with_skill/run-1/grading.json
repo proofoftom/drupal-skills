@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Permission defined in restricted_reports.permissions.yml with 'title' key (permission string must match what route uses)",
+      "passed": true,
+      "evidence": "restricted_reports.permissions.yml defines 'view restricted reports' with title: 'View restricted reports'. The route uses _custom_access which internally checks this exact permission string via AccessResult::allowedIfHasPermission($account, 'view restricted reports')."
+    },
+    {
+      "text": "Route _permission requirement references the EXACT permission string defined in .permissions.yml",
+      "passed": false,
+      "evidence": "restricted_reports.routing.yml uses '_custom_access: \\Drupal\\restricted_reports\\Access\\RestrictedReportsAccessChecker::access' instead of '_permission: view restricted reports'. While the custom access checker internally references the correct permission string, the route itself does not use the _permission requirement key."
+    },
+    {
+      "text": "If custom access checking code exists, it returns AccessResult objects (AccessResult::allowed(), AccessResult::forbidden(), AccessResult::neutral()) -- NOT bare booleans (TRUE/FALSE)",
+      "passed": true,
+      "evidence": "src/Access/RestrictedReportsAccessChecker.php line 25: 'return AccessResult::allowedIfHasPermission($account, 'view restricted reports');' -- returns AccessResult object, no bare booleans."
+    },
+    {
+      "text": "If AccessResult objects are used, they include ->addCacheContexts(['user.permissions']) or ->addCacheTags() for cache-aware access",
+      "passed": true,
+      "evidence": "RestrictedReportsAccessChecker.php line 25 uses AccessResult::allowedIfHasPermission() which automatically adds 'user.permissions' cache context internally (documented Drupal core behavior). The docblock on line 22 confirms: 'Cache context is added automatically by allowedIfHasPermission().'."
+    },
+    {
+      "text": "Does NOT use hook_permission() (D7 pattern) -- permissions are in .permissions.yml",
+      "passed": true,
+      "evidence": "Searched all module files for 'hook_permission' -- no matches found. Permissions are defined in restricted_reports.permissions.yml."
+    },
+    {
+      "text": "Does NOT implement manual CSRF token checking -- would use _csrf_token route option if CSRF protection needed",
+      "passed": true,
+      "evidence": "Searched all module files for 'csrf' (case-insensitive) -- no matches found. No manual CSRF token checking implemented."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en restricted_reports returns exit code 0",
+      "passed": true,
+      "evidence": "ddev drush en restricted_reports -y returned '[notice] Already installed: restricted_reports' with EXIT_CODE=0."
+    },
+    {
+      "text": "E2E: Anonymous gets 403 -- navigate to /reports/restricted as anonymous and verify access denied",
+      "passed": true,
+      "evidence": "curl -sk -o /dev/null -w '%{http_code}' https://d10-access-with.ddev.site/reports/restricted returned 403."
+    },
+    {
+      "text": "E2E: Admin gets 200 -- navigate to /reports/restricted as admin and verify page loads",
+      "passed": true,
+      "evidence": "After authenticating via drush uli, curl -sk -b cookies -o /dev/null -w '%{http_code}' https://d10-access-with.ddev.site/reports/restricted returned 200."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.89
+  }
+}
