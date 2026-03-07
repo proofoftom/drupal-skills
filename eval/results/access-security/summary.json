@@ -1,0 +1,11 @@
+{
+    "skill": "drupal-access-security",
+    "with_score": 9,
+    "without_score": 9,
+    "total": 9,
+    "delta": 0,
+    "delta_pct": "0%",
+    "pipeline": "headless",
+    "date": "2026-03-07",
+    "notes": "Both variants identical - standard pattern, no custom access code"
+}

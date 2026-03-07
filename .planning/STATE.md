@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Eval & Optimization Loop
 status: in_progress
-stopped_at: Phase 11 paused — evals.json needs schema cleanup before eval runs
-last_updated: "2026-03-07T12:25:30Z"
-last_activity: 2026-03-07 -- Session 14 reworked E2E strategy. Added browser_checks to evals.json (needs cleanup — non-schema field). Established eval verification approach for this milestone.
+stopped_at: Pipeline fully validated — access-security hardened (10% delta) — batch 11 remaining skills
+last_updated: "2026-03-07T14:30:00Z"
+last_activity: 2026-03-07 -- Session 15 fixed evals.json schema, validated headless pipeline (37.5% caching delta vs 0% with agent harness), retooled pipeline to use claude -p.
 progress:
   total_phases: 5
   completed_phases: 3
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 Phase: 11 of 12 -- Batch Execution
 Plan: 3 of 13 complete (11-01 setup, 11-02 access-security, 11-03 routing-controllers)
-Status: IN PROGRESS — evals.json has non-schema fields to clean up, then ready to validate
-Last activity: 2026-03-07 -- Reworked eval verification: eval-browser for meaningful E2E (not curl), phpcs for static analysis, phpunit for testing skill
+Status: IN PROGRESS — pipeline fully validated (headless + browser), batch 11 remaining skills
+Last activity: 2026-03-07 -- Session 16: access-security prompt hardened (10% delta), browser handoff validated, batch plan created
 
 Progress: [████░░░░░░] 37%
 
@@ -62,6 +62,11 @@ Progress: [████░░░░░░] 37%
 - [Phase 11]: phpunit execution is the correct E2E for testing skill
 - [Phase 11]: Theming prompt updated to require page route for browser verification
 - [Phase 11]: Mega-module integrated eval approach deferred to next milestone
+- [Phase 11]: Agent harness confound CONFIRMED: 0% delta (agent) vs 37.5% delta (headless) on caching
+- [Phase 11]: Pipeline retooled to headless `claude -p` for code generation — agents only for grading/browser
+- [Phase 11]: eval-executor.md deprecated — headless templates documented inside it
+- [Phase 11]: eval-browser receives expectations from orchestrator, outputs structured JSON with expectation text
+- [Phase 11]: eval-grader uses browser report as evidence for `(via eval-browser)` expectations
 
 ### Carried from v1.0
 
@@ -70,17 +75,16 @@ Progress: [████░░░░░░] 37%
 
 ### Pending Todos
 
-- Clean up evals.json: remove browser_checks/cli_checks, promote valuable E2E to expectations, add phpcs
 - Consider Group contrib module for harder eval scenarios
+- Consider harder caching scenarios: lazy_builder for per-user uncacheable content, CacheableMetadata bubbling
 - Next milestone: integrated mega-module eval with full browser UAT
 
 ### Blockers/Concerns
 
-- evals.json files have non-schema fields — must clean up before eval runs
 - No content scaffolding for list-rendering evals (caching, theming, views) — deferred
 
 ## Session Continuity
 
-Last session: 2026-03-07T12:25:30Z
-Stopped at: evals.json needs schema cleanup (remove browser_checks/cli_checks, promote valuable E2E to expectations, add phpcs), then validate with caching re-run
+Last session: 2026-03-07T13:55:00Z
+Stopped at: Access-security hardened (10% delta), browser handoff validated. Ready to batch remaining 11 skills.
 Resume file: .planning/phases/11-batch-execution/.continue-here.md

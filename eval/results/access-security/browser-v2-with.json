@@ -1,0 +1,16 @@
+{
+  "checks": [
+    {
+      "description": "Navigate to /notes WITHOUT logging in -- verify a 403 Access Denied response (proves permission-based route protection works)",
+      "url": "https://d10-access-security-with.ddev.site/notes",
+      "passed": true,
+      "http_status": 403,
+      "evidence": "Page title: 'Access denied | Drush Site-Install', page content displays 'You are not authorized to access this page.', HTTP status code 403 confirmed"
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "total": 1
+  }
+}

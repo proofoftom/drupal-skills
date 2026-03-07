@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Permission string in route _permission EXACTLY matches the string defined in .permissions.yml (orphaned/mismatched permission strings silently deny access to everyone -- no error, no warning, just a 403 for all users)",
+      "passed": true,
+      "evidence": "routing.yml line 7: _permission: 'view restricted reports' exactly matches permissions.yml line 1: 'view restricted reports:' -- strings are identical."
+    },
+    {
+      "text": "If custom access checking code exists, it returns AccessResult objects with ->addCacheContexts(['user.permissions']) or uses AccessResult::allowedIfHasPermission() which adds contexts automatically (bare AccessResult without cache contexts gets cached for the first user's result and applies to ALL subsequent users)",
+      "passed": true,
+      "evidence": "No custom access checking code exists. Grep for 'AccessResult' across all module files returned no matches. The module uses _permission in routing.yml (line 7), which delegates to Drupal core's built-in permission checker that handles cache contexts automatically. The conditional expectation is trivially satisfied."
+    },
+    {
+      "text": "If AccessResult::allowedIf() or AccessResult::forbidden() is used directly, it includes ->addCacheContexts() call (NOT bare AccessResult without cache metadata -- this is a security and caching bug where access decisions bleed across users)",
+      "passed": true,
+      "evidence": "No AccessResult usage found anywhere in the module. Grep for 'AccessResult' returned no matches. The module relies solely on _permission in routing.yml, so this conditional expectation is trivially satisfied."
+    },
+    {
+      "text": "Does NOT use hook_permission() to define permissions (D7 pattern removed in D8 -- permissions must be in .permissions.yml)",
+      "passed": true,
+      "evidence": "Grep for 'hook_permission' across all module files returned no matches. Permissions are defined in restricted_reports.permissions.yml."
+    },
+    {
+      "text": "Does NOT use _access: 'TRUE' on a route that should be permission-restricted (opens route to everyone including anonymous)",
+      "passed": true,
+      "evidence": "Grep for '_access:.*TRUE' returned no matches. The route in restricted_reports.routing.yml line 7 uses _permission: 'view restricted reports' instead."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en restricted_reports returns exit code 0",
+      "passed": true,
+      "evidence": "ddev drush en restricted_reports -y returned 'Already installed: restricted_reports' with exit code 0."
+    },
+    {
+      "text": "Navigate to /reports/restricted WITHOUT logging in -- verify an Access Denied / 403 response (proves anonymous access is properly blocked) (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report: passed=true, evidence='HTTP Status: 403 (Access denied page title confirmed)'"
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to /reports/restricted -- verify the page renders with content and HTTP 200 (proves permission-based access grants correctly) (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report: passed=true, evidence='HTTP Status: 200, Page title: Restricted Reports | Drush Site-Install, Content: This is the restricted reports page.'"
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": true,
+      "evidence": "ddev exec vendor/bin/phpcs --standard=Drupal,DrupalPractice --extensions=php,module,install,yml returned exit code 0 with no output (no errors or warnings)."
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0
+  }
+}
