@@ -5,10 +5,10 @@
 
 ## Infrastructure
 
-- [ ] **INFRA-01**: eval-executor subagent with `model: sonnet` in frontmatter for controlled A/B execution
-- [ ] **INFRA-02**: eval-grader subagent following skill-creator grader.md, producing compliant grading.json
-- [ ] **INFRA-03**: Fresh Drupal 10 ddev setup script (replaces os-kg-based setup) with auto-retry for ddev-router failures
-- [ ] **INFRA-04**: eval-browser subagent using agent-browser + drush uli for E2E/UAT verification
+- [x] **INFRA-01**: eval-executor subagent with `model: sonnet` in frontmatter for controlled A/B execution
+- [x] **INFRA-02**: eval-grader subagent following skill-creator grader.md, producing compliant grading.json
+- [x] **INFRA-03**: Fresh Drupal 10 ddev setup script (replaces os-kg-based setup) with auto-retry for ddev-router failures
+- [x] **INFRA-04**: eval-browser subagent using agent-browser + drush uli for E2E/UAT verification
 
 ## Eval Content
 
