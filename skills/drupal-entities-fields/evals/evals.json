@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "I'm building a knowledge curation feature on our Open Social Drupal 10 site (os-knowledge-garden). We need a custom content entity type called KnowledgeResource for organizing external learning resources (articles, papers, tools, documentation) alongside our AI-indexed content. It should have base fields for: related_topic (entity_reference to node), author (entity_reference to user), resource_type (list_string with allowed values: article, research_paper, tool, documentation), and created timestamp. Include all necessary handlers - forms, list builder, access handler, and route provider. Put it in a module called knowledge_resource.",
+      "prompt": "Create a custom content entity type called KnowledgeResource for a Drupal 10 site. The entity is for organizing external learning resources (articles, papers, tools, documentation). It should have base fields for: related_topic (entity_reference to node), author (entity_reference to user), resource_type (list_string with allowed values: article, research_paper, tool, documentation), and created timestamp. Include all necessary handlers -- forms, list builder, access handler, and route provider. Put it in a module called knowledge_resource. We want D11 compatibility.",
       "expected_output": "A complete content entity type with entity class, base fields, all handlers, and module scaffold that installs and creates entities successfully",
       "files": [],
       "expectations": [
