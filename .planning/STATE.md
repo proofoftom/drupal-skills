@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Eval & Optimization Loop
-status: in_progress
-stopped_at: Pipeline fully validated — access-security hardened (10% delta) — batch 11 remaining skills
-last_updated: "2026-03-07T14:30:00Z"
-last_activity: 2026-03-07 -- Session 15 fixed evals.json schema, validated headless pipeline (37.5% caching delta vs 0% with agent harness), retooled pipeline to use claude -p.
+status: unknown
+stopped_at: Completed 12-02-PLAN.md
+last_updated: "2026-03-08T01:39:45.125Z"
+last_activity: "2026-03-08 -- Session 20: Plan 12-02 complete."
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 19
-  completed_plans: 7
-  percent: 37
+  total_plans: 23
+  completed_plans: 10
+  percent: 61
 ---
 
 # Project State
@@ -21,16 +21,32 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-07)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** v2.0 -- Eval & Optimization Loop (Phase 11: evals.json schema cleanup, then validation run)
+**Current focus:** v2.0 -- Eval & Optimization Loop (Phase 12: Analysis & Optimization)
 
 ## Current Position
 
-Phase: 11 of 12 -- Batch Execution
-Plan: 3 of 13 complete (11-01 setup, 11-02 access-security, 11-03 routing-controllers)
-Status: IN PROGRESS — pipeline fully validated (headless + browser), batch 11 remaining skills
-Last activity: 2026-03-07 -- Session 16: access-security prompt hardened (10% delta), browser handoff validated, batch plan created
+Phase: 12 of 12 -- Analysis & Optimization
+Plan 02 complete (harder evals for neutral-delta skills). Plans 01, 03, 04 remaining.
+Last activity: 2026-03-08 -- Session 20: Plan 12-02 complete.
 
-Progress: [████░░░░░░] 37%
+Progress: [██████░░░░] 61%
+
+### Phase 11 Final Results (13/13)
+| Tier | Skill | WITH | WITHOUT | Delta |
+|------|-------|------|---------|-------|
+| HIGH | caching | 8/8 | 5/8 | +37.5% |
+| HIGH | scaffold | 6/6 | 4/6 | +33.3% |
+| HIGH | testing | 9/9 | 7/9 | +22.2% |
+| MOD | config-storage | 8/8 | 7/8 | +12.5% |
+| MOD | plugins-blocks | 8/8 | 7/8 | +12.5% |
+| MOD | access-security | 9/10 | 8/10 | +10.0% |
+| NEUT | forms-api | 9/9 | 9/9 | 0% |
+| NEUT | database-api | 8/9 | 8/9 | 0% |
+| NEUT | theming | 9/9 | 9/9 | 0% |
+| NEUT | entities-fields | 9/9 | 9/9 | 0% |
+| NEG | routing-controllers | 7/9 | 8/9 | -11.1% |
+| NEG | views-dev | 8/9 | 9/9 | -11.1% |
+| NEG | batch-queue-cron | 6/8 | 7/8 | -12.5% |
 
 ## Accumulated Context
 
@@ -67,6 +83,9 @@ Progress: [████░░░░░░] 37%
 - [Phase 11]: eval-executor.md deprecated — headless templates documented inside it
 - [Phase 11]: eval-browser receives expectations from orchestrator, outputs structured JSON with expectation text
 - [Phase 11]: eval-grader uses browser report as evidence for `(via eval-browser)` expectations
+- [Phase 12]: 12-02: ConfirmFormBase selected as forms-api eval differentiator (getCancelUrl Url object, getQuestion method)
+- [Phase 12]: 12-02: template_preprocess_HOOK naming and hook_theme_suggestions_HOOK chosen as theming differentiators
+- [Phase 12]: 12-02: Bundle entity wiring (bundle_entity_type + bundle_of + entity_keys bundle) chosen as entities-fields differentiator
 
 ### Carried from v1.0
 
@@ -85,6 +104,6 @@ Progress: [████░░░░░░] 37%
 
 ## Session Continuity
 
-Last session: 2026-03-07T13:55:00Z
-Stopped at: Access-security hardened (10% delta), browser handoff validated. Ready to batch remaining 11 skills.
-Resume file: .planning/phases/11-batch-execution/.continue-here.md
+Last session: 2026-03-08T01:39:45.123Z
+Stopped at: Completed 12-02-PLAN.md
+Resume file: None
