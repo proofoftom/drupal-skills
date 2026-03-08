@@ -1,384 +1,648 @@
-# Pitfalls Research
+# Domain Pitfalls: v4.0 Vue.js Kanban UX Overhaul
 
-**Domain:** Group-based project management with Drupal AI/AI Agents integration + Claude Code plugin packaging + phase-level eval methodology
-**Researched:** 2026-03-07
-**Confidence:** HIGH for plugin packaging, MEDIUM for Group/AI integration (APIs are evolving), HIGH for eval methodology (empirical v2.0 data)
+**Domain:** Adding Vue.js, AJAX, and rich frontend UX to an existing Drupal 10 module (group_ai_pm)
+**Researched:** 2026-03-08
+**Confidence:** HIGH for Drupal asset pipeline and CSRF patterns (official docs verified); MEDIUM for Vue.js + Drupal integration (community patterns, no single authoritative source); MEDIUM for Haiku code generation limitations (empirical from v3.0 evals)
 
-**Scope:** Pitfalls specific to ADDING v3.0 features (Group module, Drupal AI integration, plugin restructuring, new eval methodology) to the existing Drupal Skills project. v2.0 eval pipeline pitfalls remain in git history.
+**Scope:** Pitfalls specific to ADDING Vue.js Kanban boards, REST endpoints, AJAX interactions, and keyboard-driven UX to the existing group_ai_pm module. v3.0 pitfalls (Group API, AI integration, plugin packaging) are archived in git history.
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause rewrites, invalidate the eval, or produce a non-functional plugin.
+Mistakes that cause rewrites, broken UX, or security vulnerabilities.
 
-### Pitfall 1: Plugin Skill Auto-Triggering Is Unreliable Without Description Engineering
-
-**What goes wrong:**
-Skills packaged in a plugin do not auto-trigger when developers ask natural Drupal questions. The plugin installs fine, skills appear in `/context`, but Claude ignores them and works from training data alone. The entire v3.0 eval (plugin-installed vs no-plugin) produces 0% delta -- not because skills lack value, but because they never activate.
-
-**Why it happens:**
-Claude Code loads only skill **descriptions** (name + description field) into the system prompt at session start, with a budget of 2% of context window (~16,000 chars fallback). With 14 skills, each description gets roughly 1,100 characters max. If descriptions are passive ("Covers cache metadata patterns") rather than directive ("Use WHENEVER producing render arrays that display entity or config data"), Claude's relevance matching fails. Community testing shows ~50% activation rate with standard descriptions, improving to ~95% with imperative directive descriptions. Additionally, 14 drupal skills at ~200 chars each = ~2,800 chars, but the description character limit per skill is 1,024 chars -- staying well within budget. The risk is not budget overflow but description quality.
-
-**How to avoid:**
-- Use imperative directive descriptions: "Use WHENEVER [trigger condition]. Do NOT use for [anti-pattern]." This is the pattern already used in existing SKILL.md files (confirmed in drupal-caching and drupal-module-scaffold).
-- Test auto-triggering empirically: write 10 natural developer prompts per skill, run each with the plugin installed, measure activation rate. Target >80%.
-- If activation is low, add a `UserPromptSubmit` hook that evaluates each prompt against skill triggers. This is a fallback, not a first resort.
-- Set `SLASH_COMMAND_TOOL_CHAR_BUDGET=30000` if skills are excluded from context (check `/context` for warnings).
-- Write descriptions in third person ("Applies correct cache metadata...") per official Anthropic best practices -- inconsistent point-of-view causes discovery problems.
-
-**Warning signs:**
-- `/context` shows skills excluded or truncated
-- Natural prompts like "add caching to this block" do not trigger drupal-caching skill
-- v3.0 eval shows 0% delta across all phases despite v2.0 showing HIGH deltas on same skills
-
-**Phase to address:**
-Plugin packaging phase (description optimization). Must validate auto-triggering BEFORE running phase-level evals, or eval results are meaningless.
-
----
-
-### Pitfall 2: Eval Methodology Conflates Plugin Activation Failure with Skill Content Failure
+### Pitfall 1: CSRF Token Not Fetched Before First Mutation -- Silent 403 on Drag-and-Drop
 
 **What goes wrong:**
-v3.0 shifts from "explicit `read SKILL.md`" (v2.0) to "plugin installed, skills must auto-trigger from natural prompts" (v3.0). When a phase-level eval shows 0% delta, you cannot distinguish between: (a) the skill content is not useful for this task, (b) the skill never activated, or (c) the skill activated but the prompt was too easy. This ambiguity makes eval results unactionable.
+The Vue.js Kanban board loads, renders tasks correctly via GET, and the user drags a card to a new column. The optimistic UI moves the card. Then the PATCH request to update the task status returns a 403. The card snaps back. This happens on every single mutation because the JavaScript never fetched a CSRF token from `/session/token` before issuing write requests.
 
 **Why it happens:**
-v2.0 controlled for activation by explicitly telling the agent to read SKILL.md. v3.0 removes this control, introducing a new variable (activation) on top of the existing variable (content value). Two uncontrolled variables in one experiment = no causal attribution.
+Drupal requires an `X-CSRF-Token` header on all POST/PATCH/DELETE requests when using session (cookie) authentication. The token must be retrieved via a separate GET to `/session/token` before any write operation. This is not optional -- missing it produces a 403 with an empty or unhelpful body. The token is per-session, not per-request, so it only needs to be fetched once -- but it MUST be fetched before the first mutation.
 
-**How to avoid:**
-- **Three-tier eval design per phase:**
-  1. **Without-plugin baseline:** No plugin installed. Headless `claude -p` with haiku. Measures baseline capability.
-  2. **With-plugin (auto-trigger):** Plugin installed but no explicit skill instruction. Measures full product experience (activation + content).
-  3. **With-plugin (explicit):** Plugin installed AND prompt includes "use the drupal-X skill". Measures content value independent of activation.
-- Compare tier 2 vs tier 3: if tier 3 shows delta but tier 2 does not, the problem is activation (description), not content.
-- Compare tier 1 vs tier 3: should match v2.0 deltas (validated baseline).
-- Log whether skills activated: check Claude's tool use for `Skill(drupal-*)` calls.
+Many Vue/React tutorials show REST calls without CSRF because they assume Bearer token auth (which bypasses CSRF checks). Drupal admin pages use session cookies, so CSRF protection is always active for authenticated admin users.
 
-**Warning signs:**
-- Phase eval shows 0% delta on a skill that had HIGH delta in v2.0 (caching, scaffold, routing-controllers, testing)
-- No `Skill()` tool calls visible in session transcript
-- Tier 2 and tier 3 produce different results
+**Consequences:**
+- Every drag-and-drop, inline edit, quick-create, and status toggle fails silently or with a confusing 403
+- Optimistic UI reverts look like bugs to the user
+- If error handling is poor, the UI shows the card in the new column but the server state is unchanged -- data inconsistency
 
-**Phase to address:**
-Eval methodology design phase. Must be decided before ANY phase-level eval runs.
-
----
-
-### Pitfall 3: Group Module 3.x API Terminology Has Changed -- Old Documentation Misleads
-
-**What goes wrong:**
-Development uses Group 2.x API names (`GroupContent`, `GroupContentEnabler`, `addContent()`, `GroupContentEnablerManager`) because most tutorials and StackOverflow answers reference the older API. The code compiles against Group 3.x but produces EntityNotFoundException errors at runtime, or silently creates wrong entity types.
-
-**Why it happens:**
-Group 3.x renamed fundamental concepts:
-- `GroupContent` entity -> `GroupRelationship` entity
-- `GroupContentType` entity -> `GroupRelationshipType` entity
-- `GroupContentEnabler` plugin -> `GroupRelationType` plugin
-- `GroupContentEnablerManager` service -> `GroupRelationTypeManager` service
-- `Group::addContent()` -> `Group::addRelationship()` (returns created entity in 3.x)
-- Plugin directory: `src/Plugin/Group/ContentEnabler/` -> `src/Plugin/Group/Relation/`
-- Plugin handlers replaced most methods on the plugin base class
-
-Most documentation, tutorials, and even some Drupal.org issue queue discussions still reference 2.x terminology. Claude's training data likely contains more 2.x examples than 3.x.
-
-**How to avoid:**
-- Pin Group module version in composer.json: `"drupal/group": "^3.3"`. Never `^2 || ^3`.
-- Create a SKILL.md reference card mapping old to new terminology. Include it in the drupal-entities-fields skill or a new Group-specific skill.
-- Validate ALL Group API calls against 3.x codebase, not documentation. The source at `modules/contrib/group/src/` is authoritative.
-- Use `GroupRelationBase` for custom relation plugins, NOT `GroupContentEnablerBase`.
-- Handler pattern: define handlers as services with naming convention `group.relation_handler.[HANDLER_TYPE].[PLUGIN_ID]`.
-
-**Warning signs:**
-- Code references `GroupContent` class or `group_content` entity type
-- Plugin files in `src/Plugin/Group/ContentEnabler/` directory
-- Method calls to `$group->addContent()` instead of `$group->addRelationship()`
-- `@GroupContentEnabler` annotation instead of `@GroupRelationType`
-
-**Phase to address:**
-Entity/data model phase (first phase that touches Group module). Must have correct API terms from day one.
-
----
-
-### Pitfall 4: Plugin Directory Structure Has Strict Requirements -- Skills in Wrong Location Are Silently Ignored
-
-**What goes wrong:**
-Restructuring the existing `skills/` repo into a Claude Code plugin results in skills not loading. Plugin installs, `plugin.json` validates, but zero skills appear in `/context` or autocomplete. No error messages -- completely silent failure.
-
-**Why it happens:**
-Claude Code plugins require a specific directory structure:
-- `plugin.json` MUST be inside `.claude-plugin/` directory
-- Skills MUST be at plugin root in `skills/` directory (NOT inside `.claude-plugin/`)
-- Each skill needs `skills/<skill-name>/SKILL.md` structure
-- Plugin is cached to `~/.claude/plugins/cache/` on install -- external references via `../` are stripped
-
-The existing repo structure (`skills/drupal-*/SKILL.md`) is already correct for the skills directory layout. But the common mistake is putting skills inside `.claude-plugin/skills/` or using absolute paths in plugin.json.
-
-**How to avoid:**
-- Target plugin structure:
+**Prevention:**
+- Fetch CSRF token in the Vue app's `onMounted()` lifecycle hook, BEFORE any user interaction is possible
+- Store the token in a module-level variable or Pinia store, include it in every mutation request
+- Pass the `/session/token` URL via `drupalSettings` (do not hardcode it -- base path may vary)
+- Example pattern for the API service layer:
+  ```javascript
+  let csrfToken = null;
+  async function ensureCsrfToken() {
+    if (!csrfToken) {
+      const response = await fetch(drupalSettings.path.baseUrl + 'session/token');
+      csrfToken = await response.text();
+    }
+    return csrfToken;
+  }
   ```
-  drupal-skills/                    # Plugin root
-  ├── .claude-plugin/
-  │   └── plugin.json              # Only manifest here
-  ├── skills/                       # At root level
-  │   ├── drupal-caching/
-  │   │   ├── SKILL.md
-  │   │   └── references/
-  │   ├── drupal-module-scaffold/
-  │   │   └── SKILL.md
-  │   └── ... (14 total)
-  ├── agents/                       # Optional
-  ├── hooks/                        # Optional (for auto-trigger hooks)
-  └── settings.json                 # Optional defaults
+- Add `_csrf_request_header_token: 'TRUE'` to custom REST route requirements (not `_csrf_token: 'TRUE'` -- that is for query-string tokens used in link URLs, not header-based tokens)
+- Verify: `_csrf_request_header_token` always succeeds for anonymous users, so ALWAYS pair it with a permission requirement
+
+**Detection:**
+- 403 responses on PATCH/POST/DELETE requests in browser DevTools Network tab
+- Drupal watchdog showing "X-CSRF-Token request header is missing" or "is invalid"
+- Optimistic UI updates that consistently revert
+
+**Phase to address:** API Layer (Phase 1). Must be correct before any mutation endpoint is testable.
+
+---
+
+### Pitfall 2: Vue App Mounts Multiple Times Due to Drupal Behaviors / BigPipe
+
+**What goes wrong:**
+The Kanban board Vue app initializes correctly on first page load. Then a Drupal AJAX operation on the same page (dialog close, Views exposed filter update, admin toolbar refresh) triggers `Drupal.attachBehaviors()` again. If the Vue app initialization code is inside a Drupal behavior without a `once()` guard, the app mounts a second time on the same DOM element. This creates duplicate event listeners, double rendering, and eventually a memory leak that causes the tab to slow down and crash.
+
+**Why it happens:**
+Drupal's behavior system calls `Drupal.attachBehaviors(context, settings)` on initial page load AND after every AJAX response. BigPipe also triggers it when replacing placeholders. In Drupal 10.1+, behaviors can fire twice on page load (once when the script loads, once from `drupal.init.js`). Without the `once()` utility from `@drupal/once`, any initialization code will re-execute.
+
+Vue 3's `createApp()` does not protect against double mounting. Calling `createApp().mount('#kanban-board')` twice on the same element produces unpredictable behavior.
+
+**Consequences:**
+- Duplicate Vue app instances competing for the same DOM
+- Event listeners stacking (keyboard shortcuts fire twice per keystroke)
+- Memory usage grows with each AJAX operation until the page becomes unresponsive
+- Drag-and-drop behaves erratically because two app instances handle the same events
+
+**Prevention:**
+- ALWAYS use `once()` to guard Vue app initialization inside Drupal behaviors:
+  ```javascript
+  Drupal.behaviors.kanbanBoard = {
+    attach: function (context, settings) {
+      once('kanban-board', '#kanban-board-mount', context).forEach(function (element) {
+        const app = createApp(KanbanBoard, {
+          projectId: settings.groupAiPm.projectId,
+          csrfTokenUrl: settings.path.baseUrl + 'session/token',
+        });
+        app.mount(element);
+        // Store app reference for detach cleanup
+        element._vueApp = app;
+      });
+    },
+    detach: function (context, settings, trigger) {
+      if (trigger === 'unload') {
+        document.querySelectorAll('[data-once="kanban-board"]').forEach(function (element) {
+          if (element._vueApp) {
+            element._vueApp.unmount();
+            element._vueApp = null;
+          }
+        });
+      }
+    }
+  };
   ```
-- All paths in plugin.json MUST be relative starting with `./`
-- Use `${CLAUDE_PLUGIN_ROOT}` in any scripts/hooks, never absolute paths
-- Test with `claude --plugin-dir .` during development (bypasses cache)
-- Validate with `claude --debug` to see plugin loading messages
-- Verify skills appear: ask Claude "What skills are available?" after enabling plugin
+- Declare `core/once` as a dependency in `libraries.yml` (it is a separate library, not bundled with `core/drupal`)
+- Implement the `detach` handler to unmount Vue when Drupal removes the DOM (page navigation, AJAX replacement)
+- Store the Vue app instance on the DOM element so `detach` can find and unmount it
 
-**Warning signs:**
-- `claude --debug` shows plugin loading but no skill registration messages
-- `/context` shows no drupal-* skills
-- Plugin installs without error but skills don't appear in autocomplete
+**Detection:**
+- Console warnings about mounting on a non-empty DOM node
+- Keyboard shortcuts executing twice per keystroke
+- Increasing memory usage in browser DevTools Performance tab over time
+- Multiple `#kanban-board-mount` elements or duplicate Vue devtools instances
 
-**Phase to address:**
-Plugin packaging phase. This is the FIRST thing to get right -- all subsequent phases depend on skills loading.
+**Phase to address:** Vue Infrastructure (Phase 1). The mounting pattern must be established as part of the initial Vue integration.
 
 ---
 
-### Pitfall 5: Drupal AI Module Is Pre-1.0 Conceptually Despite Version Numbers -- API Will Change
+### Pitfall 3: Custom Controller Returns JsonResponse Without Proper Content Negotiation -- Drupal Error Handler Serves HTML on Errors
 
 **What goes wrong:**
-Building tight integration with Drupal AI module's provider API or AI Agents framework, then discovering the API changed in a point release. Custom tools, agent configurations, or provider integrations break on `composer update`.
+The custom REST controller returns `JsonResponse` for task data. Normal operation works. But when a validation error or access denied occurs, Drupal's default exception handler returns an HTML error page instead of a JSON error response. The Vue app receives HTML where it expects JSON, fails to parse it, and shows a generic "something went wrong" error instead of actionable information.
 
 **Why it happens:**
-While Drupal AI module is at version 1.2.11 (stable), and AI Agents at 1.2.3, the ecosystem is rapidly evolving. The 2026 roadmap lists 8 new capabilities (page generation, context management, background agents, design system integration). The AI Agents documentation explicitly states it is "WIP". The Tool API module (separate from AI core) is a recent addition providing `tool_ai_connector` for bridging to AI function calling. Module interdependencies are shifting: AI -> AI Agents -> Tool API is an emerging but not yet stable dependency chain.
+Drupal dispatches exceptions to different exception subscribers based on the request's `Accept` header and the `?_format` query parameter. Without `?_format=json`, Drupal defaults to HTML error responses. Custom controllers using `JsonResponse` directly (not `ResourceResponse` from the REST module) bypass the content negotiation system. The controller works for happy-path responses but Drupal's error infrastructure does not know the client expects JSON.
 
-**How to avoid:**
-- Pin exact versions in composer.json: `"drupal/ai": "1.2.11"`, `"drupal/ai_agents": "1.2.3"`. Do NOT use `^1.2`.
-- Write integration code against the provider abstraction layer (`\Drupal::service('ai.provider')`) not specific provider implementations.
-- Wrap ALL AI module API calls in a service class with a clear interface. When APIs change, only the wrapper changes.
-- Design the module to work WITHOUT AI integration as a baseline (Group project management), with AI as an enhancement layer that can be enabled/disabled.
-- Subscribe to AI module release notes. Test against `dev` branch periodically.
-- Consider the Tool API module for defining custom tools that AI Agents can call, rather than building custom agent code directly.
+**Consequences:**
+- Validation errors (missing required field, invalid status value) return HTML instead of JSON
+- 403 responses return Drupal's full HTML access denied page
+- 404 responses for deleted tasks return HTML
+- Vue app's error handling cannot parse the response, so users see unhelpful error messages
+- Debugging is difficult because the JSON error body is absent
 
-**Warning signs:**
-- Direct calls to provider-specific methods scattered throughout the codebase
-- No service abstraction layer between your module and `\Drupal::service('ai.provider')`
-- Module fails to install if AI module is not present (hard dependency when it should be optional)
+**Prevention:**
+- ALWAYS append `?_format=json` to the route path or require clients to include it:
+  ```yaml
+  group_ai_pm.api.tasks:
+    path: '/api/group-ai-pm/project/{project}/tasks'
+    defaults:
+      _controller: '\Drupal\group_ai_pm\Controller\TaskApiController::list'
+    requirements:
+      _permission: 'access group_ai_pm dashboard'
+      _format: json
+      _csrf_request_header_token: 'TRUE'
+  ```
+- When `_format: json` is a route requirement, Drupal's JSON exception subscriber handles errors and returns JSON error bodies
+- NEVER rely on the Accept header alone -- Drupal's content negotiation requires `_format` in the route definition or query string
+- In the Vue API service, always include `?_format=json` in request URLs:
+  ```javascript
+  const response = await fetch(
+    `${baseUrl}api/group-ai-pm/project/${projectId}/tasks?_format=json`
+  );
+  ```
+- Use `try/catch` with response type checking in the API layer to handle the edge case where HTML is returned despite configuration
 
-**Phase to address:**
-Architecture phase (service layer design). AI integration phase (implementation). Design the abstraction BEFORE writing integration code.
+**Detection:**
+- Error responses in browser DevTools Network tab showing `text/html` content type
+- Vue app's JSON parse throwing `SyntaxError: Unexpected token '<'`
+- Drupal watchdog not logging JSON serialization for error responses
+
+**Phase to address:** API Layer (Phase 1). Route definitions must include `_format: json` from the start.
 
 ---
 
-### Pitfall 6: Existing install.sh and Skill Paths Break When Restructured as Plugin
+### Pitfall 4: Vue Production Bundle Not Committed -- Module Requires npm Build Step
 
 **What goes wrong:**
-The existing `install.sh` script copies skills to `~/.claude/skills/`. When the repo is restructured as a plugin, you now have two install paths: the old `install.sh` (copies to `~/.claude/skills/`) and the new plugin system (via `claude plugin install`). Users who installed via `install.sh` and then install the plugin have duplicate skills -- one set in `~/.claude/skills/` and another from the plugin cache. Claude loads both, wastes context budget, and may get conflicting instructions from two copies of the same skill.
+The module ships with `package.json`, `vite.config.js`, and Vue source files in `js/src/`. But the compiled production bundle (`js/dist/kanban.js`) is in `.gitignore`. End users install the module via `composer require`, enable it, and get a blank page where the Kanban board should be because the compiled JavaScript does not exist. Users must run `npm install && npm run build` -- but most Drupal admins do not have Node.js in production and should not need it.
 
 **Why it happens:**
-The project evolved from "repo of skills you manually install" (v1.0/v2.0) to "packaged plugin you install via Claude Code" (v3.0). The transition creates a dual-installation surface.
+Modern JavaScript development workflows use `.gitignore` to exclude `node_modules/` and build artifacts from version control. This is correct for application development but wrong for Drupal contrib modules. Drupal modules must be installable via Composer alone -- no secondary build steps. The pattern used by Drupal core itself is: source files + build tooling exist, and compiled assets are committed alongside them.
 
-**How to avoid:**
-- Phase the transition: first release as plugin, then deprecate `install.sh` in the README.
-- Add a migration check to the plugin's `SessionStart` hook: if `~/.claude/skills/drupal-*` exists, warn the user to run `install.sh --uninstall` or manually remove the old skills.
-- Plugin skills use namespace `drupal-skills:drupal-caching` (plugin-name:skill-name), which cannot conflict with personal skills at `~/.claude/skills/drupal-caching`. BUT context budget is still consumed by both.
-- Alternatively: update `install.sh` to detect if the plugin is installed and abort with a message.
-- Add `--uninstall` flag to `install.sh` that removes all `~/.claude/skills/drupal-*` directories.
+**Consequences:**
+- Module fails silently (mount point div renders, but no JavaScript executes)
+- Users file bug reports about "blank Kanban board"
+- Users with Node.js may build locally, creating version drift between their build and the intended bundle
+- CI/CD pipelines that do not include Node.js will not produce working deployments
 
-**Warning signs:**
-- Users report skills appearing twice in `/context`
-- Context budget warnings about excluded skills
-- Total description budget consumed by 28 skills (14 x 2) instead of 14
+**Prevention:**
+- Commit the compiled production bundle to the repository alongside source files
+- Module directory structure:
+  ```
+  modules/group_ai_pm/
+    js/
+      src/                    # Vue source (for development)
+        App.vue
+        components/
+        stores/
+      dist/                   # Compiled bundle (committed)
+        kanban.min.js
+        kanban.min.css
+      package.json            # For developers only
+      vite.config.js          # Build configuration
+    css/                      # Drupal CSS (non-Vue styles)
+  ```
+- Reference only `js/dist/kanban.min.js` in `libraries.yml`, never source files
+- Add `js/node_modules/` to `.gitignore` but NOT `js/dist/`
+- Include a `js/BUILD.md` documenting how developers rebuild the bundle (for contributors, not end users)
+- Use Vite in library mode to produce a single UMD bundle that does not require ES module support:
+  ```javascript
+  // vite.config.js
+  export default {
+    build: {
+      lib: {
+        entry: 'src/main.js',
+        name: 'GroupAiPmKanban',
+        fileName: 'kanban',
+        formats: ['umd']
+      },
+      rollupOptions: {
+        // Do NOT externalize Vue -- bundle it in the UMD output
+        // Drupal does not provide Vue as a global
+      },
+      outDir: 'dist'
+    }
+  };
+  ```
 
-**Phase to address:**
-Plugin packaging phase. Must handle migration path as part of the packaging work.
+**Detection:**
+- Blank mount point div with no JavaScript errors (script tag not even present)
+- `libraries.yml` referencing files that do not exist in the installed module
+- Users reporting the module works in development but not production
+
+**Phase to address:** Vue Infrastructure (Phase 1). Build tooling and committed bundle pattern must be established before any Vue components are built.
+
+---
+
+### Pitfall 5: Using `_csrf_token` (Query String) Instead of `_csrf_request_header_token` (Header) for REST Routes
+
+**What goes wrong:**
+The REST route is defined with `_csrf_token: 'TRUE'` (the query-string variant). Drupal automatically appends a CSRF token to URLs generated via `Url::fromRoute()` in PHP. But the Vue app constructs its own URLs in JavaScript and never includes the query-string token. Every PATCH/POST/DELETE request returns 403. The developer adds the `X-CSRF-Token` header (fetched from `/session/token`), but the route validator ignores the header because it is checking for a query string parameter.
+
+**Why it happens:**
+Drupal has TWO different CSRF token mechanisms:
+1. `_csrf_token: 'TRUE'` -- validates a `token` query parameter in the URL. Used for action links (like "Complete Project" in the existing module). Token is appended automatically by Drupal's URL generation.
+2. `_csrf_request_header_token: 'TRUE'` -- validates the `X-CSRF-Token` HTTP header. Used for JavaScript-driven REST calls where URLs are constructed client-side.
+
+These are different route access checkers with different token sources. Using the wrong one for your use case means CSRF protection either blocks legitimate requests or provides no protection.
+
+The existing `group_ai_pm.project.complete` route correctly uses `_csrf_token: 'TRUE'` because it is a link-based action. New REST API routes for Vue.js MUST use `_csrf_request_header_token: 'TRUE'`.
+
+**Consequences:**
+- All JavaScript-initiated mutation requests return 403
+- Developers add the X-CSRF-Token header but it is still rejected because the route checker is looking for a query parameter
+- Falling back to no CSRF protection (`_csrf_token` removed) creates a real CSRF vulnerability
+
+**Prevention:**
+- Use `_csrf_request_header_token: 'TRUE'` for ALL routes called by JavaScript fetch/XHR
+- Use `_csrf_token: 'TRUE'` ONLY for server-rendered link-based actions (form actions, action links)
+- ALWAYS pair `_csrf_request_header_token` with a permission requirement (it auto-passes for anonymous)
+- Document the distinction in code comments so future contributors do not mix them up
+
+**Detection:**
+- 403 on JavaScript requests despite including X-CSRF-Token header
+- Token present in URL query string on PHP-rendered links (correct for `_csrf_token`)
+- No token required for GET requests (both variants skip safe methods)
+
+**Phase to address:** API Layer (Phase 1). Route requirement must be correct from the first endpoint definition.
+
+---
+
+### Pitfall 6: Vue Bundle Size Bloats Admin Page Load Time
+
+**What goes wrong:**
+The Vue.js Kanban app, including Vue 3 runtime, vue-dnd-kit, and application code, produces a 200-400KB JavaScript bundle. This loads on every admin page where the Kanban board library is attached. Drupal admin pages already load jQuery, Drupal core JS, toolbar JS, and the admin theme's CSS/JS. The additional Vue bundle pushes total page weight over 1MB, causing noticeable load delays on slower connections and in regions with high latency to the server.
+
+**Why it happens:**
+Vue 3 production runtime is ~50KB gzipped. vue-dnd-kit adds ~15-30KB. Application code, CSS, and any utility libraries (date formatting, fuzzy search for command palette) add more. Unlike a SPA where this is loaded once, Drupal admin pages are full page loads -- every navigation to the board page re-downloads the bundle unless aggressively cached. If the library is attached globally or to all admin pages (instead of just the board page), it loads unnecessarily everywhere.
+
+**Consequences:**
+- Board page takes 2-4 seconds to become interactive on first visit
+- Admin users on slow connections experience degraded UX across the admin (if loaded globally)
+- Google Lighthouse admin audits show poor performance scores
+- Perception of "heavy module" reduces adoption
+
+**Prevention:**
+- Attach the Vue library ONLY to the board route controller's render array, never globally:
+  ```php
+  public function board(ProjectInterface $project): array {
+    return [
+      '#theme' => 'kanban_board',
+      '#project' => $project,
+      '#attached' => [
+        'library' => ['group_ai_pm/kanban_board'],
+        'drupalSettings' => [
+          'groupAiPm' => [
+            'projectId' => $project->id(),
+          ],
+        ],
+      ],
+    ];
+  }
+  ```
+- Use Vite's tree-shaking: import only what is used from vue-dnd-kit, not the entire library
+- Externalize Vue 3 ONLY if a shared Vue library module is installed (otherwise bundle it -- double-loading is worse than a larger bundle)
+- Enable Drupal's JS aggregation (`/admin/config/development/performance`) for production
+- Consider code splitting: load the command palette and detail panel lazily (dynamic import) since they are not needed on initial render
+- Target budget: <100KB gzipped for the full Kanban bundle (Vue runtime + DnD + app code)
+
+**Detection:**
+- Chrome DevTools Network tab: filter by JS, sort by size, look for the Kanban bundle
+- Lighthouse Performance audit on the board page
+- Vue library appearing in `drupalSettings.ajaxPageState.libraries` on non-board pages (means it is loading too broadly)
+
+**Phase to address:** Vue Infrastructure (Phase 1) for library scoping; Polish (Phase 3) for optimization.
 
 ---
 
 ## Moderate Pitfalls
 
-### Pitfall 7: Group Module Access Control Overrides Core Node Access
+### Pitfall 7: drupalSettings Data Not Available When Vue App Initializes
 
 **What goes wrong:**
-Group module returns `AccessResult::forbidden()` for grouped content when the user lacks group-level permissions, even if they have core node permissions. This means existing Drupal roles and permissions do not work as expected for content within groups. Developers assume core access controls still apply and are surprised when admin users with "bypass node access" permission still get denied on grouped content.
+The Vue app reads `drupalSettings.groupAiPm.projectId` during initialization, but the value is `undefined`. The app sends API requests without a project ID, gets 404 or returns all tasks across all projects.
 
-**How to avoid:**
-- Understand that Group module's access model is intentionally strict: group permissions REPLACE core permissions for grouped content. This is a feature, not a bug.
-- Configure Group role permissions explicitly for every content operation (view, create, edit, delete) on every group type.
-- Test access control for: anonymous, authenticated, group member, group admin, site admin. All five must be verified.
-- If AI Agents need to manipulate grouped content, they need group-level permissions, not just core permissions. The agent's user account must be a member of relevant groups.
+**Why it happens:**
+In Drupal, `drupalSettings` is populated from render array `#attached` settings and injected into the page as a `<script>` tag. If the Vue library loads BEFORE the settings script (wrong library weight or async loading), `drupalSettings` is not yet defined. Additionally, if the controller forgets to attach settings to the render array, they simply are not present -- no error, just missing data.
 
-**Warning signs:**
-- "Access denied" errors for admin users on grouped content
-- AI Agents failing to create/edit content within groups despite having core permissions
-- REST/JSON:API requests for grouped content returning 403
+This is especially tricky with Drupal's library dependency system. The Vue app library must declare a dependency on `core/drupalSettings`:
+```yaml
+kanban_board:
+  js:
+    js/dist/kanban.min.js: { minified: true }
+  dependencies:
+    - core/drupalSettings
+    - core/once
+```
 
-**Phase to address:**
-Access/security phase. Must be addressed when building the Group entity types and permissions.
+Without the `core/drupalSettings` dependency, Drupal may load the kanban JS before the settings script.
+
+**Prevention:**
+- Always declare `core/drupalSettings` as a library dependency
+- Always attach settings in the controller's render array via `#attached.drupalSettings`
+- In JavaScript, validate settings exist before using them:
+  ```javascript
+  const projectId = drupalSettings?.groupAiPm?.projectId;
+  if (!projectId) {
+    console.error('GroupAiPm: Missing project ID in drupalSettings');
+    return;
+  }
+  ```
+- Pass ALL configuration through drupalSettings: API base URL, project ID, user permissions, CSRF token URL -- never hardcode paths
+
+**Phase to address:** Vue Infrastructure (Phase 1).
 
 ---
 
-### Pitfall 8: Phase-Level Eval Environment Accumulates State Across Phases
+### Pitfall 8: Local Task Tab Route Does Not Match Entity Base Route -- Tab Disappears
 
 **What goes wrong:**
-v3.0 builds a real module across multiple phases. Phase 3 (routing) depends on entities from Phase 2. Phase 5 (caching) depends on blocks from Phase 4. If the "without-plugin baseline" approach creates code in Phase 2 that is structurally incompatible with Phase 3's requirements, the entire baseline chain breaks and subsequent phase comparisons are invalid.
+A "Board" tab is added to the project entity page (alongside View/Edit/Delete), but it does not appear. The route exists and the page loads at the direct URL, but the tab is missing from the project entity page.
 
-**How to avoid:**
-- **Each phase baseline must start from a known-good snapshot.** After Phase N is built with the plugin, snapshot the ddev environment (export DB + files). The Phase N+1 baseline starts from this snapshot, not from Phase N's baseline output.
-- Alternative: define each phase as self-contained with explicit input fixtures. Phase 3 does not depend on Phase 2's output -- it depends on a pre-built fixture that provides the necessary entities.
-- Document phase dependencies explicitly: which phases require prior phase output vs which are independently evaluable.
-- Consider making some phases independent "skill islands" that can be evaluated without sequential dependency.
+**Why it happens:**
+Drupal local tasks require a `base_route` property that matches the base route of the tab group. For entity pages, the base route is typically `entity.{entity_type}.canonical`. The "Board" tab must declare:
+```yaml
+group_ai_pm.project.board:
+  route_name: group_ai_pm.project.board
+  title: 'Board'
+  base_route: entity.project.canonical
+  weight: 5
+```
 
-**Warning signs:**
-- Baseline breaks in later phases because earlier baseline code was structurally wrong
-- Accumulating technical debt in the baseline that makes fair comparison impossible
-- Phase eval results vary wildly depending on which baseline code was generated
+Common mistakes:
+1. Setting `base_route` to the board route itself (creates a standalone tab group, not part of entity tabs)
+2. Using a different route pattern that does not share the same route parameters (the `{project}` parameter must match the entity route's `{project}` parameter exactly)
+3. Defining the board route with a path like `/admin/content/project-board/{project}` that does not share the entity route prefix `/admin/content/project/{project}/board` -- the parameter name must match
 
-**Phase to address:**
-Eval methodology design phase. Must decide phase independence vs chain before any eval runs.
+**Prevention:**
+- Board route path MUST follow the entity canonical path pattern:
+  ```yaml
+  # In routing.yml
+  group_ai_pm.project.board:
+    path: '/admin/content/project/{project}/board'
+    defaults:
+      _controller: '\Drupal\group_ai_pm\Controller\BoardController::board'
+      _title: 'Board'
+    requirements:
+      _permission: 'access group_ai_pm dashboard'
+    options:
+      _admin_route: TRUE
+      parameters:
+        project:
+          type: entity:project
+  ```
+- The `{project}` parameter name must match what the entity routing uses
+- Add `parameters.project.type: entity:project` so Drupal upcasts the parameter to a Project entity
+- Declare `_admin_route: TRUE` so the route uses the admin theme (where Claro styles apply)
+
+**Detection:**
+- Board page loads at direct URL but tab does not appear on entity page
+- Other entity tabs (View/Edit/Delete) appear normally
+- `drush router:debug group_ai_pm` shows the route exists but with wrong parameter names
+
+**Phase to address:** Board Route (Phase 1, alongside API layer).
 
 ---
 
-### Pitfall 9: Group Module REST/JSON:API Content Creation Requires Group Context
+### Pitfall 9: Optimistic UI Without Proper Rollback Creates Ghost State
 
 **What goes wrong:**
-Trying to create group content (tasks, milestones) via REST or JSON:API fails because the Group module requires `$context['group']` for access checks during entity creation. Standard `POST /jsonapi/node/task` does not provide this context, resulting in access denied errors even for authenticated users with correct permissions.
+User drags a task card from "To Do" to "In Progress." The UI updates immediately (optimistic). The server request fails (network error, validation error, concurrent edit conflict). The card stays in "In Progress" in the UI but remains "To Do" in the database. Subsequent page loads show the card back in "To Do," confusing the user about whether their action was saved.
 
-**How to avoid:**
-- Use Group module's relationship API for content creation: create the node first, then add it to the group via `$group->addRelationship($node, 'group_node:task')`.
-- For REST/JSON:API, create a custom REST resource or controller that handles the group context.
-- AI Agents that create content in groups must use a two-step process: entity creation + group relationship creation.
-- Consider the EntityGroupField contrib module for providing a computed field that simplifies the group assignment UX.
+**Why it happens:**
+Optimistic updates require three components working together: (1) immediate UI update, (2) server sync, (3) rollback on failure. Most implementations nail the first two but fail on the third. The rollback must:
+- Store the previous state before the optimistic update
+- Detect failure (network error, non-2xx response, timeout)
+- Restore the previous state in the UI
+- Show a user-visible error message
 
-**Warning signs:**
-- 403 errors on JSON:API POST requests for group-enabled content types
-- `TypeError: GroupRelationBase::createAccess()` errors when group context is null
-- AI Agents can create content but it does not appear within groups
+Without all three, the UI and server diverge silently.
 
-**Phase to address:**
-Routing/API phase. Must be addressed when building REST endpoints for project management.
+**Prevention:**
+- Implement a proper optimistic update pattern in the Pinia store:
+  ```javascript
+  async function moveTask(taskId, newStatus) {
+    const previousStatus = tasks.value.find(t => t.id === taskId).status;
+    // Optimistic update
+    tasks.value.find(t => t.id === taskId).status = newStatus;
+    try {
+      await apiService.patchTask(taskId, { status: newStatus });
+    } catch (error) {
+      // Rollback
+      tasks.value.find(t => t.id === taskId).status = previousStatus;
+      showErrorMessage('Failed to update task status. Please try again.');
+    }
+  }
+  ```
+- Set a reasonable timeout (5 seconds) on mutation requests -- do not let them hang indefinitely
+- On rollback, animate the card moving back to its original column (visual feedback that the action failed)
+- Consider a brief "saving..." indicator on the card during the server sync window
+- After rollback, log the error to Drupal watchdog via a lightweight error endpoint (helps with debugging)
+
+**Detection:**
+- Drag a card, then immediately reload the page -- if the card is in a different column, rollback failed
+- Disconnect from the network, drag a card -- if no error appears and the card stays, rollback is missing
+- Check browser DevTools Console for unhandled promise rejections on PATCH failures
+
+**Phase to address:** Interactions (Phase 2). Basic drag-and-drop in Phase 1 can use non-optimistic updates; optimistic pattern in Phase 2.
 
 ---
 
-### Pitfall 10: Headless `claude -p` vs Agent Subagent for v3.0 Eval Is a Fundamental Methodology Decision
+### Pitfall 10: Claro Admin Theme CSS Conflicts with Vue Component Styles
 
 **What goes wrong:**
-v2.0 used headless `claude -p --model claude-haiku-4-5-20251001` for code generation because it produced clean A/B data (37.5% delta on caching vs 0% with agent harness). v3.0 wants to test the "full product experience" with plugin auto-triggering. These are fundamentally incompatible: `claude -p` cannot load plugins, and interactive sessions cannot be scripted reproducibly.
+Vue component styles (card layouts, column widths, button styles, typography) render correctly in a standalone development environment but break in Drupal. Cards have wrong padding, buttons inherit Claro's button styles, dropdowns use Claro's select styling, and the overall layout looks off.
 
-**How to avoid:**
-- For "content value" evaluation (does the skill help?): continue using headless `claude -p` with explicit skill injection, same as v2.0. This is the validated methodology.
-- For "activation" evaluation (does the skill auto-trigger?): use interactive Claude Code sessions with the plugin installed via `--plugin-dir`. This requires a different eval harness.
-- For "integration" evaluation (does the full module work?): build the real module with the plugin installed. Quality is assessed by code review and functional testing, not A/B comparison.
-- Do NOT try to run A/B activation tests via `claude -p`. Plugins are not loaded in headless mode.
-- Consider using `claude --plugin-dir /path/to/plugin -p "build the routing for project tasks"` if `--plugin-dir` works with `-p`. This needs empirical validation.
+**Why it happens:**
+Drupal's Claro admin theme applies global CSS rules to common elements: `button`, `select`, `input`, `table`, `a`, `.messages`, etc. These are not namespaced -- they apply to ALL elements under the admin theme. Vue components that use these base HTML elements inherit Claro's styles by default. This causes:
+- Buttons getting Claro's blue/white button styling instead of the Kanban design
+- Select dropdowns getting Claro's styled select appearance
+- Links getting Claro's link colors
+- Tables inside task details getting Claro's table borders and padding
 
-**Warning signs:**
-- Attempting to measure auto-trigger rate via headless pipeline
-- Conflating "skill activated" with "skill helped" in eval results
-- No clear separation between activation eval and content eval
+**Prevention:**
+- Namespace all Kanban CSS under a unique wrapper class:
+  ```css
+  .kanban-board { /* all styles scoped here */ }
+  .kanban-board .task-card { /* specific to kanban */ }
+  ```
+- Use Vue's `<style scoped>` in single-file components -- this adds data attributes for CSS scoping
+- Override specific Claro styles that leak into the Kanban board:
+  ```css
+  .kanban-board button {
+    all: unset; /* Reset Claro button styles */
+    /* Then apply kanban-specific styles */
+  }
+  ```
+- Test ALL components inside the Claro admin theme during development, never in a standalone HTML file
+- Declare the library CSS with `theme` category (highest weight, loads last, overrides other CSS):
+  ```yaml
+  kanban_board:
+    css:
+      theme:
+        css/kanban-board.css: {}
+  ```
+- Do NOT use `!important` to override Claro -- it creates a specificity war that is unmaintainable
 
-**Phase to address:**
-Eval infrastructure phase. Must test whether `--plugin-dir` works with `-p` before designing the full eval.
+**Detection:**
+- Visual comparison: component in Storybook/standalone vs inside Drupal admin
+- Claro CSS rules appearing in DevTools Element Inspector on Kanban elements
+- Buttons, inputs, and links looking different from the intended design
+
+**Phase to address:** Vue Infrastructure (Phase 1, CSS strategy) and Board UI (Phase 1, card/column design).
 
 ---
 
-### Pitfall 11: SKILL.md Content May Need Group-Specific Patterns Not in Sipos Book
+### Pitfall 11: Haiku Code Gen Builds REST Routes But Does Not Wire drupalSettings or CSRF Token Passing
 
 **What goes wrong:**
-The existing 14 skills are extracted from the Sipos D10 book. The Group module, Drupal AI module, and project management patterns are NOT in the book. Building a Group-based module may require patterns that no existing skill covers: custom GroupRelationType plugins, AI provider service injection, Tool API definitions, group-scoped Views, group-aware access checking.
+In the eval pipeline, Haiku generates a controller that returns `JsonResponse`, defines the route in `routing.yml`, and creates a Vue component that calls the endpoint. But the controller does not attach `drupalSettings` with the project ID. The Vue component hardcodes the project ID or omits it entirely. The CSRF token is never fetched -- the Vue app makes mutations without it. The board renders (GET works without CSRF) but every interaction fails.
 
-**How to avoid:**
-- Identify knowledge gaps early: list every Group/AI API pattern the module will need, cross-reference against existing SKILL.md files.
-- Do NOT modify existing skills to add Group-specific content. The 14 skills are book-derived and validated via v2.0 evals. Adding non-book content risks regression.
-- If Group-specific patterns are needed, create a NEW skill (e.g., `drupal-group-integration`) that covers Group module development patterns. This keeps the book-sourced skills clean.
-- For AI module integration: the patterns are standard Drupal (services, plugins, dependency injection). The existing `drupal-plugins-blocks` and `drupal-routing-controllers` skills likely cover most of it. Validate empirically.
+**Why it happens:**
+This is the Haiku "declaration-usage gap" pattern documented in v3.0 eval Phase 16 results. Haiku reliably creates the infrastructure pieces (route, controller, Vue component) but fails to wire them together with data flow. Specifically:
+- Creates `libraries.yml` entry but does not add `core/drupalSettings` dependency
+- Creates controller but does not attach `drupalSettings` to the render array
+- Creates Vue component but does not read from `drupalSettings`
+- Implements fetch/axios calls but does not include CSRF token headers
 
-**Warning signs:**
-- Phases requiring Group-specific patterns produce 0% delta because no skill covers them
-- Temptation to add Group patterns to existing skills (scope creep)
-- Multiple phases blocked by missing Group API knowledge that existing skills cannot provide
+This is the same pattern that caused `#attached` library and `#theme` to never be wired to output in Phase 16 (theming pitfall).
 
-**Phase to address:**
-Architecture phase. Identify which phases need Group-specific knowledge. Create a new skill if gap analysis warrants it.
+**Consequences:**
+- Without-plugin code gen produces REST infrastructure that partially works (GET only)
+- With-plugin code gen should perform better IF the skill files explicitly document the wiring pattern (drupalSettings flow, CSRF token flow) as a CRITICAL pattern
+- If skills only document individual pieces (how to define routes, how to use drupalSettings), Haiku still will not wire them together
+
+**Prevention:**
+- Skills (if created for v4.0 Vue/REST patterns) MUST document the complete data flow as a single connected pattern, not separate pieces
+- Include a CRITICAL NEVER callout: "NEVER create a REST route for JavaScript without ALL of: (1) _csrf_request_header_token in route requirements, (2) drupalSettings attached to render array with endpoint URL and config, (3) core/drupalSettings in library dependencies, (4) JavaScript that reads drupalSettings and fetches CSRF token before mutations"
+- Eval assertions should test the wiring, not just the existence of files:
+  - Static: `libraries.yml` contains `core/drupalSettings` dependency
+  - Static: Controller `#attached.drupalSettings` contains project ID
+  - Static: JavaScript fetches from `/session/token` before PATCH
+  - Runtime: `drush eval` verifies route accepts requests with X-CSRF-Token header
+
+**Detection:**
+- JavaScript console shows `drupalSettings.groupAiPm is undefined`
+- Network tab shows PATCH requests without X-CSRF-Token header
+- Board renders tasks but all interactions fail
+- GET requests succeed but POST/PATCH/DELETE return 403
+
+**Phase to address:** ALL phases. This is a cross-cutting concern for eval design. Every eval assertion set must include wiring checks, not just existence checks.
 
 ---
 
-## Technical Debt Patterns
+## Minor Pitfalls
 
-Shortcuts that seem reasonable but create long-term problems.
+### Pitfall 12: Keyboard Shortcuts Conflict with Browser and Drupal Defaults
 
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Hard-coding AI provider (e.g., Anthropic only) | Faster implementation | Locks out OpenAI/Gemini users, breaks when provider changes | Never -- use `ai.provider` abstraction from day one |
-| Skipping Group access control testing | Faster feature delivery | Users discover broken permissions in production | Never -- Group access is the module's core value |
-| Putting all 14 skills in plugin without description optimization | Ship plugin fast | Auto-trigger rate is ~50%, making the plugin feel broken | Only for internal testing; optimize descriptions before public release |
-| Using Group 2.x API calls that happen to work on 3.x | Code works today | Breaks on Group 3.4+ when deprecated 2.x shims are removed | Never -- use 3.x API from the start |
-| Tight coupling between project management entities and AI features | One codebase, simpler dev | Cannot install project management without AI module | Never -- AI should be an optional submodule or separate module |
-| Using existing v2.0 eval methodology for v3.0 without adaptation | Reuse proven pipeline | Cannot measure auto-triggering, which is v3.0's core question | For content value validation only; need separate activation eval |
+**What goes wrong:**
+Custom keyboard shortcuts (Ctrl+K for command palette, S for status change, G+P for go to projects) conflict with browser shortcuts or Drupal admin toolbar shortcuts. Ctrl+K opens the browser's address bar in some browsers. Single-key shortcuts fire while typing in form fields.
 
-## Integration Gotchas
+**Prevention:**
+- NEVER bind single-key shortcuts globally -- only when a board element has focus and no text input is active:
+  ```javascript
+  function handleKeydown(event) {
+    // Skip if user is typing in an input
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+    if (event.target.isContentEditable) return;
+    // Now handle board shortcuts
+  }
+  ```
+- Use `event.preventDefault()` for shortcuts that conflict with browser defaults, but only when the Kanban board has focus context
+- Test shortcuts in Claro theme specifically (toolbar may have its own keyboard handlers)
+- Provide a keyboard shortcut reference (? key to show overlay) so users can discover shortcuts
 
-Common mistakes when connecting to external services and APIs.
+**Phase to address:** Interactions (Phase 2).
 
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| Group module + custom entities | Using `entity_type_id` in GroupRelationType annotation without enabling the relation in group type config | After creating the plugin, must also create a GroupRelationshipType config entity via UI or config install |
-| AI module + provider service | Calling `$provider->chat()` without checking if the provider supports the Chat operation type | Check `$provider->isUsable()` and handle the case where no provider is configured |
-| AI Agents + Group content | Assuming AI agent's user has group permissions because they have core permissions | Add the AI agent's user to relevant groups with appropriate group roles |
-| Plugin + existing install.sh | Shipping plugin without migration path for existing `~/.claude/skills/` users | Add uninstall instructions, migration hook, or dual-install detection |
-| Claude Code plugin + headless `claude -p` | Assuming `-p` mode loads plugins for eval | Verify empirically; likely need `--plugin-dir` flag explicitly |
-| Tool API + AI Agents | Defining tools without JSON Schema for input/output | Tool API requires typed schemas for AI function calling to work |
+---
 
-## Performance Traps
+### Pitfall 13: Entity Access Checks Missing on REST Endpoints -- Users See Tasks From Other Projects
 
-Patterns that work at small scale but fail as usage grows.
+**What goes wrong:**
+The custom REST controller loads tasks by project ID but does not check whether the current user has access to view those tasks or that project. Any authenticated user who guesses a project ID can see its tasks via the REST API, even if they are not a member of the associated group.
 
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| Loading all Group relationships eagerly | Slow page loads, high memory | Use paged queries, lazy loading of relationships | >100 relationships per group |
-| AI provider calls on every page load | Timeout errors, API rate limits, high cost | Cache AI responses with appropriate cache tags, use batch/queue for bulk operations | >10 concurrent users triggering AI |
-| No cache metadata on Group-related render arrays | Stale content after group membership changes | Add `group:ID` cache tags, `user.group_permissions` cache context | Any multi-user scenario |
-| Eval running 14 skills x 3 tiers sequentially | 6+ hour eval run | Run independent evaluations in parallel where possible, skip self-evident phases | Every full eval run |
+**Prevention:**
+- Run entity access checks on every loaded entity:
+  ```php
+  $tasks = $this->entityTypeManager->getStorage('task')->loadMultiple($task_ids);
+  $accessible_tasks = array_filter($tasks, function ($task) {
+    return $task->access('view');
+  });
+  ```
+- Check project access before returning any tasks:
+  ```php
+  if (!$project->access('view')) {
+    throw new AccessDeniedHttpException();
+  }
+  ```
+- For PATCH operations, check `update` access on the specific entity
+- For POST operations, check `create` access on the entity type within the group context
+- NEVER rely on route-level permission alone -- it checks "can access the dashboard feature" but not "can access THIS project's tasks"
 
-## Security Mistakes
+**Phase to address:** API Layer (Phase 1).
 
-Domain-specific security issues beyond general web security.
+---
 
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| AI agent with admin permissions creating content in any group | Privilege escalation -- AI creates content users cannot access | Scope AI agent permissions to specific groups; never give site-wide admin to AI service account |
-| Exposing AI provider API keys via Group content fields | API key theft, financial loss | Use Drupal Key module for credential storage; never store keys in config or content |
-| Group permissions not tested for anonymous users | Public access to private project data | Write explicit access tests for anonymous, authenticated, and non-member roles |
-| Trusting AI-generated content without sanitization | XSS via AI output injected into render arrays | Always use `#markup` with `Xss::filterAdmin()` or proper render element types for AI output |
-| Custom REST endpoints bypassing Group access checks | Ungrouped content creation, access control bypass | Use `$group->hasPermission()` in custom controllers, not just core `$account->hasPermission()` |
+### Pitfall 14: Drupal AJAX Commands Used Alongside Vue -- Two Rendering Systems Fight
 
-## UX Pitfalls
+**What goes wrong:**
+The module uses Drupal's AJAX framework (`AjaxResponse`, `ReplaceCommand`, `OpenModalDialogCommand`) for list view enhancements while using Vue.js for the Kanban board. When both are on the same page (or when navigating between them), they interfere. Drupal AJAX replaces HTML that Vue is managing, or Vue's state management conflicts with Drupal's AJAX state tracking.
 
-Common user experience mistakes in this domain.
+**Prevention:**
+- Draw a clear boundary: Vue owns the Kanban board route, Drupal AJAX owns the entity list/form routes. NEVER mix them on the same page.
+- The Kanban board page should have ZERO Drupal AJAX forms or AJAX-enabled elements inside the Vue-managed DOM
+- The entity list builder page should use PURE Drupal AJAX for status toggles, without loading Vue
+- If a modal is needed from the board (e.g., confirming deletion), use a Vue modal component, NOT `OpenModalDialogCommand`
+- Share state via REST API, not DOM manipulation -- if a Drupal AJAX action changes a task status, Vue should re-fetch on focus return
 
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| Plugin skills auto-trigger on unrelated tasks | Claude uses drupal-caching skill when user is working on a Node.js project | Make skill descriptions highly specific with clear negative constraints ("Do NOT use for non-Drupal projects") |
-| No feedback when AI agent fails within Group context | User sees generic error, cannot debug | Surface AI agent errors in Drupal messages with contextual information about which tool failed and why |
-| Requiring Group module for basic project management | Users who want simple task tracking must install complex access control system | Make Group integration optional -- basic project management should work without Group module |
-| Phase-level eval prompts that are too specific to the module | Eval measures prompt memorization, not skill value | Write phase prompts that describe the GOAL, not the implementation |
+**Phase to address:** Architecture decision (Phase 1). Boundary between Vue and Drupal AJAX must be defined before either is implemented.
+
+---
+
+### Pitfall 15: `_format: json` Missing From Route -- Content Negotiation Defaults to HTML
+
+**What goes wrong:**
+Custom REST routes work in manual testing (because the developer includes `?_format=json` in the URL) but fail in the Vue app (because the app constructs URLs without `?_format=json`). The server returns HTML responses that the Vue app cannot parse.
+
+**Prevention:**
+- Add `_format: json` as a route requirement (not just a query parameter):
+  ```yaml
+  group_ai_pm.api.task_update:
+    path: '/api/group-ai-pm/task/{task}'
+    defaults:
+      _controller: '\Drupal\group_ai_pm\Controller\TaskApiController::update'
+    requirements:
+      _permission: 'access group_ai_pm dashboard'
+      _csrf_request_header_token: 'TRUE'
+      _format: json
+      _method: PATCH
+  ```
+- When `_format` is a route requirement, Drupal automatically uses the JSON exception subscriber for error responses
+- The Vue API service should still include `?_format=json` in URLs as a safety measure
+- Set Content-Type headers on JavaScript requests: `'Content-Type': 'application/json'`
+
+**Phase to address:** API Layer (Phase 1).
+
+---
+
+## Phase-Specific Warnings
+
+| Phase Topic | Likely Pitfall | Mitigation |
+|-------------|---------------|------------|
+| API Layer (REST endpoints) | CSRF token mechanism confusion (#1, #5) | Use `_csrf_request_header_token` for all JS-called routes, `_csrf_token` for link-based actions only |
+| API Layer (REST endpoints) | JSON error responses (#3, #15) | Add `_format: json` to ALL API route requirements |
+| API Layer (REST endpoints) | Missing entity access checks (#13) | Check `$entity->access()` for every loaded entity, not just route permission |
+| Vue Infrastructure | Double initialization (#2) | Use `once()` guard in Drupal behavior, implement `detach` for cleanup |
+| Vue Infrastructure | drupalSettings not available (#7) | Declare `core/drupalSettings` dependency, attach settings in controller |
+| Vue Infrastructure | Bundle not committed (#4) | Use Vite library mode, commit dist/ folder |
+| Vue Infrastructure | Bundle size (#6) | Attach library only on board route, tree-shake imports, target <100KB gzipped |
+| Board UI | Claro CSS conflicts (#10) | Namespace all styles, use scoped CSS, test in Claro theme |
+| Board UI | Local task tab not appearing (#8) | Match base_route and parameter names exactly with entity canonical route |
+| Interactions (DnD) | Optimistic update without rollback (#9) | Implement full rollback pattern with user-visible error messaging |
+| Keyboard shortcuts | Browser/Drupal conflicts (#12) | Guard against text input focus, test in Claro with toolbar |
+| AJAX list enhancements | Vue and AJAX systems conflict (#14) | Hard boundary: Vue on board page, Drupal AJAX on list pages, never mixed |
+| Eval design | Haiku declaration-usage gap (#11) | Eval assertions must test WIRING (settings attached, CSRF fetched), not just file existence |
 
 ## "Looks Done But Isn't" Checklist
 
 Things that appear complete but are missing critical pieces.
 
-- [ ] **Plugin packaging:** Skills load in `/context` -- verify each of 14 skills appears, not just the first few
-- [ ] **Plugin packaging:** Skills auto-trigger -- test with 5+ natural prompts per skill, not just `/skill-name` invocation
-- [ ] **Plugin packaging:** Old `install.sh` users are handled -- migration path documented, dual-install detection works
-- [ ] **Group integration:** Custom GroupRelationType plugin -- verify it appears in Group Type configuration UI, not just that the plugin class exists
-- [ ] **Group integration:** Access control -- test all 5 user types (anon, auth, member, group-admin, site-admin), not just admin
-- [ ] **AI integration:** Provider abstraction -- verify module installs and basic features work WITHOUT AI module enabled
-- [ ] **AI integration:** Tool definitions -- verify tools appear in AI Agent Explorer, not just that the code compiles
-- [ ] **Eval methodology:** Activation logging -- verify you can determine which skills activated from eval transcripts
-- [ ] **Eval methodology:** Baseline validity -- verify without-plugin baseline produces working (if less optimal) code, not broken code
-- [ ] **Eval methodology:** Phase independence -- verify Phase N+1 baseline does not depend on Phase N baseline's specific implementation
+- [ ] **REST endpoint works:** Check that mutation requests include X-CSRF-Token header AND `?_format=json` -- not just that GET returns data
+- [ ] **Vue app mounts:** Check that `once()` guard prevents double mounting after AJAX/BigPipe -- not just that it works on fresh page load
+- [ ] **Board tab appears:** Check that the tab appears on the entity page -- not just that the route loads at a direct URL
+- [ ] **Drag-and-drop works:** Check that failure rolls back the card AND shows an error -- not just that successful drags update status
+- [ ] **Library loads:** Check that the Vue bundle loads ONLY on board pages -- not on every admin page
+- [ ] **Settings passed:** Check that drupalSettings contains project ID, base URL, and permissions -- not just that the controller returns JSON
+- [ ] **Keyboard shortcuts work:** Check shortcuts while Drupal toolbar is visible and while a text input is focused -- not just in isolation
+- [ ] **CSS looks correct:** Check component rendering inside Claro admin theme -- not in a standalone HTML file
+- [ ] **Production bundle exists:** Check that `js/dist/` contains compiled files AND is referenced in libraries.yml -- not that source files exist
+- [ ] **Access control applies:** Check that REST endpoints respect entity-level access, not just route-level permission
 
 ## Recovery Strategies
 
@@ -386,54 +650,46 @@ When pitfalls occur despite prevention, how to recover.
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Skills not auto-triggering (#1) | LOW | Optimize descriptions iteratively. Add hooks if needed. Does not require code changes. |
-| Eval conflates activation and content (#2) | MEDIUM | Add explicit-trigger tier to eval. Re-run affected phases only. |
-| Wrong Group API version (#3) | HIGH | Find-and-replace all 2.x terms. Rewrite plugin classes. Rebuild config entities. |
-| Plugin structure wrong (#4) | LOW | Move directories to correct locations. Re-install plugin. |
-| AI API breaks on update (#5) | MEDIUM | Service abstraction layer limits blast radius. Update wrapper, not callsites. |
-| Dual install confusion (#6) | LOW | Ship `install.sh --uninstall`. Document in README. |
-| Group access blocks AI agent (#7) | MEDIUM | Create dedicated AI service account, add to groups, assign group roles. |
-| Phase eval chain breaks (#8) | HIGH | Redesign as independent phases with fixtures. Significant rework. |
-| REST/JSON:API group context missing (#9) | MEDIUM | Add custom controller or two-step creation pattern. |
-| Headless eval cannot test auto-trigger (#10) | MEDIUM | Accept different methodology for activation vs content evals. |
-
-## Pitfall-to-Phase Mapping
-
-How roadmap phases should address these pitfalls.
-
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| Auto-trigger unreliability (#1) | Plugin packaging + description optimization | Run activation test suite: 10 prompts x 14 skills, >80% activation rate |
-| Eval methodology conflation (#2) | Eval design phase | Document three-tier eval design, validate with one calibration phase |
-| Group 3.x API terminology (#3) | Entity/data model phase | grep for 2.x terms in codebase, zero matches required |
-| Plugin directory structure (#4) | Plugin packaging phase | `claude --debug` shows all 14 skills registered |
-| Drupal AI API instability (#5) | Architecture phase | AI service abstraction interface defined, module installs without AI module |
-| install.sh migration (#6) | Plugin packaging phase | Test: install via install.sh, then install plugin, verify no duplicates |
-| Group access overrides (#7) | Access/security phase | Automated tests for all 5 user types on grouped content |
-| Phase eval state accumulation (#8) | Eval design phase | Each phase has documented fixtures or snapshot strategy |
-| REST group context (#9) | Routing/API phase | JSON:API POST to create task in group succeeds |
-| Headless vs interactive eval (#10) | Eval infrastructure phase | Empirical test: does `--plugin-dir` work with `-p`? |
-| Missing Group skill content (#11) | Architecture phase | Gap analysis document: patterns needed vs patterns covered |
+| CSRF token not fetched (#1) | LOW | Add token fetch to app initialization. Single code change. |
+| Vue double mounting (#2) | LOW | Wrap in once() guard. Add detach handler. Quick fix. |
+| HTML error responses (#3) | LOW | Add `_format: json` to route requirements. No API changes. |
+| Bundle not committed (#4) | LOW | Run build, commit dist/, update .gitignore. No code changes. |
+| Wrong CSRF mechanism (#5) | LOW | Change route requirement from `_csrf_token` to `_csrf_request_header_token`. |
+| Bundle too large (#6) | MEDIUM | Tree-shaking, code splitting, lazy loading. Requires refactoring imports. |
+| drupalSettings missing (#7) | LOW | Add dependency to libraries.yml, attach settings in controller. |
+| Local task tab missing (#8) | LOW | Fix route path and base_route parameter matching. |
+| Optimistic rollback missing (#9) | MEDIUM | Implement rollback pattern in store. Requires state management refactor. |
+| Claro CSS conflicts (#10) | MEDIUM | Add CSS scoping/resets. May require reworking many component styles. |
+| Haiku wiring gap (#11) | HIGH | Skill content must be rewritten to show connected patterns. Eval re-run needed. |
+| Keyboard conflicts (#12) | LOW | Add input-focus guards. Quick conditional checks. |
+| Missing access checks (#13) | MEDIUM | Add access checks to all endpoints. Must audit every controller method. |
+| Vue/AJAX conflict (#14) | HIGH | Architectural separation. May require rewriting pages that mix both. |
+| JSON format missing (#15) | LOW | Add `_format: json` to routes. No API changes needed. |
 
 ## Sources
 
-- [Claude Code Skills Documentation](https://code.claude.com/docs/en/skills) -- Skill loading, description budget (2% of context window), auto-triggering behavior, frontmatter reference
-- [Claude Code Plugins Reference](https://code.claude.com/docs/en/plugins-reference) -- Plugin directory structure, plugin.json schema, component locations, common issues table
-- [Anthropic Skill Authoring Best Practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) -- Description writing guidelines, third-person requirement, 1024-char limit, testing recommendations
-- [Claude Code Skills Activation Issues](https://dev.to/oluwawunmiadesewa/claude-code-skills-not-triggering-2-fixes-for-100-activation-3b57) -- UserPromptSubmit hook workaround, forced evaluation pattern (LOW confidence -- unverified activation rates)
-- [Skills Activation Community Research](https://scottspence.com/posts/how-to-make-claude-code-skills-activate-reliably) -- Imperative vs passive description testing, SLASH_COMMAND_TOOL_CHAR_BUDGET env var
-- [Drupal Group Module](https://www.drupal.org/project/group) -- Group 3.3.0 release notes, API changes from 2.x to 3.x
-- [Drupal Group 3.x API Changes](https://www.drupal.org/node/3292844) -- `addContent()` -> `addRelationship()`, entity renames
-- [Drupal Group 3.x GroupRelationTypeManager](https://www.drupal.org/node/3232814) -- Service renames, handler pattern
-- [Adding Custom Permissions to Groups](https://www.hashbangcode.com/article/drupal-10-adding-custom-permissions-groups) -- GroupRelationType plugin implementation, Group 3.x code patterns
-- [Drupal AI Module](https://www.drupal.org/project/ai) -- Version 1.2.11, provider abstraction API
-- [Drupal AI Agents Module](https://www.drupal.org/project/ai_agents) -- Version 1.2.3, tool calling framework, WIP documentation
-- [Drupal AI Agents Getting Started](https://project.pages.drupalcode.org/ai/2.0.x/agents/) -- Agent architecture, tool calling, development approach
-- [Group Module REST/JSON:API Issue](https://www.drupal.org/project/group/issues/2872645) -- `$context['group']` required for content creation access checks
-- [Group Access Control Issue](https://www.drupal.org/project/group/issues/3162511) -- `forbidden()` result breaking regular node grants
-- v2.0 empirical eval data from MEMORY.md -- headless pipeline validated, 37.5% vs 0% agent harness delta on caching skill
-- Existing SKILL.md files (drupal-caching, drupal-module-scaffold) -- current description format with imperative directives
+- [Drupal CSRF Access Checking Documentation](https://www.drupal.org/docs/8/api/routing-system/access-checking-on-routes/csrf-access-checking) -- `_csrf_token` vs `_csrf_request_header_token` distinction (HIGH confidence)
+- [Drupal REST Request Fundamentals](https://www.drupal.org/docs/8/core/modules/rest/getting-started-rest-configuration-rest-request-fundamentals) -- X-CSRF-Token header requirement, /session/token endpoint (HIGH confidence)
+- [CSRF Token Route Protection Change Record](https://www.drupal.org/node/2772399) -- Token system moved out of REST module to core (HIGH confidence)
+- [X-CSRF-Token 403 Error Issue](https://www.drupal.org/project/drupal/issues/3458218) -- Common error patterns (HIGH confidence)
+- [REST 403 Responses Unhelpful Issue](https://www.drupal.org/project/drupal/issues/2808233) -- JSON error body missing without `_format` (HIGH confidence)
+- [Drupal Asset Libraries Documentation](https://www.drupal.org/docs/develop/creating-modules/adding-assets-css-js-to-a-drupal-module-via-librariesyml) -- libraries.yml, drupalSettings, dependencies (HIGH confidence)
+- [Drupal JavaScript API Overview](https://www.drupal.org/docs/drupal-apis/javascript-api/javascript-api-overview) -- Drupal.behaviors, once(), attachBehaviors lifecycle (HIGH confidence)
+- [Drupal Behaviors Double-Attachment Issue](https://www.drupal.org/project/drupal/issues/3377788) -- BigPipe and behaviors firing twice (HIGH confidence)
+- [Vue.js + Drupal Integration Guide (Five Jars)](https://fivejars.com/blog/how-integrate-vuejs-applications-drupal) -- Library architecture, build targets, mounting patterns (MEDIUM confidence)
+- [Building JS for Drupal Contrib Modules (TrueSummit)](https://truesummit.dev/blog/building-js-drupal-contrib-modules) -- Committing compiled bundles, CI/CD pattern (MEDIUM confidence)
+- [Vue.js Library Drupal Module](https://www.drupal.org/project/vuejs) -- Vue 3 as Drupal library (MEDIUM confidence)
+- [Drupal Local Tasks Documentation](https://www.drupal.org/docs/drupal-apis/menu-api/providing-module-defined-local-tasks) -- base_route, route parameters, tab grouping (HIGH confidence)
+- [Vue.js Performance Best Practices](https://vuejs.org/guide/best-practices/performance) -- Tree-shaking, code splitting, bundle optimization (HIGH confidence)
+- [Vue.js Production Deployment](https://vuejs.org/guide/best-practices/production-deployment.html) -- Production build configuration (HIGH confidence)
+- [Drupal @drupal/once NPM Package](https://www.npmjs.com/package/@drupal/once) -- once() API for preventing double initialization (HIGH confidence)
+- [Claro Theme CSS Variables Issue](https://www.drupal.org/project/drupal/issues/3554220) -- Claro library dependency chain (MEDIUM confidence)
+- [Drupal Passing Data PHP to JavaScript](https://gorannikolovski.com/snippet/passing-data-from-php-to-javascript-in-drupal) -- drupalSettings patterns (MEDIUM confidence)
+- [Drupal HTMX Replacement Proposal](https://www.drupal.org/project/drupal/issues/3404409) -- Context on Drupal AJAX framework complexity (LOW confidence -- proposal, not implemented)
+- v3.0 Eval Phase 16 Results -- Haiku "declaration-usage gap" pattern empirically validated (HIGH confidence, project-specific)
+- v3.0 Eval Phase 15 Results -- CSRF_token CRITICAL callout effectiveness empirically validated (HIGH confidence, project-specific)
+- Existing group_ai_pm module source -- Current route definitions, libraries.yml, entity structure (HIGH confidence, first-party)
 
 ---
-*Pitfalls research for: Group-based project management with AI/AI Agents integration + Claude Code plugin packaging*
-*Researched: 2026-03-07*
+*Pitfalls research for: v4.0 Vue.js Kanban UX Overhaul -- adding Vue.js, AJAX, and rich frontend UX to existing Drupal 10 module*
+*Researched: 2026-03-08*
