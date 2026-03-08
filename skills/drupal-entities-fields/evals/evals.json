@@ -3,20 +3,19 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Create a custom content entity type called KnowledgeResource for a Drupal 10 site. The entity is for organizing external learning resources (articles, papers, tools, documentation). It should have base fields for: related_topic (entity_reference to node), author (entity_reference to user), resource_type (list_string with allowed values: article, research_paper, tool, documentation), and created timestamp. Include all necessary handlers -- forms, list builder, access handler, and route provider. Put it in a module called knowledge_resource. We want D11 compatibility.",
-      "expected_output": "A complete content entity type with entity class, base fields, all handlers, and module scaffold",
+      "prompt": "Create a module called `project_tracker` for a Drupal 10 site that provides a content entity type called `project_item` with bundle support. Different project types (task, milestone, deliverable) should be separate bundles. Define a companion config entity type called `project_item_type` that serves as the bundle entity for project_item. The content entity should have base fields for: title (string), status (list_string with allowed values: open, in_progress, closed), and deadline (timestamp). Wire the bundle relationship properly between the content entity and config entity via annotations. Include all necessary handlers: forms, list builder, access control handler, and route provider. Provide admin routes for managing both the entity types and their instances. We want D11 compatibility.",
+      "expected_output": "Content entity with bundle_entity_type, config entity with bundle_of, EntityChangedTrait with changed field, complete handler wiring",
       "files": [],
       "expectations": [
-        "Entity class baseFieldDefinitions() calls parent::baseFieldDefinitions($entity_type) and assigns/merges the result into $fields (MUST call parent or id/uuid/langcode base fields are lost, causing entity creation to silently fail with missing primary key)",
-        "Base fields that should appear in forms use setDisplayOptions('form', [...]) with widget type (without this call, fields are invisible in entity add/edit forms even though they exist in the database)",
-        "Base fields that should appear in entity view use setDisplayOptions('view', [...]) with formatter type (without this, entity view mode renders nothing for these fields)",
-        "Entity annotation/attribute includes route_provider handler pointing to AdminHtmlRouteProvider or DefaultHtmlRouteProvider (auto-generates CRUD routes from links array instead of hand-writing each entity route in .routing.yml)",
-        "This is a content entity per the prompt -- does NOT include config_export key in the annotation/attribute (config_export is for ConfigEntityType only, including it on a content entity causes errors)",
-        "The module enables successfully: ddev drush en knowledge_resource returns exit code 0"
-      ],
-      "browser_checks": [
-        "Log in as admin via drush uli, navigate to the KnowledgeResource entity add form (e.g., /admin/content/knowledge-resource/add or the path defined in entity links) — verify the form renders with fields for related_topic, author, resource_type (dropdown with article/research_paper/tool/documentation options), and created",
-        "Navigate to the KnowledgeResource entity list page (e.g., /admin/content/knowledge-resource) — verify the list builder page loads without errors"
+        "Content entity annotation/attribute includes bundle_entity_type key pointing to the config entity type ID (e.g., 'project_item_type') -- without this key Drupal does not know which config entity provides bundles for this content entity",
+        "Config entity annotation/attribute includes bundle_of key pointing to the content entity type ID (e.g., 'project_item') -- this creates the reverse relationship and without it the config entity is not recognized as a bundle provider",
+        "Content entity has 'bundle' key in entity_keys annotation mapping to a field (without this Drupal cannot determine which bundle an entity instance belongs to, causing fatal errors on entity creation)",
+        "Config entity class exists as a separate file from the content entity class -- one entity per file, config entity extends ConfigEntityBase or ConfigEntityBundleBase (NOT mixing content and config entity definitions in one class file)",
+        "Content entity uses EntityChangedTrait AND defines a 'changed' base field in baseFieldDefinitions() (the trait provides getChangedTime/setChangedTime methods but requires the base field to exist in the database -- having the trait without the field or the field without the trait is an incomplete pattern)",
+        "Content entity baseFieldDefinitions() calls parent::baseFieldDefinitions($entity_type) and uses the result (MUST call parent or core base fields like id, uuid, and langcode are lost, causing entity creation to fail with missing primary key errors)",
+        "The module enables successfully: ddev drush en project_tracker returns exit code 0",
+        "Log in as admin via drush uli, navigate to the project item type admin page (e.g., /admin/structure/project_item_type or similar collection route) -- verify the bundle management UI loads without errors (via eval-browser)",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
       ]
     }
   ]

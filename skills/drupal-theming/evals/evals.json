@@ -3,20 +3,19 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Create a module called `featured_resources` for a Drupal 10 site that renders a themed list of featured learning resources. Implement hook_theme() with a template that displays resource items with titles and links. Attach a CSS library for styling the list. Use render arrays with #theme, NOT raw HTML strings. Use proper Drupal template naming conventions. Provide a page at a route (e.g., /featured-resources) that displays the themed output. We want D11 compatibility.",
-      "expected_output": "A theming module with hook_theme(), a hyphen-named Twig template, render arrays using #theme, and an attached CSS library via .libraries.yml",
+      "prompt": "Create a module called `team_profiles` for a Drupal 10 site that renders team member profiles using the theme layer. The module should define a custom theme hook called `team_profile` with variables for name (string), role (string), and bio (string). Provide a default preprocess function that adds a CSS class based on the role -- for example, 'team-profile--lead' when the role is 'lead', 'team-profile--developer' when the role is 'developer', etc. Implement hook_theme_suggestions_HOOK() to suggest alternative templates based on the role value, so a role of 'lead' produces a template suggestion like team_profile__lead. Provide a page route at /team that displays at least 3 sample team members rendered through the theme hook. Attach a CSS library for styling. We want D11 compatibility.",
+      "expected_output": "Module with hook_theme(), template_preprocess_HOOKNAME(), hook_theme_suggestions_HOOK(), Twig template, CSS library, and page route",
       "files": [],
       "expectations": [
-        "Template filename uses hyphens not underscores: e.g., featured-resources-list.html.twig (Drupal convention maps underscores in hook name to hyphens in filename -- wrong naming means template is silently never found and output falls back to empty)",
-        "hook_theme() declares ALL template variables with default values in the 'variables' key (undeclared variables are undefined in Twig causing silent rendering failures -- the variables array IS the template's API contract)",
-        "Render array uses #theme key referencing the hook_theme entry name (NOT building raw HTML strings with Markup::create() or concatenating HTML into #markup -- raw HTML bypasses theme overrides and security filtering)",
-        "CSS/JS attached via #attached['library'] referencing module_name/library_name format (NOT inline <script>/<style> tags, NOT drupal_add_css() which was removed in D8)",
-        "featured_resources.libraries.yml file exists defining the CSS library with a css key containing at least one file path",
-        "Template file exists in templates/ subdirectory of the module (correct standard location for module templates)",
-        "The module enables successfully: ddev drush en featured_resources returns exit code 0"
-      ],
-      "browser_checks": [
-        "Log in as admin via drush uli, navigate to the module's page route (e.g., /featured-resources) — verify the themed template renders the featured resources list with visible styled output (not raw HTML, not PHP errors, not a blank page)"
+        "template_preprocess_team_profile() function exists in the .module file using the correct naming convention -- the default preprocessor MUST use the template_preprocess_ prefix followed by the exact hook name (NOT module_preprocess_team_profile which is for module-specific overrides, NOT team_profiles_preprocess_team_profile)",
+        "Preprocess function modifies $variables by reference and adds or modifies attributes or CSS classes based on the role value (NOT just passing variables through unchanged -- the preprocess must actively transform data for the template)",
+        "hook_theme_suggestions_team_profile() or hook_theme_suggestions_team_profile_alter() is implemented to provide dynamic template suggestions based on the role variable value",
+        "Template suggestions use the double-underscore pattern: team_profile__rolename (NOT hyphen separator, NOT single underscore -- Drupal maps double underscores to directory separators for template discovery and single underscores break the suggestion system)",
+        "hook_theme() declares ALL template variables (name, role, bio) with default values in the 'variables' key (undeclared variables are undefined in Twig causing silent rendering failures -- the variables array IS the template's API contract)",
+        "Template filename uses hyphens: team-profile.html.twig (NOT underscores -- Drupal maps underscores in hook names to hyphens in template filenames and will not find the template if this convention is wrong)",
+        "The module enables successfully: ddev drush en team_profiles returns exit code 0",
+        "Log in as admin via drush uli, navigate to /team -- verify that team member profiles render with visible name and role content (not raw HTML, not PHP errors, not a blank page) (via eval-browser)",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
       ]
     }
   ]
