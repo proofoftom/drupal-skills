@@ -49,6 +49,54 @@
 
 ---
 
+## Milestone: v2.0 -- Eval & Optimization Loop
+
+**Shipped:** 2026-03-08
+**Phases:** 5 | **Plans:** 23 | **Sessions:** ~11
+
+### What Was Built
+- Headless eval pipeline (`claude -p`) eliminating agent harness confound
+- 13 rewritten eval prompts for fresh Drupal 10 with differentiating assertions
+- Coding-standards skill for cross-cutting phpcs compliance
+- Full 13-skill benchmark suite with tier classifications
+- FINAL-REPORT.md with empirically-grounded portfolio analysis
+
+### What Worked
+- Discovering agent harness confound early in Phase 11 saved the entire eval from invalid data
+- Headless `claude -p` pipeline produced clean, reproducible signals
+- Coding-standards baseline skill elegantly separated phpcs noise from domain skill value
+- Phase 12 iteration cycle: fix SKILL.md -> re-run -> validate -- turned 3 negative-delta skills positive
+- CRITICAL NEVER callout placement experiment showed +44.4% swing -- proved content placement matters
+
+### What Was Inefficient
+- Phase 10 pipeline validation was confounded by agent scaffold -- had to redo with headless pipeline in Phase 11
+- Phase 11 batch execution was manual (1 skill at a time) despite plans for 3-4 per session batching
+- Multiple rounds of evals.json schema discovery -- browser_checks field wasn't supported, wasted time adding it
+- E2E browser verification (eval-browser) proved zero discriminatory value -- dropped in v3 runs
+- Phase 11 had 13 plans but most were identical batch runs -- over-planned for repetitive work
+
+### Patterns Established
+- Headless `claude -p --model haiku` for all code generation (never agent subagents)
+- `unset CLAUDECODE` before headless sessions to prevent environment leakage
+- Coding-standards skill loaded as baseline for both variants (isolates domain delta)
+- Single-run design sufficient for tier classification (HIGH/MOD/NEUT clear in 1 run)
+- Eval grading with sonnet agent reading code + structured expectations
+
+### Key Lessons
+1. Agent harness provides implicit knowledge -- NEVER use agent subagents for controlled A/B code generation
+2. Skill content placement matters more than presence -- CRITICAL NEVER callouts near the relevant code flow produce the biggest swings
+3. 4 neutral-delta skills (forms-api, theming, database-api, entities-fields) represent domains where Haiku baseline is sufficient -- accept this honestly
+4. phpcs compliance is cross-cutting -- dedicated skill is better than per-domain coverage
+5. E2E browser testing adds no discriminatory value for eval grading -- drush/curl is sufficient evidence
+6. Expectations must test what the skill teaches that the model doesn't know -- "obvious" assertions produce 0% delta
+
+### Cost Observations
+- Model mix: ~50% Opus (orchestration, grading), ~40% Haiku (code gen, browser), ~10% Sonnet (grading)
+- Sessions: ~11 sessions over 3 days
+- Notable: Code gen moved from Sonnet to Haiku in Phase 11 (cheaper + more accurate baseline measurement)
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -56,8 +104,11 @@
 | Milestone | Sessions | Phases | Key Change |
 |-----------|----------|--------|------------|
 | v1.0 | ~8 | 7 | Established skill authoring + eval pipeline |
+| v2.0 | ~11 | 5 | Headless pipeline, coding-standards baseline, tier classifications |
 
 ### Top Lessons (Verified Across Milestones)
 
-1. Eval methodology matters more than skill content -- wrong assertions produce meaningless data
-2. Skills add value only where model training data has gaps; standard patterns are already known
+1. Eval methodology matters more than skill content -- wrong assertions produce meaningless data (v1.0 Phase 7, v2.0 Phase 10-11)
+2. Skills add value only where model training data has gaps; standard patterns are already known (v1.0 0% delta on 9/13, v2.0 confirmed 4 neutral)
+3. Agent scaffolding confounds eval results -- implicit knowledge in system prompts inflates baselines (v1.0 discovered, v2.0 confirmed and fixed)
+4. Content placement within skill files matters as much as content presence (v2.0 CRITICAL NEVER callout experiment)
