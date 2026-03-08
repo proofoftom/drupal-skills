@@ -1,0 +1,11 @@
+{
+  "name": "drupal-skills",
+  "description": "14 skills for generating correct Drupal 10/11 module code. Covers module scaffolding, entities, routing, forms, plugins, caching, theming, testing, Views, batch processing, access control, config management, database API, and coding standards.",
+  "version": "3.0.0",
+  "author": {
+    "name": "proofoftom"
+  },
+  "repository": "https://github.com/proofoftom/drupal-skills",
+  "license": "MIT",
+  "keywords": ["drupal", "drupal-10", "drupal-11", "module-development", "php"]
+}
