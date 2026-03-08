@@ -3,20 +3,19 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Create a settings form module called `search_settings` for configuring search parameters on a Drupal 10 site. The form at `/admin/config/search/search-settings` should have fields for: similarity_threshold (number, default 0.7), result_limit (number, default 5), and cache_ttl (number, default 300). Save all settings to config. Include a config schema file. We want D11 compatibility.",
-      "expected_output": "ConfigFormBase with getEditableConfigNames, config schema, route with _form key",
+      "prompt": "Create a module called `content_cleanup` for a Drupal 10 site that provides a confirmation form for bulk-deleting old unpublished content. The form should live at `/admin/content/cleanup`. When a user visits the page, they see a confirmation page asking \"Are you sure you want to delete unpublished items older than 30 days?\" with confirm and cancel buttons. The confirm button triggers deletion of matching nodes (unpublished, created more than 30 days ago) and redirects back to the content overview at /admin/content. The cancel link also goes to /admin/content. The route should require the 'administer nodes' permission. We want D11 compatibility.",
+      "expected_output": "ConfirmFormBase with getQuestion, getCancelUrl returning Url object, submitForm with redirect, route with _form key",
       "files": [],
       "expectations": [
-        "Form class extends ConfigFormBase (not FormBase) -- ConfigFormBase provides getEditableConfigNames(), config helpers, and automatic submit button/status message via parent calls",
-        "buildForm() calls parent::buildForm($form, $form_state) and returns its result -- parent adds the submit button automatically (NOT manually adding a '#type' => 'submit' element which duplicates the button)",
-        "submitForm() calls parent::submitForm($form, $form_state) for the automatic 'The configuration options have been saved.' status message (NOT calling messenger()->addMessage() manually for save confirmation)",
-        "submitForm() uses $this->config('search_settings.settings') to get editable config (NOT \\Drupal::configFactory()->getEditable() static call -- ConfigFormBase provides $this->config() which returns editable config within submitForm)",
-        "Config schema file exists and uses appropriate types: 'integer' for result_limit and cache_ttl, 'float' for similarity_threshold (NOT 'string' for all numeric fields)",
-        "Route uses _form key pointing to the form class (NOT _controller -- using _controller for a form bypasses CSRF protection, form token validation, and the full form lifecycle)",
-        "The module enables successfully: ddev drush en search_settings returns exit code 0"
-      ],
-      "browser_checks": [
-        "Log in as admin via drush uli, navigate to /admin/config/search/search-settings — verify the form renders with fields for similarity_threshold (showing 0.7), result_limit (showing 5), and cache_ttl (showing 300) with correct default values"
+        "Form class extends ConfirmFormBase (NOT FormBase or ConfigFormBase) -- ConfirmFormBase provides the confirmation UI automatically with question text, description, confirm button, and cancel link",
+        "getQuestion() method exists and returns a translatable string via $this->t() or new TranslatableMarkup() describing the action -- this method is required by ConfirmFormBase and without it the confirmation page renders with no question text",
+        "getCancelUrl() method returns a Url object via new Url() or Url::fromRoute() (NOT a plain string path like '/admin/content' -- ConfirmFormBase requires a Url object and passing a string causes a fatal TypeError)",
+        "submitForm() redirects after completion using $form_state->setRedirectUrl() or $form_state->setRedirect() (NOT drupal_goto() which was removed in D8, NOT omitting redirect which leaves the user stuck on the confirmation page after submit)",
+        "Route definition uses _form key pointing to the form class (NOT _controller -- using _controller for a form bypasses CSRF protection, form token validation, and the full Form API lifecycle)",
+        "Route uses _permission for access control (e.g., 'administer nodes' or similar admin permission)",
+        "The module enables successfully: ddev drush en content_cleanup returns exit code 0",
+        "Log in as admin via drush uli, navigate to /admin/content/cleanup -- verify the confirmation page renders with question text and both confirm and cancel buttons visible (via eval-browser)",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
       ]
     }
   ]
