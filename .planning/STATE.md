@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Eval & Optimization Loop
-status: unknown
-stopped_at: Completed 12-03-PLAN.md
-last_updated: "2026-03-08T02:15:44.968Z"
-last_activity: 2026-03-08 -- Plans 01-03 complete. 3 negative-delta skills flipped positive. 4 neutral confirmed. Plan 04 remaining.
+status: complete
+stopped_at: Completed 12-04-PLAN.md -- v2.0 milestone shipped
+last_updated: "2026-03-08T02:20:00.000Z"
+last_activity: 2026-03-08 -- Phase 12 complete. FINAL-REPORT.md compiled with stabilized tier classifications. v2.0 milestone shipped.
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 5
   total_plans: 23
-  completed_plans: 13
-  percent: 57
+  completed_plans: 23
+  percent: 100
 ---
 
 # Project State
@@ -25,13 +25,13 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 
 ## Current Position
 
-Phase: 12 of 12 -- Analysis & Optimization
-Plans 01, 02, and 03 complete. Plan 04 remaining.
-Last activity: 2026-03-08 -- Plans 01-03 complete. 3 negative-delta skills flipped positive. 4 neutral confirmed. Plan 04 remaining.
+Phase: 12 of 12 -- Analysis & Optimization -- COMPLETE
+All plans complete. v2.0 Eval & Optimization Loop milestone shipped.
+Last activity: 2026-03-08 -- Phase 12 complete. FINAL-REPORT.md compiled. v2.0 shipped.
 
-Progress: [██████░░░░] 57%
+Progress: [██████████] 100%
 
-### Current Results (13/13, v3 where re-run)
+### Final Results (Stabilized)
 | Tier | Skill | WITH | WITHOUT | Delta | Note |
 |------|-------|------|---------|-------|------|
 | HIGH | caching | 8/8 | 5/8 | +37.5% | v2 |
@@ -92,6 +92,10 @@ Progress: [██████░░░░] 57%
 - [Phase 12]: 12-03: Neutral-delta skills (forms-api, theming) confirmed as baseline Haiku knowledge -- no further iteration
 - [Phase 12]: 12-03: entities-fields bundle_of gap: neither variant produces it, SKILL.md needs explicit coverage
 - [Phase 12]: 12-03: Coding-standards baseline for both variants eliminates phpcs noise, isolates domain skill delta
+- [Phase 12]: 12-04: Final portfolio: 4 HIGH (+31.6% avg), 5 MOD (+11.7% avg), 4 NEUT (0%), 0 NEG
+- [Phase 12]: 12-04: Skill content placement matters more than presence -- CRITICAL NEVER callout placement produced +44.4% swing
+- [Phase 12]: 12-04: Neutral skills confirmed as baseline Haiku knowledge -- forms-api, theming, database-api, entities-fields
+- [Phase 12]: 12-04: v2.0 milestone shipped with FINAL-REPORT.md
 
 ### Carried from v1.0
 
@@ -110,6 +114,6 @@ Progress: [██████░░░░] 57%
 
 ## Session Continuity
 
-Last session: 2026-03-08T02:15:44.966Z
-Stopped at: Completed 12-03-PLAN.md
+Last session: 2026-03-08T02:20:00.000Z
+Stopped at: Completed 12-04-PLAN.md -- v2.0 milestone shipped
 Resume file: None

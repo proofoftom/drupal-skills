@@ -3,7 +3,7 @@
 ## Milestones
 
 - v1.0 **Skill Authoring** -- Phases 1-7 (shipped 2026-03-07)
-- v2.0 **Eval & Optimization Loop** -- Phases 8-12 (in progress)
+- v2.0 **Eval & Optimization Loop** -- Phases 8-12 (shipped 2026-03-08)
 
 ## Phases
 
@@ -28,7 +28,7 @@ Full details: milestones/v1.0-ROADMAP.md
 - [x] **Phase 9: Eval Prompt Rewrite** - Rewrite all 13 eval prompts for fresh Drupal 10 instances (replace os-kg references), adjust assertions if needed for new prompt context
 - [x] **Phase 10: Pipeline Validation** - Run 2-3 calibration skills (caching, scaffold) end-to-end through new pipeline, validate grading.json/benchmark.json schemas, confirm meaningful deltas (completed 2026-03-07)
 - [x] **Phase 11: Batch Execution** - Run all 13 skills through eval pipeline in batches of 3-4 per session, produce graded benchmarks for every skill
-- [ ] **Phase 12: Analysis & Optimization** - Classify skills into tiers, iterate on weak deltas (tighten assertions or improve skill content), produce final report with stabilized results
+- [x] **Phase 12: Analysis & Optimization** - Classify skills into tiers, iterate on weak deltas (tighten assertions or improve skill content), produce final report with stabilized results (completed 2026-03-08)
 
 ## Phase Details
 
@@ -95,12 +95,12 @@ Plans:
 **Goal**: Final analysis with tier classifications, iteration on weak deltas, and overall verdict on skill value
 **Depends on**: Phase 11
 **Requirements**: ANLZ-02, ANLZ-03, ANLZ-04, CARRY-01, CARRY-02
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 Plans:
 - [x] 12-01-PLAN.md -- Fix known failures (coding-standards skill, SKILL.md patches, eval prompt fix)
 - [x] 12-02-PLAN.md -- Write harder evals for neutral-delta skills
 - [x] 12-03-PLAN.md -- Re-run 7 affected skills through eval pipeline
-- [ ] 12-04-PLAN.md -- Compile final report and close milestone
+- [x] 12-04-PLAN.md -- Compile final report and close milestone
 **Success Criteria** (what must be TRUE):
   1. All 13 skills classified into tiers: High (>15%), Moderate (5-15%), Low (<5%)
   2. Skills with weak deltas analyzed -- at least 1 iteration of assertion tightening or skill improvement attempted
@@ -119,4 +119,4 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 | 9. Eval Prompt Rewrite | v2.0 | 2/2 | Complete | 2026-03-07 |
 | 10. Pipeline Validation | v2.0 | 2/2 | Complete | 2026-03-07 |
 | 11. Batch Execution | v2.0 | 13/13 | Complete | 2026-03-07 |
-| 12. Analysis & Optimization | v2.0 | 3/4 | In Progress | - |
+| 12. Analysis & Optimization | v2.0 | 4/4 | Complete | 2026-03-08 |
