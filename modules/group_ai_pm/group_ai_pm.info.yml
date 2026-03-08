@@ -6,6 +6,4 @@ package: Custom
 dependencies:
   - drupal:datetime
   - group:group
-  - ai:ai
-  - ai_agents:ai_agents
 configure: group_ai_pm.settings

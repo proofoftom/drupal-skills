@@ -6,3 +6,6 @@ administer group_ai_pm:
 access group_ai_pm dashboard:
   title: 'Access Group AI Project Management dashboard'
   description: 'View the Group AI Project Management dashboard.'
+
+permission_callbacks:
+  - Drupal\group_ai_pm\PermissionGenerator::getPermissions

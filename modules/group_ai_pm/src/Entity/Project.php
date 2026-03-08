@@ -18,6 +18,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\group_ai_pm\ProjectListBuilder",
+ *     "access" = "Drupal\group_ai_pm\ProjectAccessControlHandler",
  *     "form" = {
  *       "default" = "Drupal\Core\Entity\ContentEntityForm",
  *       "add" = "Drupal\Core\Entity\ContentEntityForm",
@@ -41,6 +42,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
  *     "add-form" = "/admin/content/project/add",
  *     "edit-form" = "/admin/content/project/{project}/edit",
  *     "delete-form" = "/admin/content/project/{project}/delete",
+ *     "complete" = "/admin/content/project/{project}/complete",
  *     "collection" = "/admin/content/project",
  *   }
  * )
