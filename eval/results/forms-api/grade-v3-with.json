@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Form class extends ConfirmFormBase (NOT FormBase or ConfigFormBase) -- ConfirmFormBase provides the confirmation UI automatically with question text, description, confirm button, and cancel link",
+      "passed": true,
+      "evidence": "/tmp/d10-forms-api-with/web/modules/custom/content_cleanup/src/Form/ContentCleanupConfirmForm.php line 14: 'class ContentCleanupConfirmForm extends ConfirmFormBase {' and line 6: 'use Drupal\\Core\\Form\\ConfirmFormBase;'"
+    },
+    {
+      "text": "getQuestion() method exists and returns a translatable string via $this->t() or new TranslatableMarkup() describing the action -- this method is required by ConfirmFormBase and without it the confirmation page renders with no question text",
+      "passed": true,
+      "evidence": "/tmp/d10-forms-api-with/web/modules/custom/content_cleanup/src/Form/ContentCleanupConfirmForm.php lines 64-66: 'public function getQuestion() { return $this->t(\\'Are you sure you want to delete unpublished items older than 30 days?\\'); }'"
+    },
+    {
+      "text": "getCancelUrl() method returns a Url object via new Url() or Url::fromRoute() (NOT a plain string path like '/admin/content' -- ConfirmFormBase requires a Url object and passing a string causes a fatal TypeError)",
+      "passed": true,
+      "evidence": "/tmp/d10-forms-api-with/web/modules/custom/content_cleanup/src/Form/ContentCleanupConfirmForm.php lines 74-76: 'public function getCancelUrl() { return new Url(\\'system.admin_content\\'); }' with line 8: 'use Drupal\\Core\\Url;'"
+    },
+    {
+      "text": "submitForm() redirects after completion using $form_state->setRedirectUrl() or $form_state->setRedirect() (NOT drupal_goto() which was removed in D8, NOT omitting redirect which leaves the user stuck on the confirmation page after submit)",
+      "passed": true,
+      "evidence": "/tmp/d10-forms-api-with/web/modules/custom/content_cleanup/src/Form/ContentCleanupConfirmForm.php line 117: '$form_state->setRedirectUrl($this->getCancelUrl());'"
+    },
+    {
+      "text": "Route definition uses _form key pointing to the form class (NOT _controller -- using _controller for a form bypasses CSRF protection, form token validation, and the full Form API lifecycle)",
+      "passed": true,
+      "evidence": "/tmp/d10-forms-api-with/web/modules/custom/content_cleanup/content_cleanup.routing.yml lines 3-4: 'defaults:\\n    _form: \\'\\\\Drupal\\\\content_cleanup\\\\Form\\\\ContentCleanupConfirmForm\\''"
+    },
+    {
+      "text": "Route uses _permission for access control (e.g., 'administer nodes' or similar admin permission)",
+      "passed": true,
+      "evidence": "/tmp/d10-forms-api-with/web/modules/custom/content_cleanup/content_cleanup.routing.yml lines 6-7: 'requirements:\\n    _permission: \\'administer nodes\\''"
+    },
+    {
+      "text": "The module enables successfully: ddev drush en content_cleanup returns exit code 0",
+      "passed": true,
+      "evidence": "Command 'cd /tmp/d10-forms-api-with && ddev drush en content_cleanup -y' returned: '[notice] Already installed: content_cleanup' with EXIT: 0"
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to /admin/content/cleanup -- verify the confirmation page renders with question text and both confirm and cancel buttons visible (via eval-browser)",
+      "passed": true,
+      "evidence": "Used ddev exec curl to log in as admin and access /admin/content/cleanup. Page rendered with: page title 'Are you sure you want to delete unpublished items older than 30 days?', form class 'confirmation', submit button with value='Delete', and cancel link '<a href=\"/admin/content\" class=\"button dialog-cancel\"...>Cancel</a>'"
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": false,
+      "evidence": "phpcs reported 1 error in ContentCleanupConfirmForm.php line 113: 'Expected newline after closing brace' (the closing brace of the else block at line 113 is missing a newline before it). Exit code 2."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.89
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "hook_schema() in .install file defines the table with a 'serial' type auto-increment primary key (NOT 'int' for the PK -- serial handles auto-increment cross-database, int requires manual ID management)",
+      "passed": true,
+      "evidence": "view_analytics.install line 19: 'type' => 'serial' for the 'id' field, with 'primary key' => ['id'] at line 47. Correctly uses serial (not int) for the auto-increment PK."
+    },
+    {
+      "text": "Insert operations use the dynamic query builder: ->insert('table')->fields([...]) (NOT raw SQL strings via ->query('INSERT...'), NOT deprecated db_insert() function)",
+      "passed": true,
+      "evidence": "view_analytics.module lines 21-28: $database->insert('view_analytics')->fields([...])->execute(); Uses dynamic query builder, no raw SQL INSERT or db_insert() found."
+    },
+    {
+      "text": "Select queries use dynamic query builder: ->select('table', 'alias')->fields()->condition() (NOT raw SQL strings via ->query('SELECT...') -- dynamic queries are alterable by other modules via hook_query_alter)",
+      "passed": false,
+      "evidence": "ViewAnalyticsService.php lines 54-57: $count = $this->database->query('SELECT COUNT(*) FROM {view_analytics} WHERE [nid] = :nid', [':nid' => $nid]); -- uses raw SQL static query for getNodeViewCount(). Two other queries (getTopViewedNodes, getNodeViews) do use ->select(), but getNodeViewCount() uses ->query() with raw SQL, violating this expectation."
+    },
+    {
+      "text": "Aggregation uses ->addExpression('COUNT(nid)', 'view_count') or equivalent on a dynamic select query (NOT raw SQL COUNT() in a ->query() string -- dynamic queries integrate with Drupal's query alter system)",
+      "passed": true,
+      "evidence": "ViewAnalyticsService.php line 34: $query->addExpression('COUNT(*)', 'view_count'); called on a dynamic select query ($this->database->select('view_analytics', 'va')). Uses dynamic query builder for aggregation."
+    },
+    {
+      "text": "At least one select query includes ->addTag() enabling hook_query_TAG_alter() for other modules (without tags, queries cannot be altered by access control or other modules)",
+      "passed": true,
+      "evidence": "ViewAnalyticsService.php line 38: $query->addTag('view_analytics_top_nodes'); and line 78: $query->addTag('view_analytics_node_views'); -- two different select queries use addTag()."
+    },
+    {
+      "text": "Does NOT concatenate PHP variables into SQL strings -- uses :placeholders in static queries or condition() methods in dynamic queries for all variable input (SQL injection prevention)",
+      "passed": true,
+      "evidence": "No string concatenation of PHP variables into SQL found. The static query at ViewAnalyticsService.php line 55 uses ':nid' placeholder. Dynamic queries use ->condition() methods. grep for '. $' and similar patterns returned no matches."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en view_analytics returns exit code 0",
+      "passed": true,
+      "evidence": "Command: cd /tmp/d10-database-api-with && ddev drush en view_analytics -y; Output: '[notice] Already installed: view_analytics'; Exit code: 0."
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to /admin/reports/view-analytics -- verify the analytics report page loads without errors and displays the report structure (via eval-browser)",
+      "passed": true,
+      "evidence": "Logged in via drush uli URL (HTTP 200), then accessed http://d10-database-api-with.ddev.site:33016/admin/reports/view-analytics (HTTP 200). Page HTML contains: <title>View Analytics | Drush Site-Install</title>, <h1>View Analytics</h1>, intro paragraph 'This page shows the top 10 most viewed content on your site.', and a <table> with 'No view data available yet.' message. No PHP errors or exceptions in the page output."
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": false,
+      "evidence": "Command: ddev exec vendor/bin/phpcs --standard=Drupal,DrupalPractice web/modules/custom/view_analytics/; Exit code 1. Output: 'FOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE -- ViewAnalyticsService.php:94 | WARNING | \\Drupal calls should be avoided in classes, use dependency injection instead'. The pruneOldViews() method at line 94 calls \\Drupal::time() statically instead of injecting the time service. While there are 0 errors, phpcs exits with code 1 on warnings, so the tool does not pass cleanly."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 2,
+    "total": 9,
+    "pass_rate": 0.78
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "hook_schema() in .install file defines the table with a 'serial' type auto-increment primary key (NOT 'int' for the PK -- serial handles auto-increment cross-database, int requires manual ID management)",
+      "passed": true,
+      "evidence": "view_analytics.install line 17: 'type' => 'serial' for the 'id' field, with 'primary key' => ['id'] at line 46. Correctly uses 'serial' type for the auto-increment primary key."
+    },
+    {
+      "text": "Insert operations use the dynamic query builder: ->insert('table')->fields([...]) (NOT raw SQL strings via ->query('INSERT...'), NOT deprecated db_insert() function)",
+      "passed": true,
+      "evidence": "view_analytics.module lines 25-32: $database->insert('view_analytics')->fields([...])->execute() uses the dynamic query builder. No raw SQL strings or db_insert() found."
+    },
+    {
+      "text": "Select queries use dynamic query builder: ->select('table', 'alias')->fields()->condition() (NOT raw SQL strings via ->query('SELECT...') -- dynamic queries are alterable by other modules via hook_query_alter)",
+      "passed": true,
+      "evidence": "ViewAnalyticsController.php lines 67-72: $this->connection->select('view_analytics', 'va')->addTag()->fields()->orderBy()->groupBy()->range() uses the dynamic query builder. No raw SQL via ->query() found. No ->condition() call is present but the query uses the fully dynamic builder API as required."
+    },
+    {
+      "text": "Aggregation uses ->addExpression('COUNT(nid)', 'view_count') or equivalent on a dynamic select query (NOT raw SQL COUNT() in a ->query() string -- dynamic queries integrate with Drupal's query alter system)",
+      "passed": true,
+      "evidence": "ViewAnalyticsController.php line 74: $query->addExpression('COUNT(va.id)', 'view_count') on a dynamic select query object. This is the correct pattern."
+    },
+    {
+      "text": "At least one select query includes ->addTag() enabling hook_query_TAG_alter() for other modules (without tags, queries cannot be altered by access control or other modules)",
+      "passed": true,
+      "evidence": "ViewAnalyticsController.php line 68: ->addTag('view_analytics_report') is chained onto the dynamic select query at line 67."
+    },
+    {
+      "text": "Does NOT concatenate PHP variables into SQL strings -- uses :placeholders in static queries or condition() methods in dynamic queries for all variable input (SQL injection prevention)",
+      "passed": true,
+      "evidence": "Searched all module files: no raw SQL string concatenation found. All queries use the dynamic query builder (->insert()->fields(), ->select()) which handles parameterization internally. No ->query('... $var ...') pattern present."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en view_analytics returns exit code 0",
+      "passed": true,
+      "evidence": "cd /tmp/d10-database-api-without && ddev drush en view_analytics -y output: '[notice] Already installed: view_analytics', Exit code: 0"
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to /admin/reports/view-analytics -- verify the analytics report page loads without errors and displays the report structure (via eval-browser)",
+      "passed": false,
+      "evidence": "HTTP 500 error on /admin/reports/view-analytics after admin login. Error from watchdog: 'Drupal\\Core\\Database\\DatabaseExceptionWrapper: SQLSTATE[42S22]: Column not found: 1054 Unknown column \"COUNTva.id\" in \"ORDER BY\"'. Root cause: ViewAnalyticsController.php line 70 uses ->orderBy('COUNT(va.id)', 'DESC') which passes the raw string 'COUNT(va.id)' as a column name to ORDER BY in the dynamic query builder, causing a SQL error. The correct approach is to orderBy the alias 'view_count' instead."
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": false,
+      "evidence": "phpcs exited with code 2. ViewAnalyticsController.php line 9: WARNING - Unused use statement for Drupal\\Core\\Url (imported but never used in the file). phpcs output: 'FOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE'. Exit code 2 indicates failure."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 2,
+    "total": 9,
+    "pass_rate": 0.78
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "skill": "drupal-forms-api",
+  "date": "2026-03-08",
+  "version": "v3",
+  "changes": [
+    "Eval rewritten to test ConfirmFormBase patterns: getCancelUrl() returning Url object, getQuestion(), submitForm redirect (12-02)",
+    "Both variants now load coding-standards skill as baseline (12-03)",
+    "Browser step dropped from eval pipeline (zero discriminatory value)"
+  ],
+  "with_skill": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.89,
+    "failed_expectations": [
+      "phpcs error: Expected newline after closing brace in ContentCleanupConfirmForm.php"
+    ]
+  },
+  "without_skill": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.89,
+    "failed_expectations": [
+      "phpcs error: There must be one blank line after the last USE statement; 2 found"
+    ]
+  },
+  "delta": 0.0,
+  "previous_delta": 0.0,
+  "delta_change": 0.0,
+  "notes": "Still neutral despite harder ConfirmFormBase eval. Both variants correctly implement ConfirmFormBase, getQuestion(), getCancelUrl() with Url object, and submitForm redirect. Both fail only on phpcs formatting minutiae (different errors). The ConfirmFormBase pattern appears to be within Haiku's baseline knowledge even without the skill. Coding-standards skill prevented major phpcs failures but both variants still have minor formatting issues."
+}

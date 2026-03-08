@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Form class extends ConfirmFormBase (NOT FormBase or ConfigFormBase) -- ConfirmFormBase provides the confirmation UI automatically with question text, description, confirm button, and cancel link",
+      "passed": true,
+      "evidence": "/tmp/d10-forms-api-without/web/modules/custom/content_cleanup/src/Form/ContentCleanupForm.php line 7: 'use Drupal\\Core\\Form\\ConfirmFormBase;' and line 16: 'class ContentCleanupForm extends ConfirmFormBase'"
+    },
+    {
+      "text": "getQuestion() method exists and returns a translatable string via $this->t() or new TranslatableMarkup() describing the action -- this method is required by ConfirmFormBase and without it the confirmation page renders with no question text",
+      "passed": true,
+      "evidence": "/tmp/d10-forms-api-without/web/modules/custom/content_cleanup/src/Form/ContentCleanupForm.php lines 65-67: 'public function getQuestion() { return $this->t(\"Are you sure you want to delete unpublished items older than 30 days?\"); }'"
+    },
+    {
+      "text": "getCancelUrl() method returns a Url object via new Url() or Url::fromRoute() (NOT a plain string path like '/admin/content' -- ConfirmFormBase requires a Url object and passing a string causes a fatal TypeError)",
+      "passed": true,
+      "evidence": "/tmp/d10-forms-api-without/web/modules/custom/content_cleanup/src/Form/ContentCleanupForm.php lines 79-81: 'public function getCancelUrl() { return Url::fromRoute(\"system.admin_content\"); }'. Drush verification confirmed getCancelUrl() returns a Drupal\\Core\\Url object."
+    },
+    {
+      "text": "submitForm() redirects after completion using $form_state->setRedirectUrl() or $form_state->setRedirect() (NOT drupal_goto() which was removed in D8, NOT omitting redirect which leaves the user stuck on the confirmation page after submit)",
+      "passed": true,
+      "evidence": "/tmp/d10-forms-api-without/web/modules/custom/content_cleanup/src/Form/ContentCleanupForm.php line 137: '$form_state->setRedirectUrl($this->getCancelUrl());'"
+    },
+    {
+      "text": "Route definition uses _form key pointing to the form class (NOT _controller -- using _controller for a form bypasses CSRF protection, form token validation, and the full Form API lifecycle)",
+      "passed": true,
+      "evidence": "/tmp/d10-forms-api-without/web/modules/custom/content_cleanup/content_cleanup.routing.yml line 4: '_form: \"\\Drupal\\content_cleanup\\Form\\ContentCleanupForm\"'"
+    },
+    {
+      "text": "Route uses _permission for access control (e.g., 'administer nodes' or similar admin permission)",
+      "passed": true,
+      "evidence": "/tmp/d10-forms-api-without/web/modules/custom/content_cleanup/content_cleanup.routing.yml line 7: '_permission: \"administer nodes\"'"
+    },
+    {
+      "text": "The module enables successfully: ddev drush en content_cleanup returns exit code 0",
+      "passed": true,
+      "evidence": "Command 'cd /tmp/d10-forms-api-without && ddev drush en content_cleanup -y' returned: '[notice] Already installed: content_cleanup', exit code 0"
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to /admin/content/cleanup -- verify the confirmation page renders with question text and both confirm and cancel buttons visible (via eval-browser)",
+      "passed": true,
+      "evidence": "No eval-browser report available. Verified via drush script: form renders with #title set to TranslatableMarkup 'Are you sure you want to delete unpublished items older than 30 days?', submit button (value='Delete') present in rendered output, and Cancel link pointing to /admin/content present. Route resolves to /admin/content/cleanup with _permission: 'administer nodes' access control."
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": false,
+      "evidence": "phpcs reported 1 error in ContentCleanupForm.php: 'Line 10 | ERROR | There must be one blank line after the last USE statement; 2 found'. Two blank lines exist after the last use statement (lines 10-11). Exit code: 2."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.89
+  }
+}

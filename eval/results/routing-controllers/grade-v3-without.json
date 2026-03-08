@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Route parameter is named `{user}` (matching the entity type machine name) for automatic entity upcasting -- the controller does NOT manually call User::load() or \\Drupal\\user\\Entity\\User::load() (Drupal auto-loads when param name matches entity type)",
+      "passed": false,
+      "evidence": "user_activity.routing.yml line 2 shows path '/user/{user}/activity' — the param is named {user}. No direct User::load() calls found. However, both controller methods type-hint 'int $user' (UserActivityController.php lines 49, 85; UserActivityApiController.php line 50), not UserInterface/AccountInterface. Entity upcasting requires a type hint matching the entity class — with 'int $user', Drupal passes the raw ID, not the upcasted entity. The module does NOT use entity upcasting despite having the correct route parameter name."
+    },
+    {
+      "text": "Route file defines `_title_callback` pointing to a controller method for dynamic page title (not just a static `_title` string -- dynamic titles need a callback that receives the upcasted entity)",
+      "passed": true,
+      "evidence": "user_activity.routing.yml line 5: '_title_callback: '\\Drupal\\user_activity\\Controller\\UserActivityController::pageTitle'' — a proper title callback method is defined pointing to the controller."
+    },
+    {
+      "text": "The custom service class does NOT extend ControllerBase -- services are standalone classes with constructor injection via .services.yml arguments (not the create() factory pattern which is for controllers)",
+      "passed": true,
+      "evidence": "UserActivityService.php line 11: 'class UserActivityService {' — no 'extends ControllerBase'. Dependencies injected via .services.yml arguments: '@database' and '@entity_type.manager' (user_activity.services.yml lines 4-6)."
+    },
+    {
+      "text": "Controller does NOT use static \\Drupal::service() or \\Drupal::entityTypeManager() calls -- injects all dependencies via create() + constructor (static calls bypass DI, making code untestable)",
+      "passed": true,
+      "evidence": "Grep for '\\Drupal::service' and '\\Drupal::entityTypeManager' across all module PHP files returns no matches. Both UserActivityController and UserActivityApiController use create(ContainerInterface $container) + constructor injection pattern (UserActivityController.php lines 27-38, UserActivityApiController.php lines 28-39)."
+    },
+    {
+      "text": "Routes use `_permission` for access control (not `_access: 'TRUE'` which bypasses all access checking including for anonymous users)",
+      "passed": true,
+      "evidence": "user_activity.routing.yml line 7: '_permission: 'view own activity'' and line 17: '_permission: 'access user activity''. No '_access: TRUE' found in the routing file."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en user_activity -y returns exit code 0",
+      "passed": true,
+      "evidence": "Command 'ddev drush en user_activity -y' returned: '[notice] Already installed: user_activity' with exit code 0."
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to /user/1/activity -- verify the page renders with a dynamic title containing the admin user's display name and shows activity summary content (via eval-browser)",
+      "passed": true,
+      "evidence": "curl -b session cookies to /user/1/activity returned HTTP 200. Page title extracted: 'admin Activity | Drush Site-Install'. Content from .user-activity div: '<h2>admin Activity</h2><p>Nodes authored: 0</p><p>Last access: 2026-03-07 19:00</p>'. Dynamic title contains admin username and shows activity summary."
+    },
+    {
+      "text": "Navigate to /api/user/1/activity -- verify the response contains valid JSON with activity data fields (via eval-browser)",
+      "passed": false,
+      "evidence": "curl to /api/user/1/activity with admin session returned HTTP 500. Error: 'Call to undefined method Symfony\\Component\\HttpFoundation\\JsonResponse::getCacheableMetadata() in Drupal\\user_activity\\Controller\\UserActivityApiController->getActivityJson() (line 58)'. JsonResponse does not have a getCacheableMetadata() method — this is incorrect usage. The endpoint returns a 500 error, not valid JSON."
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": true,
+      "evidence": "Command 'ddev exec ./vendor/bin/phpcs --standard=Drupal,DrupalPractice --report=full web/modules/custom/user_activity/' produced no output and exited with code 0, indicating no coding standards violations."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 3,
+    "total": 9,
+    "pass_rate": 0.67
+  }
+}

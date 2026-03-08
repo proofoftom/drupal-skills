@@ -1,0 +1,34 @@
+{
+  "skill": "drupal-entities-fields",
+  "date": "2026-03-08",
+  "version": "v3",
+  "changes": [
+    "Eval rewritten to test bundle entity wiring: bundle_entity_type, bundle_of, entity_keys bundle, EntityChangedTrait+changed field pair (12-02)",
+    "Both variants now load coding-standards skill as baseline (12-03)",
+    "Browser step dropped from eval pipeline (zero discriminatory value)"
+  ],
+  "with_skill": {
+    "passed": 7,
+    "failed": 2,
+    "total": 9,
+    "pass_rate": 0.78,
+    "failed_expectations": [
+      "Config entity annotation missing bundle_of key pointing to content entity type ID",
+      "phpcs errors: missing member variable doc comments in ProjectItemType.php, expected newline after closing brace in form files"
+    ]
+  },
+  "without_skill": {
+    "passed": 7,
+    "failed": 2,
+    "total": 9,
+    "pass_rate": 0.78,
+    "failed_expectations": [
+      "Config entity annotation missing bundle_of key pointing to content entity type ID",
+      "phpcs errors: 10 'There must be one blank line after the last USE statement' errors across 10 files"
+    ]
+  },
+  "delta": 0.0,
+  "previous_delta": 0.0,
+  "delta_change": 0.0,
+  "notes": "Still neutral. Both variants fail identically on bundle_of -- neither adds this key to the config entity annotation despite the harder eval targeting it. Both also fail phpcs (different errors). The bundle_of pattern appears to be a gap in both the skill and Haiku's baseline knowledge -- SKILL.md may need explicit bundle_of coverage. bundle_entity_type, entity_keys bundle, EntityChangedTrait, and parent::baseFieldDefinitions() all pass correctly in both variants."
+}

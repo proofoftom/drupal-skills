@@ -1,0 +1,32 @@
+{
+  "skill": "drupal-routing-controllers",
+  "date": "2026-03-08",
+  "version": "v3",
+  "changes": [
+    "SKILL.md patched with CRITICAL NEVER callout for static \\Drupal:: in controllers (12-01)",
+    "Both variants now load coding-standards skill as baseline (12-03)",
+    "Browser step dropped from eval pipeline (zero discriminatory value)"
+  ],
+  "with_skill": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0,
+    "failed_expectations": []
+  },
+  "without_skill": {
+    "passed": 6,
+    "failed": 3,
+    "total": 9,
+    "pass_rate": 0.67,
+    "failed_expectations": [
+      "Route parameter {user} typed as int instead of UserInterface -- entity upcasting requires entity class type hint",
+      "API endpoint /api/user/1/activity returns HTTP 500 -- JsonResponse::getCacheableMetadata() does not exist",
+      "phpcs warnings: \\Drupal::service() static call in without-skill variant (exits non-zero but 0 errors found -- grader counted exit code 1 as failure)"
+    ]
+  },
+  "delta": 33.3,
+  "previous_delta": -11.1,
+  "delta_change": 44.4,
+  "notes": "Massive improvement. SKILL.md patch eliminated static \\Drupal:: usage in WITH variant (was the failure in v2). Coding-standards baseline fixed phpcs brace style error that plagued WITH variant. WITHOUT variant now fails on entity upcasting type hints, broken API endpoint, and minor phpcs issues -- all patterns the domain skill teaches correctly."
+}

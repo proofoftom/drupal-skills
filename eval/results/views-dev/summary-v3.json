@@ -1,0 +1,29 @@
+{
+  "skill": "drupal-views-dev",
+  "date": "2026-03-08",
+  "version": "v3",
+  "changes": [
+    "Both variants now load coding-standards skill as baseline (12-03)",
+    "Browser step dropped from eval pipeline (zero discriminatory value)"
+  ],
+  "with_skill": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0,
+    "failed_expectations": []
+  },
+  "without_skill": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.89,
+    "failed_expectations": [
+      "phpcs failure: empty hook_install() and hook_uninstall() functions in .install file flagged as unnecessary"
+    ]
+  },
+  "delta": 11.1,
+  "previous_delta": -11.1,
+  "delta_change": 22.2,
+  "notes": "Flipped from negative to positive. Coding-standards baseline fixed the phpcs nullable parameter error that previously hurt the WITH variant. WITHOUT variant now fails on phpcs due to empty installation hooks -- the domain skill teaches not to include unnecessary scaffold files. WITH variant produces clean, minimal code."
+}

@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "hook_cron() only discovers work and adds items to a queue via createItem() -- does NOT process heavy work directly in hook_cron() (cron has a time limit, processing directly blocks all other cron tasks and can timeout)",
+      "passed": true,
+      "evidence": "content_indexer.module lines 13-29: hook_cron() performs a DB select to find unindexed nodes, then calls $queue->createItem(['nid' => $row->nid]) for each. No heavy processing (node loading, transformations, external calls) occurs inside hook_cron itself."
+    },
+    {
+      "text": "Queue name in hook_cron createItem() EXACTLY matches the QueueWorker plugin ID (mismatched names = items are added to a queue that no worker processes, silently accumulating forever)",
+      "passed": true,
+      "evidence": "content_indexer.module line 15: \\Drupal::queue('content_indexer_queue', TRUE); ContentIndexer.php line 14: id = \"content_indexer_queue\" — both are exactly 'content_indexer_queue'."
+    },
+    {
+      "text": "QueueWorker plugin annotation/attribute includes cron time setting: cron = {\"time\" = 30} or cron: ['time' => 30] (without cron time config, the queue worker is never automatically invoked during cron runs)",
+      "passed": true,
+      "evidence": "ContentIndexer.php line 16: cron = {\"time\" = 15} — the cron time setting is present in the annotation (uses 15 seconds rather than 30, but the requirement is for the cron time config to exist)."
+    },
+    {
+      "text": "processItem() contains try/catch error handling that distinguishes between retryable errors and permanent failures (unhandled exceptions in processItem cause the item to be released back to the queue but with no logging or error distinction)",
+      "passed": false,
+      "evidence": "ContentIndexer.php lines 76-96: processItem() has a try/catch block, but it does NOT distinguish between retryable and permanent failures. The catch block (line 93-95) simply re-throws a generic \\Exception. There is no use of \\Drupal\\Core\\Queue\\RequeueException (retryable) or \\Drupal\\Core\\Queue\\SuspendQueueException (permanent) to make the distinction the expectation requires."
+    },
+    {
+      "text": "QueueWorker plugin is in correct PSR-4 path: src/Plugin/QueueWorker/ (NOT src/Plugin/Queue/ or src/Queue/ -- QueueWorker plugin manager scans Plugin/QueueWorker specifically)",
+      "passed": true,
+      "evidence": "File found at /tmp/d10-batch-queue-cron-without/web/modules/custom/content_indexer/src/Plugin/QueueWorker/ContentIndexer.php — correct PSR-4 path."
+    },
+    {
+      "text": "Does NOT use \\Drupal::queue() static call inside the QueueWorker processItem() method (the worker receives items automatically via cron queue processing -- manually accessing the queue inside processItem creates circular processing)",
+      "passed": true,
+      "evidence": "ContentIndexer.php processItem() (lines 76-96) contains no \\Drupal::queue() call. No static queue access anywhere in the QueueWorker class."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en content_indexer returns exit code 0",
+      "passed": true,
+      "evidence": "Command: cd /tmp/d10-batch-queue-cron-without && ddev drush en content_indexer -y. Output: '[notice] Already installed: content_indexer'. Exit code: 0."
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": true,
+      "evidence": "Command: cd /tmp/d10-batch-queue-cron-without && ddev exec vendor/bin/phpcs --standard=Drupal,DrupalPractice web/modules/custom/content_indexer/ returned exit code 0 with no output (no errors or warnings)."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 1,
+    "total": 8,
+    "pass_rate": 0.875
+  }
+}
