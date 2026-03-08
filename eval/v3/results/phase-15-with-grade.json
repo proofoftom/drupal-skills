@@ -1,0 +1,90 @@
+{
+  "expectations": [
+    {
+      "text": "EntityAccessControlHandler class exists for Project or Task that extends EntityAccessControlHandler and implements checkAccess() with a switch or match on $operation for at least 'view', 'update', and 'delete' operations (NOT just relying on the admin_permission annotation key -- the entity MUST reference a custom access handler class in its handlers array)",
+      "passed": true,
+      "evidence": "src/Entity/ProjectAccessControlHandler.php line 13: 'class ProjectAccessControlHandler extends EntityAccessControlHandler' with checkAccess() implementing switch on $operation for 'view' (line 24), 'update' (line 27), and 'delete' (line 36). TaskAccessControlHandler similarly at src/Entity/TaskAccessControlHandler.php. Both are referenced in entity annotations at Project.php line 21 and Task.php line 21: \"access\" = \"Drupal\\group_ai_pm\\Entity\\ProjectAccessControlHandler\""
+    },
+    {
+      "text": "At least one AccessResult in an access handler uses ->addCacheContexts() or ->addCacheTags() (bare AccessResult::allowed() or ::forbidden() without cache metadata causes the first user's access decision to be cached and applied to ALL subsequent users -- AccessResult::allowedIfHasPermission() is also acceptable as it adds cache contexts automatically)",
+      "passed": true,
+      "evidence": "ProjectAccessControlHandler.php lines 20-43 use ->cachePerPermissions() and ->cachePerUser() on all AccessResult returns, e.g. line 20: 'return AccessResult::allowed()->cachePerPermissions();', line 32: 'return AccessResult::allowed()->cachePerUser();'. These methods add appropriate cache contexts."
+    },
+    {
+      "text": "permissions.yml uses `permission_callbacks` key pointing to a PHP class method that generates per-entity CRUD permissions dynamically (NOT hardcoding all 12+ permissions as static YAML entries -- permission_callbacks is the Drupal pattern for generating permissions programmatically from entity types or bundles)",
+      "passed": true,
+      "evidence": "group_ai_pm.permissions.yml lines 10-11: 'permission_callbacks:\\n  - \\'Drupal\\\\group_ai_pm\\\\PermissionProvider::permissions\\''. The PermissionProvider::permissions() method at src/PermissionProvider.php lines 23-50 dynamically generates 6 permissions per entity type (create, edit own, edit any, delete own, delete any, view) for both 'project' and 'task' types in a loop."
+    },
+    {
+      "text": "At least one plugin class (Block, AiFunctionCall, or other) implements ContainerFactoryPluginInterface AND has a create() method with the 4-parameter signature: create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) -- NOT the controller 1-parameter signature create(ContainerInterface $container) which causes a fatal error when the plugin manager passes 4 arguments",
+      "passed": true,
+      "evidence": "ProjectStatusBlock.php line 21: 'class ProjectStatusBlock extends BlockBase implements ContainerFactoryPluginInterface'. create() at line 50: 'public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition)'. Same pattern in CreateProjectTool.php line 48 and QueryProjectsTool.php line 48."
+    },
+    {
+      "text": "At least one plugin constructor calls parent::__construct($configuration, $plugin_id, $plugin_definition) before storing injected services (without this call, the plugin loses its configuration array, plugin ID, and definition metadata -- block placement settings and plugin inspection methods break silently)",
+      "passed": true,
+      "evidence": "ProjectStatusBlock.php line 43: 'parent::__construct($configuration, $plugin_id, $plugin_definition);' called before '$this->entityTypeManager = $entity_type_manager;'. Same pattern in CreateProjectTool.php line 41 and QueryProjectsTool.php line 41."
+    },
+    {
+      "text": "Block plugin has a blockAccess() method that returns an AccessResult (restricting block visibility based on permissions -- without blockAccess(), the block is visible to everyone including anonymous users regardless of what content it displays)",
+      "passed": true,
+      "evidence": "ProjectStatusBlock.php lines 102-104: 'protected function blockAccess(AccountInterface $account) { return AccessResult::allowedIfHasPermission($account, \\'access group_ai_pm dashboard\\'); }'"
+    },
+    {
+      "text": "New admin/dangerous permissions (like 'delete any project' or 'administer group_ai_pm') use `restrict access: true` in permissions.yml or the permission_callbacks return array (this flag shows a security warning on the admin permissions page -- without it, site builders may grant dangerous permissions without realizing the risk)",
+      "passed": true,
+      "evidence": "permissions.yml line 4: 'restrict access: true' for 'administer group_ai_pm'. PermissionProvider.php lines 33-35: '\"edit any $entity_type\" => [..., \\'restrict access\\' => TRUE]' and lines 41-44: '\"delete any $entity_type\" => [..., \\'restrict access\\' => TRUE]'. Dynamic dangerous permissions correctly flagged."
+    },
+    {
+      "text": "A route for the state-changing action (mark complete or similar) includes `_csrf_token: 'TRUE'` in its requirements section (non-form action links that change state MUST have CSRF protection -- without it, an attacker can craft a URL that changes entity state when clicked by an authenticated user)",
+      "passed": false,
+      "evidence": "group_ai_pm.routing.yml lines 21-30 define group_ai_pm.project_complete at path '/admin/content/project/{project}/complete' — a state-changing route — but its requirements section only contains '_permission: \\'update any project\\'' and 'project: \\'\\\\d+\\''. No '_csrf_token: TRUE' requirement. Confirmed by runtime check: ddev drush php-eval returned 'ROUTE:group_ai_pm.project_complete PATH:/admin/content/project/{project}/complete CSRF:none'"
+    },
+    {
+      "text": "NO static \\Drupal:: service calls in any NEW plugin class files under src/Plugin/ (plugin classes that need services MUST inject them via ContainerFactoryPluginInterface create() + constructor -- \\Drupal:: calls bypass DI, making plugins untestable)",
+      "passed": true,
+      "evidence": "Grep for 'Drupal::' in /tmp/d10-phase15-with/web/modules/custom/group_ai_pm/src/Plugin/ returned no matches. All three plugin files (ProjectStatusBlock.php, CreateProjectTool.php, QueryProjectsTool.php) use only injected services via ContainerFactoryPluginInterface."
+    },
+    {
+      "text": "Entity annotation/attribute handlers array for at least one entity includes an 'access' key pointing to the custom access handler class (NOT just using admin_permission -- admin_permission only provides a global on/off check; custom access handlers enable per-operation, per-user, ownership-based access control)",
+      "passed": true,
+      "evidence": "Project.php line 21: '\"access\" = \"Drupal\\\\group_ai_pm\\\\Entity\\\\ProjectAccessControlHandler\"' in the handlers array of the @ContentEntityType annotation. Task.php line 21: '\"access\" = \"Drupal\\\\group_ai_pm\\\\Entity\\\\TaskAccessControlHandler\"'. Both entities define both admin_permission AND a custom access handler."
+    },
+    {
+      "text": "(runtime) Module re-enables cleanly after code changes: Run `cd /tmp/d10-phase15-with && ddev drush cr && ddev drush pm:uninstall group_ai_pm -y && ddev drush en group_ai_pm -y` — should exit 0 with no fatal errors.",
+      "passed": false,
+      "evidence": "Command exited with code 1. Error: 'group_ai_pm: There is content for the entity type: Project.' The uninstall was blocked because a Project entity was created by the preceding CRUD runtime check. After manually deleting entities the module did uninstall and reinstall successfully (no fatal errors in module code itself), but the exact specified command sequence failed with exit code 1."
+    },
+    {
+      "text": "(runtime) Entity access handler is registered and instantiable: Run `cd /tmp/d10-phase15-with && ddev drush php-eval \"...\"` — output should contain \"ACCESS_HANDLER:Drupal\\group_ai_pm\\\"",
+      "passed": true,
+      "evidence": "Command output: 'ACCESS_HANDLER:Drupal\\group_ai_pm\\Entity\\ProjectAccessControlHandler' — contains the expected prefix 'ACCESS_HANDLER:Drupal\\group_ai_pm\\'"
+    },
+    {
+      "text": "(runtime) Dynamic permissions are generated and loadable: Run `cd /tmp/d10-phase15-with && ddev drush php-eval \"...\"` — output should contain \"DYNAMIC_PERMS:\"",
+      "passed": true,
+      "evidence": "Command output: 'DYNAMIC_PERMS:delete own project,edit own project' — contains 'DYNAMIC_PERMS:' with project permissions including 'own' in the key."
+    },
+    {
+      "text": "(runtime) Block plugin is discoverable by plugin manager: Run `cd /tmp/d10-phase15-with && ddev drush php-eval \"...\"` — output should contain \"BLOCK_FOUND:\"",
+      "passed": true,
+      "evidence": "Command output: 'BLOCK_FOUND:project_status' — the block plugin with id 'project_status' is discoverable by the plugin manager."
+    },
+    {
+      "text": "(runtime) Project entity CRUD works end-to-end: Run `cd /tmp/d10-phase15-with && ddev drush php-eval \"...\"` — output should contain \"CRUD_OK:Runtime Test\"",
+      "passed": true,
+      "evidence": "Command output: 'CRUD_OK:Runtime Test' — project entity was created with title 'Runtime Test', saved, loaded, and title confirmed."
+    },
+    {
+      "text": "(runtime) CSRF-protected route exists in route collection: Run `cd /tmp/d10-phase15-with && ddev drush php-eval \"...\"` — output should contain \"ROUTE_OK:csrf=TRUE\"",
+      "passed": false,
+      "evidence": "Command returned no output. Follow-up check via getRoutesByNames(['group_ai_pm.project_complete']) output: 'ROUTE:group_ai_pm.project_complete PATH:/admin/content/project/{project}/complete CSRF:none' — the route exists but has no _csrf_token requirement, so no 'ROUTE_OK:csrf=TRUE' output was produced."
+    }
+  ],
+  "summary": {
+    "passed": 13,
+    "failed": 3,
+    "total": 16,
+    "pass_rate": 0.8125
+  }
+}

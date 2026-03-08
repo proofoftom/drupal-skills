@@ -1,0 +1,49 @@
+{
+  "phase": "15-group-ai-integration",
+  "type": "runtime",
+  "note": "These assertions are executed via ddev drush on the live Drupal instance AFTER headless code generation. They catch functional failures that static code analysis misses.",
+  "assertions": [
+    {
+      "id": "rt-1",
+      "name": "Module re-enables cleanly after code changes",
+      "command": "ddev drush cr && ddev drush pm:uninstall group_ai_pm -y && ddev drush en group_ai_pm -y",
+      "expect_exit_code": 0,
+      "rationale": "Catches fatal syntax errors, broken namespaces, invalid service definitions, bad entity annotations, and schema mismatches. If the modified module can't re-enable, the code is fundamentally broken regardless of how correct it looks statically."
+    },
+    {
+      "id": "rt-2",
+      "name": "Entity access handler class is registered and instantiable",
+      "command": "ddev drush php-eval \"$def = \\Drupal::entityTypeManager()->getDefinition('project'); $handler = $def->getHandlerClass('access'); echo $handler ? 'ACCESS_HANDLER:' . $handler : 'NO_ACCESS_HANDLER';\"",
+      "expect_output_contains": "ACCESS_HANDLER:Drupal\\group_ai_pm\\",
+      "rationale": "Static grep can find an access handler class file, but this verifies the entity annotation actually references it AND the class is loadable by Drupal's autoloader. A typo in the namespace or annotation means this returns NO_ACCESS_HANDLER."
+    },
+    {
+      "id": "rt-3",
+      "name": "Dynamic permissions are generated and loadable",
+      "command": "ddev drush php-eval \"$perms = \\Drupal::service('user.permissions')->getPermissions(); $found = array_filter(array_keys($perms), fn($p) => str_contains($p, 'project') && str_contains($p, 'own')); echo count($found) > 0 ? 'DYNAMIC_PERMS:' . implode(',', $found) : 'NO_DYNAMIC_PERMS';\"",
+      "expect_output_contains": "DYNAMIC_PERMS:",
+      "rationale": "permission_callbacks can look correct in YAML but point to a non-existent class, wrong method signature, or return the wrong array structure. This verifies the full chain: YAML -> callback class -> permission array -> Drupal permission registry."
+    },
+    {
+      "id": "rt-4",
+      "name": "Block plugin is discoverable by plugin manager",
+      "command": "ddev drush php-eval \"$blocks = \\Drupal::service('plugin.manager.block')->getDefinitions(); $found = array_filter(array_keys($blocks), fn($id) => str_contains($id, 'project_status') || str_contains($id, 'group_ai_pm')); echo count($found) > 0 ? 'BLOCK_FOUND:' . implode(',', $found) : 'NO_BLOCK';\"",
+      "expect_output_contains": "BLOCK_FOUND:",
+      "rationale": "A block plugin class can exist and look correct, but if the annotation/attribute is malformed, the plugin directory is wrong, or create() has a fatal DI error, the block manager won't discover it. This verifies the full plugin discovery chain."
+    },
+    {
+      "id": "rt-5",
+      "name": "Project entity CRUD works end-to-end",
+      "command": "ddev drush php-eval \"$storage = \\Drupal::entityTypeManager()->getStorage('project'); $entity = $storage->create(['title' => 'Runtime Test', 'status' => 'active']); $entity->save(); $loaded = $storage->load($entity->id()); echo $loaded ? 'CRUD_OK:' . $loaded->get('title')->value : 'CRUD_FAIL';\"",
+      "expect_output_contains": "CRUD_OK:Runtime Test",
+      "rationale": "After Phase 15 modifies entity annotations (adding access handler), schema updates may be needed. This verifies the entity storage layer still works — create, save, load. Catches schema mismatches, missing field definitions, and storage handler errors."
+    },
+    {
+      "id": "rt-6",
+      "name": "CSRF-protected route exists in route collection",
+      "command": "ddev drush php-eval \"$route = \\Drupal::service('router.route_provider')->getRoutesByPattern('/admin/content/project/{project}/complete'); $routes = iterator_to_array($route); $first = reset($routes); echo $first ? 'ROUTE_OK:csrf=' . ($first->getRequirement('_csrf_token') ?? 'none') : 'NO_ROUTE';\"",
+      "expect_output_contains": "ROUTE_OK:csrf=TRUE",
+      "rationale": "Static analysis can find _csrf_token in routing.yml, but this verifies the route actually compiles into Drupal's route collection with the CSRF requirement intact. A malformed YAML route silently fails to register."
+    }
+  ]
+}

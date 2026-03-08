@@ -79,7 +79,9 @@ my_module.edit_own:
 
 ### Route needs CSRF protection (state-changing action links)
 
-Use `_csrf_token: 'TRUE'` in requirements. For non-form links that change state (approve, delete, toggle).
+> **CRITICAL:** Any route with a controller that modifies data (mark complete, approve, toggle, archive) MUST have `_csrf_token: 'TRUE'` in requirements. Omitting this is a security vulnerability.
+
+Use `_csrf_token: 'TRUE'` in requirements. For non-form links that change state (approve, delete, toggle, mark complete).
 
 ```yaml
 # my_module.routing.yml
@@ -342,7 +344,9 @@ The default `EntityAccessControlHandler` checks `administer {entity_type}` permi
 
 ## CSRF protection
 
-CSRF protection is for **non-form state-changing links** (approve, publish, toggle, delete-via-link). Forms already have built-in CSRF protection via form tokens -- you do not need `_csrf_token` for form routes.
+> **CRITICAL: EVERY route that changes state without a form MUST have `_csrf_token: 'TRUE'` in requirements.** This includes action links like "mark complete", "approve", "publish", "toggle", "archive", or any controller method that modifies an entity or database record. Without `_csrf_token`, an attacker can craft a URL that silently changes data when clicked by an authenticated user. This is a SECURITY VULNERABILITY. If the route has a form, the form token handles CSRF -- but non-form action routes have NO protection unless you add `_csrf_token: 'TRUE'`.
+
+CSRF protection is for **non-form state-changing links** (approve, publish, toggle, delete-via-link, mark complete). Forms already have built-in CSRF protection via form tokens -- you do not need `_csrf_token` for form routes.
 
 ### Setup
 
