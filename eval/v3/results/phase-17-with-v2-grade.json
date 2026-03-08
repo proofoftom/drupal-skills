@@ -1,0 +1,114 @@
+{
+  "phase": "17-testing-final-eval",
+  "variant": "with-plugin-v2",
+  "model": "claude-haiku-4-5-20251001",
+  "expectations_met": 13,
+  "expectations_total": 14,
+  "runtime_assertions_met": 4,
+  "runtime_assertions_total": 6,
+  "score_percent": 85.0,
+  "expectations": [
+    {
+      "id": 1,
+      "met": true,
+      "evidence": "All 6 test files have '@group group_ai_pm' in the class-level PHPDoc comment. e.g. EntityCrudTest.php line 10, AccessControlTest.php line 11, CronQueueTest.php line 10, SettingsFormTest.php line 10, DashboardTest.php line 10, EntityFormIntegrationTest.php line 10."
+    },
+    {
+      "id": 2,
+      "met": true,
+      "evidence": "EntityCrudTest extends KernelTestBase (tests/src/Kernel/EntityCrudTest.php line 12) and AccessControlTest extends KernelTestBase (tests/src/Kernel/AccessControlTest.php line 13). Neither uses BrowserTestBase. Functional tests (DashboardTest, SettingsFormTest, EntityFormIntegrationTest) correctly use BrowserTestBase."
+    },
+    {
+      "id": 3,
+      "met": true,
+      "evidence": "All kernel test classes include 'group_ai_pm', 'system', and 'user' in $modules: EntityCrudTest.php line 17: ['group_ai_pm', 'system', 'user', 'field', 'datetime', 'views', 'group']. AccessControlTest.php line 18: same. CronQueueTest.php line 17: same."
+    },
+    {
+      "id": 4,
+      "met": true,
+      "evidence": "EntityCrudTest setUp() lines 24-25: $this->installEntitySchema('project') and $this->installEntitySchema('task'). AccessControlTest setUp() lines 25-26: same. CronQueueTest setUp() lines 23-24: same."
+    },
+    {
+      "id": 5,
+      "met": true,
+      "evidence": "EntityCrudTest setUp() line 26: $this->installEntitySchema('user'). AccessControlTest setUp() line 27: $this->installEntitySchema('user'). CronQueueTest setUp() line 25: $this->installEntitySchema('user')."
+    },
+    {
+      "id": 6,
+      "met": false,
+      "evidence": "No call to $this->installConfig(['group_ai_pm']) found in any kernel test setUp() method. Grep for 'installConfig' across all test files returned no matches. EntityCrudTest, AccessControlTest, and CronQueueTest all omit this call, meaning the module's default configuration (group_ai_pm.settings) is not installed in kernel test context."
+    },
+    {
+      "id": 7,
+      "met": true,
+      "evidence": "All three BrowserTestBase subclasses declare protected $defaultTheme = 'stark': SettingsFormTest.php line 22, DashboardTest.php line 22, EntityFormIntegrationTest.php line 22. No class uses 'starterkit_theme' or any other value."
+    },
+    {
+      "id": 8,
+      "met": true,
+      "evidence": "In kernel test classes that define setUp(): EntityCrudTest line 23 calls parent::setUp() as the first statement; AccessControlTest line 24 calls parent::setUp() as the first statement; CronQueueTest line 23 calls parent::setUp() as the first statement. Functional test classes (SettingsFormTest, DashboardTest, EntityFormIntegrationTest) do not define a setUp() method and therefore inherit parent::setUp() correctly with no code preceding it."
+    },
+    {
+      "id": 9,
+      "met": true,
+      "evidence": "Files are placed in tests/src/Kernel/ (EntityCrudTest.php, AccessControlTest.php, CronQueueTest.php) and tests/src/Functional/ (SettingsFormTest.php, DashboardTest.php, EntityFormIntegrationTest.php). No files in non-standard paths like tests/Kernel/ or src/Tests/."
+    },
+    {
+      "id": 10,
+      "met": true,
+      "evidence": "Kernel classes: EntityCrudTest.php line 3: 'Drupal\\Tests\\group_ai_pm\\Kernel'; AccessControlTest.php line 3: 'Drupal\\Tests\\group_ai_pm\\Kernel'; CronQueueTest.php line 3: 'Drupal\\Tests\\group_ai_pm\\Kernel'. Functional classes: SettingsFormTest.php line 3: 'Drupal\\Tests\\group_ai_pm\\Functional'; DashboardTest.php line 3: 'Drupal\\Tests\\group_ai_pm\\Functional'; EntityFormIntegrationTest.php line 3: 'Drupal\\Tests\\group_ai_pm\\Functional'."
+    },
+    {
+      "id": 11,
+      "met": true,
+      "evidence": "SettingsFormTest.php testSettingsFormAccessAllowed() line 36: $admin_user = $this->drupalCreateUser(['administer group_ai_pm']); line 37: $this->drupalLogin($admin_user). Same pattern repeated in testSettingsFormSubmit() (lines 49-50), testSettingsFormLoadsSavedValues() (lines 76-77), testSettingsFormDefaults() (lines 97-98), and testSettingsFormUnauthorized() (lines 121-122)."
+    },
+    {
+      "id": 12,
+      "met": true,
+      "evidence": "SettingsFormTest.php uses statusCodeEquals(403) at line 29 (anonymous access) and statusCodeEquals(200) at line 40 (authorized admin). DashboardTest.php uses statusCodeEquals(403) at line 29 (anonymous) and statusCodeEquals(200) at line 51 (authorized). Both deny and allow cases are verified."
+    },
+    {
+      "id": 13,
+      "met": true,
+      "evidence": "'datetime' is included in $modules for all kernel test classes: EntityCrudTest.php line 17, AccessControlTest.php line 18, CronQueueTest.php line 17."
+    },
+    {
+      "id": 14,
+      "met": true,
+      "evidence": "CronQueueTest.php uses \\Drupal::service('cron')->run() (the accepted form per expectation text) at lines 57, 91, 121, 154, 164, and 238. The test testCronQueuesOverdueTasks() creates a task with a past due_date, calls \\Drupal::service('cron')->run(), then asserts queue->numberOfItems() > 0."
+    }
+  ],
+  "runtime_assertions": [
+    {
+      "id": "rt-1",
+      "met": true,
+      "evidence": "Module re-enables cleanly (manually verified)."
+    },
+    {
+      "id": "rt-2",
+      "met": true,
+      "evidence": "TESTS_FOUND: kernel=3, functional=3, unit=0, total=6 — correct file count matching the 6 test files found at tests/src/Kernel/ and tests/src/Functional/."
+    },
+    {
+      "id": "rt-3",
+      "met": true,
+      "evidence": "All 6 test files have no PHP syntax errors (manually verified via php -l)."
+    },
+    {
+      "id": "rt-4",
+      "met": true,
+      "evidence": "PHPUnit discovers approximately 46 tests across 6 files — consistent with the large number of test methods observed in the files (EntityCrudTest: 4, AccessControlTest: 8, CronQueueTest: 6, SettingsFormTest: 6, DashboardTest: 7, EntityFormIntegrationTest: 9 = 40 test methods; PHPUnit count of ~46 may include inherited or parameterized tests)."
+    },
+    {
+      "id": "rt-5",
+      "met": false,
+      "evidence": "Kernel tests error with 'flexible_permissions.chain_calculator service not found' — a transitive dependency from the Group module that is not directly addressable by the testing skill. CronQueueTest, EntityCrudTest, and AccessControlTest all fail to run."
+    },
+    {
+      "id": "rt-6",
+      "met": false,
+      "evidence": "NOT RUN — depended on rt-5 passing. Since kernel tests could not execute due to the Group module transitive dependency error, the cron->queue pipeline could not be verified at runtime."
+    }
+  ]
+}

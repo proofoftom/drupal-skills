@@ -238,10 +238,13 @@ $entity_type_manager = $this->container->get('entity_type.manager');
 ```
 
 > WRONG: Missing modules in the `$modules` array. Kernel tests only load listed modules. Missing modules cause cryptic "Service not found" or "Table not found" errors. Include ALL dependency modules your code needs.
-> RIGHT: List every module your test depends on: `protected static $modules = ['my_module', 'system', 'user', 'node', 'file'];`. When you get "service not found" errors, check which module provides it and add that module.
+> RIGHT: List every module your test depends on: `protected static $modules = ['my_module', 'system', 'user', 'node', 'file'];`. When you get "service not found" errors, check which module provides it and add that module. Remember: `list_string` fields need the `options` module, `text_long` fields need the `text` module, `datetime` fields need the `datetime` module, `link` fields need the `link` module.
 
 > WRONG: Forgetting `installSchema()` for custom tables. Unlike full Drupal installs, Kernel tests do NOT run hook_schema() automatically. Custom tables will not exist, causing "Table not found" errors.
 > RIGHT: Call `$this->installSchema('module', 'table_name')` in setUp() or the test method for every custom table. Use `$this->installEntitySchema('entity_type')` for entity tables. Use `$this->installConfig(['module'])` for default config.
+
+> WRONG: Testing cron hooks by calling `my_module_cron()` directly. This bypasses the cron service pipeline (lock acquisition, queue processing, event dispatching) and does not test how cron actually runs in production.
+> RIGHT: Trigger cron via the service: `$this->container->get('cron')->run()`. This exercises the full cron pipeline including lock acquisition and queue worker processing within the same cron run.
 
 ## Functional tests (BrowserTestBase)
 
@@ -331,8 +334,9 @@ class HelloWorldPageTest extends BrowserTestBase {
 | `->elementTextContains('css', 'h1', 'Title')` | Element contains text |
 | `->addressEquals('/expected/path')` | Current URL matches |
 
-> WRONG: Missing `$defaultTheme` property. BrowserTestBase requires `protected $defaultTheme = 'stark'` (or another installed theme). Without it, tests fail with an unclear error about missing theme.
-> RIGHT: Always set `protected $defaultTheme = 'stark';` on BrowserTestBase subclasses. Stark is the minimal theme with no extra markup. Use `'claro'` if testing admin UI specifically.
+> CRITICAL NEVER: Do NOT use `$defaultTheme = 'starterkit_theme'` or any starter/generated theme. Use ONLY `protected $defaultTheme = 'stark';` (the minimal test theme with no extra markup) or `'claro'` for admin UI tests. Using `starterkit_theme` or similar non-test themes causes test failures because they may not be installed in the test environment and add unnecessary markup complexity.
+> WRONG: Missing `$defaultTheme` property or setting it to a non-test theme like `'starterkit_theme'`. BrowserTestBase requires this property and will fail with a cryptic missing theme error.
+> RIGHT: Always set `protected $defaultTheme = 'stark';` on every BrowserTestBase and WebDriverTestBase subclass.
 
 ## FunctionalJavascript tests (WebDriverTestBase)
 

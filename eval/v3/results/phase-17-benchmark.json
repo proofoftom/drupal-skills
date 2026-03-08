@@ -1,0 +1,38 @@
+{
+  "phase": "17-testing-final-eval",
+  "skills_tested": ["drupal-testing"],
+  "without_plugin": {
+    "score": "12/14",
+    "percent": 85.7,
+    "runtime": "4/6"
+  },
+  "with_plugin_v1": {
+    "score": "12/14",
+    "percent": 85.7,
+    "runtime": "4/6",
+    "failures": ["#7 defaultTheme=starterkit_theme", "#14 cron direct call"]
+  },
+  "with_plugin_v2": {
+    "score": "13/14",
+    "percent": 92.9,
+    "runtime": "4/6",
+    "failures": ["#6 missing installConfig"],
+    "patches_applied": [
+      "CRITICAL NEVER: $defaultTheme = starterkit_theme",
+      "WRONG/RIGHT: cron via service not direct call",
+      "Module-to-field-type mapping: list_string->options, text_long->text"
+    ],
+    "patches_effective": ["defaultTheme CRITICAL (fixed shared failure)", "cron service WRONG/RIGHT (fixed WITH failure)"],
+    "patches_ineffective": ["Module-to-field-type mapping (options still missing from $modules)"]
+  },
+  "delta_static": 7.1,
+  "delta_tier": "MODERATE",
+  "discriminating_expectations": [
+    "#7: $defaultTheme stark vs starterkit_theme (shared v1 failure, fixed v2)",
+    "#13: datetime in $modules (WITHOUT fail, WITH pass both versions)",
+    "#14: cron via service (WITH v1 fail, fixed v2)"
+  ],
+  "shared_failures": [
+    "rt-5/rt-6: Kernel tests fail in both variants (missing transitive dependencies: options for WITHOUT, flexible_permissions for WITH)"
+  ]
+}

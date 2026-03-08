@@ -1,0 +1,90 @@
+{
+  "phase": "16-views-theming-processing",
+  "skills_tested": ["drupal-views-dev", "drupal-theming", "drupal-batch-queue-cron"],
+  "date": "2026-03-08",
+  "variants": {
+    "without": {
+      "static_score": "8/12",
+      "runtime_score": "5/6",
+      "total_score": "13/18",
+      "pass_rate": 0.722
+    },
+    "with_v1": {
+      "static_score": "8/12",
+      "runtime_score": "6/6",
+      "total_score": "14/18",
+      "pass_rate": 0.778,
+      "delta_from_without": "+5.6%",
+      "tier": "LOW"
+    },
+    "with_v2": {
+      "static_score": "10/12",
+      "runtime_score": "6/6",
+      "total_score": "16/18",
+      "pass_rate": 0.889,
+      "delta_from_without": "+16.7%",
+      "tier": "HIGH",
+      "skill_patches": [
+        "drupal-views-dev: CRITICAL callout for empty query() on virtual ViewsField plugins",
+        "drupal-batch-queue-cron: CRITICAL callout for SuspendQueueException dual catch blocks",
+        "drupal-theming: CRITICAL callout for #theme usage and #attached library attachment"
+      ],
+      "patches_that_worked": [
+        "drupal-views-dev query() override: v1 FAIL → v2 PASS",
+        "drupal-batch-queue-cron SuspendQueueException: v1 FAIL → v2 PASS"
+      ],
+      "patches_that_failed": [
+        "drupal-theming #attached: still FAIL (library declared but never attached)",
+        "drupal-theming #theme: still FAIL (hook declared but #markup used instead)"
+      ]
+    }
+  },
+  "discriminating_expectations": [
+    {
+      "id": 4,
+      "text": "Template underscore-to-hyphen naming",
+      "skill": "drupal-theming",
+      "without": "FAIL",
+      "with_v2": "PASS",
+      "type": "v1 discriminator maintained"
+    },
+    {
+      "id": 7,
+      "text": "SuspendQueueException separate handling",
+      "skill": "drupal-batch-queue-cron",
+      "without": "FAIL",
+      "with_v1": "FAIL",
+      "with_v2": "PASS",
+      "type": "NEW discriminator from skill patch"
+    },
+    {
+      "id": "rt-6",
+      "text": "Cron detects overdue task and creates queue items",
+      "skill": "drupal-batch-queue-cron",
+      "without": "FAIL (accessCheck error)",
+      "with_v2": "PASS (full chain confirmed via watchdog)",
+      "type": "v1 discriminator maintained"
+    }
+  ],
+  "shared_failures": [
+    {
+      "id": 5,
+      "text": "#attached library not wired to render arrays",
+      "skill": "drupal-theming",
+      "note": "Both variants declare .libraries.yml correctly but never attach via #attached. Haiku builds infrastructure but doesn't wire the last connection."
+    },
+    {
+      "id": 10,
+      "text": "#theme key not used in render arrays",
+      "skill": "drupal-theming",
+      "note": "Both variants declare hook_theme() and create templates but use #markup in actual output. Same 'declaration-usage gap' pattern."
+    }
+  ],
+  "pre_existing_bugs": [
+    "Drupal\\system\\Entity\\User namespace bug (Phase 14) — both variants, not addressable via skills"
+  ],
+  "runtime_assertion_value": {
+    "rt-6_cron_queue": "Caught accessCheck() bug in WITHOUT that static analysis missed — entity query in hook_cron lacked ->accessCheck(FALSE). Confirmed WITH v2 full chain via watchdog logs.",
+    "design_note": "Queue items processed during same cron run (QueueWorker has cron time budget), so checking queue count post-cron finds 0 items. Must verify via watchdog logs instead."
+  }
+}

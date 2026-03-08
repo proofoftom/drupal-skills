@@ -1,0 +1,70 @@
+{
+  "expectations": [
+    {
+      "text": "Project entity annotation/attribute includes a 'views_data' handler key pointing to a custom class that extends EntityViewsData (NOT writing hook_views_data() for the Project content entity — content entities should use the entity views_data handler in their annotation; hook_views_data() is only for non-entity custom database tables)",
+      "passed": true,
+      "evidence": "src/Entity/Project.php line 22 shows '\"views_data\" = \"Drupal\\group_ai_pm\\Entity\\ProjectViewsData\"' in the @ContentEntityType annotation. src/Entity/ProjectViewsData.php line 10 confirms 'class ProjectViewsData extends EntityViewsData'."
+    },
+    {
+      "text": "Custom ViewsField plugin (ProjectTaskCount or similar) overrides query() with an empty method body or explicitly sets $this->query without adding a field (virtual/computed fields that don't correspond to a database column MUST override query() to prevent Views from generating an 'Unknown column' SQL error by trying to SELECT a non-existent column)",
+      "passed": true,
+      "evidence": "src/Plugin/views/field/ProjectTaskCount.php lines 18-20: 'public function query() { // This is a computed field with no database column. }' — method body contains only a comment, no addField() call."
+    },
+    {
+      "text": "hook_theme() in .module file declares theme variables with explicit default values in the 'variables' array for BOTH theme hooks — e.g., 'variables' => ['title' => NULL, 'status' => NULL, ...] (every variable a Twig template references MUST be declared with a default value in hook_theme(); omitting the default causes undefined variable warnings in Twig and silent rendering failures)",
+      "passed": true,
+      "evidence": "group_ai_pm.module lines 15-34: both 'group_ai_pm_task_card' (variables: title, status, priority, assignee_name, due_date, url all set to NULL) and 'group_ai_pm_project_summary' (variables: title, status, description set to NULL; task_count set to 0; url set to NULL) have explicit default values."
+    },
+    {
+      "text": "Template files in templates/ directory use hyphen-separated names matching the hook names with underscores converted to hyphens: group-ai-pm-task-card.html.twig and group-ai-pm-project-summary.html.twig (Drupal's theme system converts hook name underscores to hyphens when resolving template files — a file named with underscores or wrong conversion is silently never found)",
+      "passed": true,
+      "evidence": "Both files exist: templates/group-ai-pm-task-card.html.twig and templates/group-ai-pm-project-summary.html.twig, confirmed via directory listing."
+    },
+    {
+      "text": "A group_ai_pm.libraries.yml file exists defining at least one library with a css entry, AND the library is attached somewhere via '#attached' => ['library' => ['group_ai_pm/LIBRARY_NAME']] in a render array or preprocess function (Drupal's Libraries API is mandatory for all CSS/JS — inline <style> tags bypass aggregation, Content Security Policy, and library dependency management)",
+      "passed": false,
+      "evidence": "group_ai_pm.libraries.yml exists and defines two libraries ('task_cards' and 'project_summaries') each with CSS entries. However, a grep for '#attached' and 'library' across all PHP files returned no matches — the libraries are defined but never attached to any render array or preprocess function anywhere in the module."
+    },
+    {
+      "text": "QueueWorker plugin has a 'cron' key in its annotation or attribute specifying a time budget — e.g., cron = {\"time\" = 10} or cron: ['time' => 10] (the cron time budget tells Drupal's cron runner how many seconds to spend processing this queue per cron run — without it, queued items are never automatically processed by cron and require manual queue processing)",
+      "passed": true,
+      "evidence": "src/Plugin/QueueWorker/OverdueNotificationWorker.php line 17: 'cron = {\"time\" = 15}' in the @QueueWorker annotation."
+    },
+    {
+      "text": "QueueWorker processItem() method catches or handles SuspendQueueException separately from generic \\Exception (SuspendQueueException signals a systemic failure like an unavailable API where ALL remaining queue items should be skipped this run; generic \\Exception means one bad item to log and skip — catching only \\Exception without distinguishing SuspendQueueException causes the queue runner to silently treat systemic outages as individual item failures)",
+      "passed": true,
+      "evidence": "src/Plugin/QueueWorker/OverdueNotificationWorker.php lines 71-81: SuspendQueueException is caught first (lines 71-74) and rethrown via 'throw $e', while generic \\Exception is caught separately (lines 75-81) and only logged without rethrowing."
+    },
+    {
+      "text": "hook_cron() implementation uses the Lock API with a try/finally pattern: \\Drupal::lock()->acquire() or injected lock service acquire() at the start, and lock->release() inside a finally block (unreleased locks persist for 30 seconds blocking all subsequent cron runs of this task — the try/finally pattern ensures the lock is released even if an exception occurs during processing)",
+      "passed": true,
+      "evidence": "group_ai_pm.module lines 41-73: '$lock = \\Drupal::service(\"lock\")' on line 41, '$lock->acquire(\"group_ai_pm_overdue_check\")' on line 43, 'try {' on line 47, 'finally {' on line 71, '$lock->release(\"group_ai_pm_overdue_check\")' on line 72."
+    },
+    {
+      "text": "hook_cron() creates queue items via \\Drupal::queue() or the queue factory service for overdue tasks, and does NOT directly process or send notifications in hook_cron itself (hook_cron has no time budget — processing variable-size notification workloads directly in hook_cron blocks all other cron tasks and risks PHP timeout; the QueueWorker handles processing with its own time budget)",
+      "passed": true,
+      "evidence": "group_ai_pm.module lines 62-68: '\\Drupal::queue(\"group_ai_pm_overdue_notifications\")' on line 62 and '$queue->createItem($item)' on line 68. No notification processing, logging, or sending occurs in hook_cron — only item creation."
+    },
+    {
+      "text": "Render arrays using the custom theme hooks include a '#theme' key set to 'group_ai_pm_task_card' or 'group_ai_pm_project_summary' (NOT returning raw HTML strings or assembling markup with string concatenation — render arrays with #theme go through Drupal's full render pipeline enabling caching, theme overriding, altering, and XSS protection)",
+      "passed": false,
+      "evidence": "A grep for '#theme' across all PHP files in the module returned no matches. The theme hooks are declared in hook_theme() but are never referenced via a '#theme' key in any render array. The DashboardController returns '#markup' and '#type' => 'table' render arrays without using the custom theme hooks."
+    },
+    {
+      "text": "ProjectStatusBlock build() method includes a '#cache' key with 'tags' containing the project entity list cache tag (group_ai_pm_project_list or equivalent) AND 'contexts' containing at least 'user.permissions' (without list cache tags, the block shows stale counts when projects are added/deleted; without the permissions context, the block is cached once and served identically to all users regardless of access)",
+      "passed": true,
+      "evidence": "src/Plugin/Block/ProjectStatusBlock.php lines 63-67: '#cache' key contains 'tags' => ['project_list'] (the correct Drupal entity list cache tag for entity type 'project', format: {entity_type_id}_list) and 'contexts' => ['user.permissions']."
+    },
+    {
+      "text": "ViewsField plugin file is located in src/Plugin/views/field/ directory with lowercase 'views' and 'field' in the path (NOT src/Plugin/Views/Field/ with capitals — Views uses a custom plugin discovery that expects lowercase directory names unlike standard Drupal plugin types)",
+      "passed": true,
+      "evidence": "File confirmed at /tmp/phase16-with/web/modules/custom/group_ai_pm/src/Plugin/views/field/ProjectTaskCount.php — all directory components are lowercase ('views' and 'field')."
+    }
+  ],
+  "summary": {
+    "passed": 10,
+    "failed": 2,
+    "total": 12,
+    "pass_rate": 0.833
+  }
+}
