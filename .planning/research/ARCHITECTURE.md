@@ -1,387 +1,639 @@
 # Architecture Patterns
 
-**Domain:** Automated eval pipeline for Drupal Claude skills (v2.0 integration)
-**Researched:** 2026-03-06
-**Confidence:** HIGH -- derived from existing working code, confirmed Phase 7 findings, and skill-creator official schemas
+**Domain:** Group-based AI project management module + Claude Code plugin packaging (v3.0 integration)
+**Researched:** 2026-03-07
+**Confidence:** MEDIUM -- Drupal Group/AI module APIs verified via official sources; Claude Code plugin format verified via official docs; integration between all three is novel territory requiring phase-specific validation
 
-## Recommended Architecture
+## Three Architectural Workstreams
 
-The eval pipeline is an orchestrator-driven system where an Opus main session spawns Sonnet subagents for controlled A/B skill evaluation, then grades and aggregates results. It layers onto existing infrastructure (ddev environments, skill-creator JSON schemas, workspace directories).
+v3.0 has three distinct but interconnected workstreams that layer onto the existing v1.0/v2.0 repo:
 
-### System Overview
+1. **Claude Code Plugin Packaging** -- Restructure repo as an installable plugin with auto-triggering skill descriptions
+2. **Group AI Project Management Module** -- Drupal contrib module combining Group 3.x + AI Agents for project management
+3. **Phase-Level Integration Eval** -- Each module-building phase doubles as a real-world skill auto-trigger test
+
+These are not independent -- the module (workstream 2) is the test vehicle for the plugin (workstream 1), and the eval methodology (workstream 3) validates both.
+
+## System Overview
 
 ```
-Opus Main Session (Orchestrator)
+drupal-skills/ (repo root)
   |
-  |-- 1. Setup: ddev environments (2 per skill: with/without)
+  |-- [RESTRUCTURED] Plugin packaging (.claude-plugin/, skills/, etc.)
+  |       Skills auto-trigger from natural Drupal dev prompts
   |
-  |-- 2. Execute: Spawn eval-executor subagents (Sonnet)
-  |     |-- with-skill agent: reads SKILL.md, generates Drupal module
-  |     |-- without-skill agent: no SKILL.md access, generates baseline
+  |-- [NEW] modules/group_ai_pm/
+  |       Drupal contrib module: Group + AI Agents project management
+  |       Built phase-by-phase, each phase exercises different skills
   |
-  |-- 3. Grade: Opus reads generated files + evals.json, writes grading.json
+  |-- [EXISTING] eval/ pipeline
+  |       v2.0 headless pipeline preserved for regression
+  |       v3.0 adds phase-level "with-plugin vs without-plugin" comparison
   |
-  |-- 4. Aggregate: Opus writes benchmark.json from grading results
-  |
-  |-- 5. Teardown: ddev delete + rm -rf per environment
-  |
-  |-- 6. Iterate: if delta < threshold, optimize SKILL.md and re-run
+  |-- [EXISTING] .planning/ GSD workflow
+  |       Orchestrates the build phases
 ```
 
-### Component Boundaries
+## Workstream 1: Claude Code Plugin Packaging
 
-| Component | Responsibility | Communicates With | Location | Status |
-|-----------|---------------|-------------------|----------|--------|
-| Orchestrator (Opus) | Lifecycle, model switching, grading, aggregation | All components | Interactive Claude session | EXISTING pattern |
-| eval-executor subagent | Code generation within ddev Drupal env | ddev CLI, drush, filesystem | `.claude/agents/eval-executor.md` | **NEW** |
-| eval-browser subagent | Authenticated browser E2E verification | agent-browser, drush uli | `.claude/agents/eval-browser.md` | **NEW** |
-| setup-drupal-env.sh | Provision isolated ddev Drupal instance | ddev, docker, os-kg source | `eval/setup-drupal-env.sh` | EXISTING |
-| teardown-drupal-env.sh | Clean up ddev instance + filesystem | ddev, docker | `eval/teardown-drupal-env.sh` | EXISTING |
-| e2e-assert.sh | Browser-based assertion checks | agent-browser | `eval/e2e-assert.sh` | EXISTING (curl preferred) |
-| evals.json (x13) | Eval prompts + expectations per skill | Read by orchestrator | `skills/drupal-*/evals/evals.json` | EXISTING |
-| grading.json | Per-run grading results | Written by orchestrator | workspace dirs | EXISTING schema |
-| benchmark.json | Aggregated with/without comparison | Written by orchestrator | workspace dirs | EXISTING schema |
+### Current State -> Target State
 
-## New Components to Build
+**Current:** Skills live in `skills/drupal-*/SKILL.md`, installed via `install.sh` to `~/.claude/skills/`. No plugin manifest. No namespace. Skills invoked as `/drupal-module-scaffold` etc.
 
-### 1. `.claude/agents/eval-executor.md` -- Core New Component
+**Target:** Repo IS a Claude Code plugin. Install via marketplace or `--plugin-dir`. Skills namespaced as `/drupal-skills:drupal-module-scaffold`. Auto-trigger from natural Drupal development prompts without explicit invocation.
 
-Custom subagent definition for controlled eval execution.
-
-**Frontmatter:**
-
-```yaml
----
-name: eval-executor
-description: Executes a Drupal module development task in an isolated ddev environment. Generates code without access to external skills unless explicitly provided in the prompt.
-tools: Read, Write, Edit, Bash, Glob, Grep
----
-```
-
-**Architectural decisions (all confirmed from Phase 7 execution):**
-
-| Decision | Rationale |
-|----------|-----------|
-| `model: sonnet` in frontmatter | Per Claude Code sub-agents docs, the `model` field in subagent .md frontmatter controls the model. Agent tool has no model param, but frontmatter does. No `/model` switching needed. |
-| No `skills` field | Deliberate omission. Must NOT auto-load skills from `~/.claude/skills/`. Knowledge isolation is the point. |
-| Tools: file + bash only | No WebSearch, WebFetch, Agent. Executor writes code from training data (without-skill) or SKILL.md (with-skill). |
-| No `color` field | Optional cosmetic; not functionally relevant. |
-
-**System prompt structure:**
-
-```markdown
-You are a Drupal module developer. You will be given a task to create a Drupal module
-in an existing ddev environment.
-
-## Environment
-- Working directory: {ddev_project_dir}
-- Drupal root: {ddev_project_dir}/html (os-kg) or {ddev_project_dir}/web (fresh D10)
-- Custom modules go in: {docroot}/modules/custom/{module_name}/
-- Use `ddev drush` for all drush commands
-- Use `ddev exec` for PHP commands
-
-## Rules
-- Do NOT ask questions -- just create the code
-- Do NOT search the web for documentation
-- Create all required files for a working Drupal module
-- Enable the module with `ddev drush en {module_name}` after creating files
-- Verify the module works (drush status, route check, etc.)
-
-## Task
-{eval_prompt_from_evals_json}
-```
-
-**With-skill variant adds** (before Task):
-```markdown
-## Skill Reference
-Read the skill file at {absolute_path_to_SKILL.md} before starting.
-Follow its patterns and conventions.
-```
-
-**Without-skill variant:** No skill reference section. Agent works from training data alone.
-
-### 2. `.claude/agents/eval-browser.md` -- MUST-HAVE
-
-Browser-based E2E verification for evals needing authenticated UI testing (theming, forms, access).
-
-```yaml
----
-name: eval-browser
-description: Performs authenticated browser-based verification of Drupal module functionality using drush uli for login and agent-browser for page inspection.
-tools: Read, Bash
----
-```
-
-**drush uli authentication flow:**
-1. `ddev drush uli --uid=1` returns one-time login URL
-2. `agent-browser open {login_url}` authenticates as admin (sets session cookie)
-3. Navigate to target URL for verification
-4. `agent-browser snapshot` captures page content for assertion
-
-**When to use eval-browser vs curl:**
-| Method | Use For | Skills |
-|--------|---------|--------|
-| `curl -sk` (preferred) | JSON endpoints, drush commands, status codes, module enable | 10 of 13 skills |
-| eval-browser | CSS/layout, multi-step forms, role-based access pages | theming, forms-api, access-security |
-
-### 3. `eval/setup-drupal-env.sh` -- Potential Modification
-
-Current script copies os-knowledge-garden as base. PROJECT.md v2.0 specifies "fresh Drupal 10 ddev instances (no os-kg, faster/controlled)."
-
-**Decision:** Use fresh Drupal 10 instances (not os-kg). Faster installs, controlled environment, no traefik router collisions from stale os-kg projects. Eval prompts should reference "Drupal 10 site" (not Open Social). Setup script needs modification or replacement.
-
-## Data Flow
-
-### Per-Skill Eval Run (Complete Sequence)
+### Plugin Directory Structure
 
 ```
-1. INPUT
-   skills/drupal-{name}/evals/evals.json     -- prompts + expectations
-   skills/drupal-{name}/SKILL.md              -- with-skill only
-
-2. ENVIRONMENT SETUP (orchestrator runs bash)
-   eval/setup-drupal-env.sh {name}-with    --> /tmp/os-kg-{name}-with/
-   eval/setup-drupal-env.sh {name}-without --> /tmp/os-kg-{name}-without/
-
-3. MODEL SWITCH
-   /model sonnet                              -- parent session switches
-
-4. EXECUTION (2 subagents, can be parallel or sequential)
-   Agent("eval-executor", with-skill prompt)     --> module files in ddev env
-   Agent("eval-executor", without-skill prompt)  --> module files in ddev env
-
-5. MODEL SWITCH BACK
-   /model opus                                -- for grading quality
-
-6. GRADING (orchestrator reads files, runs drush/curl checks)
-   Read generated files from each ddev env
-   Compare against evals.json expectations[]
-   Write grading.json per config/run
-
-7. AGGREGATION
-   Combine grading into benchmark.json with delta calculation
-
-8. OUTPUT (written to workspace)
-   drupal-{name}-workspace/iteration-{N}/
-     eval-{module-name}/
-       with_skill/run-1/grading.json
-       without_skill/run-1/grading.json
-     benchmark.json
-
-9. TEARDOWN
-   eval/teardown-drupal-env.sh {name}-with
-   eval/teardown-drupal-env.sh {name}-without
-
-10. DECISION
-    If delta >= 15%: skill is validated, move to next
-    If delta < 15%: optimize SKILL.md, re-run (new iteration)
-```
-
-### JSON Schema Mapping (Actual vs skill-creator)
-
-The project uses simplified schemas compared to skill-creator's full specification. This is deliberate -- grading is done by the orchestrator reading files directly, not a separate grader agent examining transcripts.
-
-**grading.json (actual, from existing runs):**
-```json
-{
-  "skill": "drupal-routing-controllers",
-  "eval_id": 1,
-  "run": 1,
-  "config": "with_skill",
-  "model": "claude-sonnet-4-6",
-  "timestamp": "2026-03-06T16:03:00Z",
-  "expectations": [
-    {
-      "id": 1,
-      "description": "expectation text from evals.json",
-      "result": "PASS",
-      "evidence": "specific evidence from file inspection"
-    }
-  ],
-  "score": "8/8",
-  "percentage": 100
-}
-```
-
-**Differences from skill-creator grading.json schema:**
-- No `claims[]` (no transcript to extract claims from)
-- No `user_notes_summary` (no executor notes file)
-- No `eval_feedback` (orchestrator handles this inline)
-- No `execution_metrics` (tokens/duration captured in benchmark.json instead)
-- Uses `result: "PASS"/"FAIL"` instead of `passed: true/false`
-- Uses `description` instead of `text` for expectation content
-
-**benchmark.json (actual, from existing runs):**
-```json
-{
-  "skill": "drupal-routing-controllers",
-  "iteration": 2,
-  "model": "claude-sonnet-4-6",
-  "timestamp": "2026-03-06T16:03:00Z",
-  "eval_id": 1,
-  "prompt": "eval prompt text",
-  "results": {
-    "with_skill": {
-      "score": "8/8", "percentage": 100,
-      "tokens": 18175, "tool_uses": 9, "duration_ms": 48986
-    },
-    "without_skill": {
-      "score": "8/8", "percentage": 100,
-      "tokens": 11248, "tool_uses": 7, "duration_ms": 42754
-    }
-  },
-  "delta": 0,
-  "notes": "analysis text"
-}
-```
-
-**Differences from skill-creator benchmark.json schema:**
-- Flat structure (no `metadata`, `runs[]`, `run_summary` nesting)
-- Single eval per benchmark (not aggregated across multiple evals)
-- `delta` is a number (percentage difference), not a string
-- No statistical aggregation (mean/stddev) -- single run per config
-
-## Workspace Directory Structure
-
-```
-drupal-skills/                              # Project root
-  .claude/
-    agents/
-      eval-executor.md                      # NEW: Eval execution subagent
-      eval-browser.md                       # NEW: Browser verification subagent
-
-  skills/
-    drupal-{name}/
-      SKILL.md                              # Skill content (read by with-skill agent)
+drupal-skills/                          # Plugin root
+  .claude-plugin/
+    plugin.json                         # Plugin manifest (NEW)
+  skills/                               # Existing location, unchanged
+    drupal-module-scaffold/
+      SKILL.md
       evals/
-        evals.json                          # Eval definitions (read by orchestrator)
+        evals.json
       references/
-        *.md                                # Reference files
-
-  eval/
-    setup-drupal-env.sh                     # Environment provisioning
-    teardown-drupal-env.sh                  # Environment cleanup
-    e2e-assert.sh                           # Browser assertion helper
-
-  drupal-{name}-workspace/                  # Per-skill workspace (13 total)
-    iteration-{N}/                          # Iteration number (sequential)
-      eval-{module-name}/                   # Named from eval prompt module
-        with_skill/
-          run-{N}/
-            grading.json                    # Grading results
-        without_skill/
-          run-{N}/
-            grading.json
-      benchmark.json                        # Aggregated comparison
+        *.md
+    drupal-caching/
+      SKILL.md
+      ...
+    drupal-coding-standards/
+      SKILL.md
+  eval/                                 # NOT part of plugin distribution
+    setup-fresh-drupal10.sh
+    teardown-drupal-env.sh
+    results/
+  install.sh                            # Keep for backward compat (copies to ~/.claude/skills/)
+  README.md
+  .gitignore
 ```
 
-**Iteration numbering:**
-- Skills with only iteration-1 results: next is iteration-2
-- caching + module-scaffold (already have iteration-2): next is iteration-3
+### Plugin Manifest
+
+```json
+{
+  "name": "drupal-skills",
+  "description": "14 skills for generating correct Drupal 10/11 module code. Covers scaffolding, entities, routing, forms, caching, testing, and more.",
+  "version": "3.0.0",
+  "author": {
+    "name": "proofoftom"
+  },
+  "repository": "https://github.com/proofoftom/drupal-skills",
+  "license": "MIT",
+  "keywords": ["drupal", "drupal-10", "drupal-11", "module-development", "php"]
+}
+```
+
+### Auto-Triggering Architecture
+
+Skills auto-trigger based on their `description` field in SKILL.md frontmatter. Claude builds an `<available_skills>` list from all installed skill names + descriptions, and semantically matches user requests against them.
+
+**Key constraint:** Descriptions must be under a character budget (2% of context window, ~16,000 chars fallback). With 14 skills, each description gets roughly ~1,100 chars max. Current descriptions range 200-400 chars -- well within budget.
+
+**Triggering rules from official docs:**
+- Claude only consults skills for tasks it cannot easily handle on its own
+- Simple one-step queries may not trigger even with matching description
+- Complex, multi-step, specialized queries reliably trigger when description matches
+- Description should include both WHAT the skill does and WHEN to use it
+
+**Current descriptions already follow this pattern.** Example from drupal-caching:
+```yaml
+description: |
+  Apply correct cache metadata (tags, contexts, max-age) to Drupal render arrays...
+  Use WHENEVER producing render arrays that display entity or config data...
+  Do NOT use for building templates...
+```
+
+**Potential issue:** When used as a plugin, skill names become `/drupal-skills:drupal-caching` instead of `/drupal-caching`. The description-based auto-triggering should be unaffected since it matches on description content, not name. But verify empirically.
+
+### What Changes vs What Stays
+
+| Component | Change | Rationale |
+|-----------|--------|-----------|
+| `skills/drupal-*/SKILL.md` | NO CHANGE | Already follows Agent Skills standard |
+| `skills/drupal-*/evals/` | NO CHANGE | Not loaded by plugin system |
+| `skills/drupal-*/references/` | NO CHANGE | Loaded by SKILL.md `Read` calls |
+| `.claude-plugin/plugin.json` | **NEW** | Required for plugin recognition |
+| `install.sh` | KEEP | Backward compat for non-plugin install |
+| `README.md` | UPDATE | Add plugin install instructions |
+| `.gitignore` | UPDATE | May need to exclude eval artifacts from plugin cache |
+| `eval/`, `.planning/` | NO CHANGE | Not discovered by plugin system |
+
+### Critical Architectural Decision: Repo-as-Plugin vs Separate Plugin Dir
+
+**Decision: Repo IS the plugin.** The `skills/` directory is already at root level in the correct location. Adding `.claude-plugin/plugin.json` is the only structural change needed.
+
+**Why not a separate plugin subdirectory:** Would require duplicating or symlinking skills. The current repo structure already matches Claude Code's expected plugin layout. The eval infrastructure (`eval/`, `.planning/`) is simply ignored by the plugin system since it is not in a recognized component directory.
+
+## Workstream 2: Group AI Project Management Module
+
+### Module Architecture
+
+The contrib module `group_ai_pm` combines Drupal Group 3.x entities with AI Agents tools to create an AI-enhanced project management system within groups.
+
+```
+modules/group_ai_pm/
+  group_ai_pm.info.yml
+  group_ai_pm.module
+  group_ai_pm.install
+  group_ai_pm.routing.yml
+  group_ai_pm.permissions.yml
+  group_ai_pm.links.menu.yml
+  group_ai_pm.links.task.yml
+  group_ai_pm.links.action.yml
+  config/
+    install/
+      group.relation_type.group_project.yml    # Group relation plugin config
+      core.entity_form_display.*.yml
+      core.entity_view_display.*.yml
+      views.view.group_projects.yml
+    schema/
+      group_ai_pm.schema.yml
+  src/
+    Entity/
+      Project.php                   # Content entity: Project
+      ProjectType.php               # Config entity: Project bundle (if needed)
+      Task.php                      # Content entity: Task
+      TaskType.php                  # Config entity: Task bundle
+    Form/
+      ProjectForm.php
+      TaskForm.php
+      ProjectSettingsForm.php
+    Controller/
+      ProjectController.php
+      TaskController.php
+      ProjectDashboardController.php
+    Plugin/
+      GroupRelation/
+        GroupProject.php            # Group relation plugin for Projects
+        GroupTask.php               # Group relation plugin for Tasks
+      Block/
+        ProjectStatusBlock.php
+        TaskListBlock.php
+        AiAssistantBlock.php
+      AiFunctionCall/
+        CreateProjectTool.php       # AI Agents tool: create project
+        CreateTaskTool.php          # AI Agents tool: create task
+        UpdateTaskStatusTool.php    # AI Agents tool: update task
+        QueryProjectsTool.php       # AI Agents tool: query projects
+      Views/
+        field/
+          TaskStatusField.php
+        filter/
+          ProjectGroupFilter.php
+    Access/
+      ProjectAccessControlHandler.php
+      TaskAccessControlHandler.php
+    Service/
+      ProjectManager.php            # Business logic service
+      TaskWorkflowManager.php       # Task state transitions
+  templates/
+    project-dashboard.html.twig
+    task-list.html.twig
+  tests/
+    src/
+      Kernel/
+        ProjectEntityTest.php
+        TaskEntityTest.php
+        GroupRelationTest.php
+      Functional/
+        ProjectCrudTest.php
+        TaskWorkflowTest.php
+        AiToolsTest.php
+```
+
+### Entity Model
+
+```
+Group (from Group 3.x)
+  |-- GroupRelationship --> Project (custom content entity)
+  |                           |-- title
+  |                           |-- description (text_long)
+  |                           |-- status (list_string: planning/active/review/completed)
+  |                           |-- priority (list_string: low/medium/high/critical)
+  |                           |-- owner (entity_reference: user)
+  |                           |-- created, changed (timestamps)
+  |
+  |-- GroupRelationship --> Task (custom content entity)
+                              |-- title
+                              |-- description (text_long)
+                              |-- project (entity_reference: Project)
+                              |-- assignee (entity_reference: user)
+                              |-- status (list_string: todo/in_progress/review/done)
+                              |-- priority (list_string: low/medium/high/critical)
+                              |-- due_date (datetime)
+                              |-- created, changed (timestamps)
+```
+
+### Group 3.x Integration Points
+
+**Confidence: MEDIUM** -- Group 3.x API is confirmed via drupal.org change records, but implementation details need phase-specific research.
+
+Group 3.x uses GroupRelationship entities (renamed from GroupContent) to link content to groups. Key integration:
+
+| Group 3.x Concept | Our Usage | Notes |
+|-------------------|-----------|-------|
+| GroupType | "Project Team" bundle | Config entity defining group behavior |
+| GroupRole | PM, Developer, Observer | Per-group roles with permissions |
+| GroupRelationship | Links Projects and Tasks to Groups | Each relationship is an entity with metadata |
+| GroupRelationType | `group_project`, `group_task` | Plugin-defined relationship types |
+| Group Relation Plugin | `GroupProject`, `GroupTask` | PHP classes defining how entities relate to groups |
+
+**Group 3.x API (confirmed changes from Group 2.x):**
+- `Group::addContent()` renamed to `Group::addRelationship()` -- returns the created entity
+- GroupContent entity renamed to GroupRelationship
+- Plugin manager behaves like EntityTypeManager
+- Relation plugins define handlers as services, not annotations
+- Both content entities and config entities can be group content
+
+### AI Module / AI Agents Integration
+
+**Confidence: MEDIUM** -- Architecture verified from official docs and QED42 guide; specific tool plugin implementation needs validation.
+
+The Drupal AI module (1.2.x stable) provides:
+- Provider abstraction layer (48+ AI providers including Anthropic)
+- OperationType system (Chat, Embedding, etc.)
+- Tools/Function Calling support via ChatInterface
+
+The AI Agents module (1.2.x stable) provides:
+- Plugin-based agent framework
+- `AiFunctionCall` plugin type for custom tools
+- `solve()` method for programmatic agent execution
+- Built-in agents (Field, Content Type, Taxonomy)
+
+**Our custom AI tools (AiFunctionCall plugins):**
+
+```php
+// src/Plugin/AiFunctionCall/CreateProjectTool.php
+#[AiFunctionCall(
+  id: 'group_ai_pm_create_project',
+  label: new TranslatableMarkup('Create Project'),
+  description: new TranslatableMarkup('Create a new project in a group'),
+)]
+class CreateProjectTool extends AiFunctionCallBase {
+
+  public function execute(array $arguments): string {
+    // Create Project entity, add as GroupRelationship
+    // Return success/error message to agent
+  }
+
+  public function getArguments(): array {
+    return [
+      'group_id' => ['type' => 'integer', 'description' => 'Group ID'],
+      'title' => ['type' => 'string', 'description' => 'Project title'],
+      'description' => ['type' => 'string', 'description' => 'Project description'],
+    ];
+  }
+}
+```
+
+**Agent configuration (config entity, not code):**
+A custom "Project Manager" agent is defined via config/install YAML, not code:
+- System prompt: "You manage projects and tasks within Drupal groups..."
+- Tools: CreateProject, CreateTask, UpdateTaskStatus, QueryProjects
+- Max loops: 3 (create, verify, report)
+
+### Dependencies
+
+```yaml
+# group_ai_pm.info.yml
+name: 'Group AI Project Management'
+type: module
+description: 'AI-enhanced project management within Drupal Groups'
+core_version_requirement: '^10 || ^11'
+package: 'Group'
+dependencies:
+  - group:group
+  - ai:ai
+  - ai_agents:ai_agents
+```
+
+### Data Flow: User Creates Project via AI
+
+```
+1. User in Group context sends natural language:
+   "Create a project called API Refactor with high priority"
+
+2. AI Agents framework routes to Project Manager agent
+
+3. Agent calls CreateProjectTool with parsed arguments:
+   {group_id: 5, title: "API Refactor", priority: "high"}
+
+4. Tool creates Project entity via ProjectManager service
+
+5. Tool calls Group::addRelationship() to link Project to Group
+
+6. Tool returns success message to agent
+
+7. Agent confirms to user with project details and link
+```
+
+### Data Flow: Standard CRUD (No AI)
+
+```
+1. User navigates to Group -> Projects tab
+2. Clicks "Add Project" action link
+3. ProjectForm renders with Group context
+4. On submit: Project entity created, GroupRelationship created
+5. Redirects to project view within group context
+```
+
+## Workstream 3: Phase-Level Integration Eval
+
+### Methodology Shift from v2.0
+
+| Aspect | v2.0 | v3.0 |
+|--------|------|------|
+| What is tested | Individual skill content value | Plugin auto-triggering + skill content in realistic workflow |
+| Execution model | Headless `claude -p` with explicit "read SKILL.md" | Interactive Claude Code with plugin installed vs not installed |
+| Skill activation | Forced (prompt says "read the skill file") | Organic (description-based auto-trigger from natural prompts) |
+| Task scope | Single eval prompt, one module | Full development phase (multiple files, multiple concerns) |
+| Environment | Fresh D10, disposable | Persistent D10 with Group + AI modules installed |
+| Eval unit | 13 individual skills x 1 prompt each | N phases x multiple skill domains per phase |
+
+### Phase-Eval Architecture
+
+Each development phase of the Group AI PM module becomes an eval:
+
+```
+Phase: "Create Project and Task entities with Group relations"
+
+WITHOUT-PLUGIN baseline:
+  1. Setup fresh D10 with Group + AI modules
+  2. Headless claude -p with natural prompt (no plugin, no skills)
+  3. Grade generated code against expectations
+  4. Teardown
+
+WITH-PLUGIN build:
+  1. Same D10 environment
+  2. Claude Code with --plugin-dir ./  (plugin installed)
+  3. Natural prompt (same as baseline) -- skills auto-trigger
+  4. Grade + compare to baseline
+  5. Keep result -- this IS the real module code
+```
+
+**Key difference:** The with-plugin run produces the ACTUAL module code that ships. It is not a throwaway eval -- it is the real development process. The without-plugin baseline is the throwaway.
+
+### Eval Environment
+
+```
+/tmp/d10-group-ai-pm/                  # Persistent ddev project
+  web/
+    modules/
+      contrib/
+        group/                          # Group 3.x (composer require)
+        ai/                             # AI module (composer require)
+        ai_agents/                      # AI Agents (composer require)
+      custom/
+        group_ai_pm/                    # Our module, built incrementally
+
+/tmp/d10-group-ai-pm-baseline/         # Per-phase throwaway for without-plugin
+  web/
+    modules/
+      contrib/
+        group/
+        ai/
+        ai_agents/
+      custom/
+        group_ai_pm_baseline/           # Baseline code, discarded after grading
+```
+
+## Component Boundaries (All Workstreams)
+
+### New Components
+
+| Component | Responsibility | Communicates With | Location | Workstream |
+|-----------|---------------|-------------------|----------|------------|
+| Plugin manifest | Plugin identity, metadata | Claude Code plugin system | `.claude-plugin/plugin.json` | 1 |
+| Project entity | Custom content entity type | Group relations, Task entity, services | `modules/group_ai_pm/src/Entity/Project.php` | 2 |
+| Task entity | Custom content entity type | Project entity, Group relations, services | `modules/group_ai_pm/src/Entity/Task.php` | 2 |
+| Group relation plugins | Link Project/Task to Groups | Group 3.x API | `modules/group_ai_pm/src/Plugin/GroupRelation/` | 2 |
+| AI tools (AiFunctionCall) | Expose CRUD to AI Agents | AI Agents framework, entity services | `modules/group_ai_pm/src/Plugin/AiFunctionCall/` | 2 |
+| Project Manager agent config | AI agent definition | AI Agents explorer, tools | `modules/group_ai_pm/config/install/` | 2 |
+| Entity forms | CRUD UI for Projects/Tasks | Entity API, Form API | `modules/group_ai_pm/src/Form/` | 2 |
+| Controllers | Dashboard, listings | Entity queries, services | `modules/group_ai_pm/src/Controller/` | 2 |
+| Views plugins | Group-scoped project views | Views API, Group API | `modules/group_ai_pm/src/Plugin/Views/` | 2 |
+| Block plugins | Dashboard blocks | Block API, entity queries | `modules/group_ai_pm/src/Plugin/Block/` | 2 |
+| Access handlers | Per-group permission checks | Group roles, entity access | `modules/group_ai_pm/src/Access/` | 2 |
+| Templates | Twig templates for output | Theme system | `modules/group_ai_pm/templates/` | 2 |
+| Kernel/functional tests | Automated testing | PHPUnit, entity API | `modules/group_ai_pm/tests/` | 2 |
+| Phase eval scripts | Setup/grade per phase | ddev, drush, headless claude | `eval/v3/` (or inline in phase plans) | 3 |
+
+### Existing Components -- Integration Changes
+
+| Existing Component | v3.0 Changes | Rationale |
+|-------------------|-------------|-----------|
+| `skills/drupal-*/SKILL.md` | Description optimization if auto-trigger fails | Descriptions may need tuning for plugin context |
+| `skills/drupal-*/evals/evals.json` | NO CHANGE | v2.0 evals preserved for regression |
+| `eval/setup-fresh-drupal10.sh` | May need Group/AI module variant | Phase eval needs D10 with contrib modules pre-installed |
+| `eval/teardown-drupal-env.sh` | NO CHANGE | Still used for baseline teardown |
+| `.claude/agents/eval-grader.md` | NO CHANGE | Still used for grading |
+| `install.sh` | KEEP with deprecation note | Plugin install is preferred path |
+| `README.md` | UPDATE | Plugin install as primary, install.sh as fallback |
 
 ## Patterns to Follow
 
-### Pattern 1: Knowledge Isolation via Separate Agents
+### Pattern 1: Repo-as-Plugin with Minimal Restructuring
 
-**What:** With-skill and without-skill runs MUST use separate Agent instances.
-**Why:** Once an agent reads SKILL.md, knowledge contaminates all subsequent outputs. Cannot "unknow" content.
-**How:**
-```
-Agent("eval-executor", prompt_with_skill_path)    # reads SKILL.md
-Agent("eval-executor", prompt_without_skill_path) # never sees SKILL.md
-```
+**What:** Add `.claude-plugin/plugin.json` at repo root. Keep everything else in place.
+**Why:** Current `skills/` directory is already in the correct location for plugin discovery. No need to move files.
+**Verification:** `claude --plugin-dir ./ ` should discover all 14 skills.
 
-### Pattern 2: Model Control via Subagent Frontmatter
+### Pattern 2: Module in `modules/` Subdirectory (Not Repo Root)
 
-**What:** Set `model: sonnet` in eval-executor.md frontmatter. Opus parent session spawns Sonnet subagents automatically.
-**Why:** Claude Code sub-agents docs confirm `model` field in .md frontmatter controls the subagent model. No `/model` switching needed.
-**How:** Add `model: sonnet` to eval-executor.md and eval-browser.md frontmatter.
+**What:** Place the Drupal module in `modules/group_ai_pm/` rather than at repo root.
+**Why:** Separation of concerns. The repo is a Claude Code plugin; the module is a deliverable built using the plugin. Module code should be copyable to any Drupal site's `modules/custom/` directory.
+**How:** `modules/group_ai_pm/` is a standard Drupal module directory structure, self-contained.
 
-### Pattern 3: Serial ddev Lifecycle with flock
+### Pattern 3: Group Relation Plugins for Entity Integration
 
-**What:** Serialize `ddev start` via flock. Max 2 simultaneous ddev instances per skill.
-**Why:** ddev-router health check fails ~50% when `ddev start` calls race.
-**Recovery:** `docker restart ddev-router && sleep 20`, then retry.
+**What:** Use Group 3.x's relation plugin system to integrate Project and Task entities.
+**Why:** Group 3.x creates a GroupRelationshipType bundle for each GroupType + plugin combination. This is the standard way to make custom entities groupable -- do not use entity reference fields or ad-hoc solutions.
+**How:** Create `GroupProject` and `GroupTask` classes extending `GroupRelationBase`, register as plugins.
 
-### Pattern 4: Full Environment Teardown (Not Surgical)
+### Pattern 4: AiFunctionCall Plugins for AI Tools
 
-**What:** Tear down entire ddev project after eval, not surgical module uninstall.
-**Why:** Removing module files without `drush pm:uninstall` corrupts Drupal registry. Full teardown avoids this entirely since environments are disposable.
+**What:** Create custom tools as `AiFunctionCall` plugins, not custom agent classes.
+**Why:** AI Agents framework delegates to tools. "Only development needed is if there is not a tool for what your agent is trying to solve." Agents are config entities (UI-configurable); tools are code.
+**How:** Implement `AiFunctionCallBase` with `execute()` and `getArguments()`.
 
-### Pattern 5: curl over e2e-assert.sh for E2E
+### Pattern 5: Incremental Module Build Per Phase
 
-**What:** Use `curl -sk` with full URL (including port) instead of e2e-assert.sh.
-**Why:** ddev assigns non-standard HTTPS ports. e2e-assert.sh constructs URLs without port.
-**How:** `ddev describe` to get URL, or `curl -sk https://os-kg-{name}.ddev.site:{port}/path`
+**What:** Build the module in phases where each phase exercises specific skill domains.
+**Why:** Each phase is both a development milestone AND an auto-trigger eval. If entities-fields skill does not trigger during entity creation phase, we catch it immediately.
+**Phase-to-skill mapping:**
+
+| Build Phase | Primary Skills Exercised | Secondary Skills |
+|-------------|------------------------|------------------|
+| Module scaffold + entity types | scaffold, entities-fields | config-storage |
+| Routing + controllers | routing-controllers | access-security |
+| Forms | forms-api | config-storage |
+| Group integration (relation plugins) | plugins-blocks, entities-fields | access-security |
+| AI tools integration | plugins-blocks | routing-controllers |
+| Views + blocks | views-dev, plugins-blocks | caching |
+| Theming + templates | theming | caching |
+| Caching layer | caching | -- |
+| Access control | access-security | -- |
+| Testing | testing | all above |
+| Batch/queue operations | batch-queue-cron | -- |
+
+### Pattern 6: Without-Plugin Baseline First, Then Real Build
+
+**What:** Generate baseline code WITHOUT the plugin installed before building the real module.
+**Why:** Establishes what Claude produces from training data alone. The with-plugin version becomes the actual shipped code. Comparing the two proves plugin value in realistic workflow.
+**How:** Per phase: headless baseline -> grade -> real build with plugin -> grade -> delta.
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Headless `claude -p` for Eval Execution
-**Why bad:** Black box, hangs silently, no observability, output lost on process death.
-**Instead:** Agent tool from within main session -- full visibility of progress and errors.
+### Anti-Pattern 1: Moving Skills for Plugin Packaging
 
-### Anti-Pattern 2: Skills in ~/.claude/skills/ During Evals
-**Why bad:** Auto-discovery contaminates without-skill baseline.
-**Instead:** Skills only in `skills/` repo dir. With-skill agent gets explicit path in prompt.
+**Why bad:** Skills are already in `skills/` at repo root -- exactly where plugins expect them. Moving to a subdirectory or restructuring breaks backward compatibility and gains nothing.
+**Instead:** Add `.claude-plugin/plugin.json` only. No file moves.
 
-### Anti-Pattern 3: GSD Executor for Eval Runs
-**Why bad:** Cannot spawn sub-agents (tools restricted). Adds irrelevant overhead (STATE.md, commits).
-**Instead:** Opus main session orchestrates directly via Agent tool.
+### Anti-Pattern 2: Custom Agent Classes for AI Integration
 
-### Anti-Pattern 4: Single Agent for Both Configs
-**Why bad:** SKILL.md knowledge persists in agent context, contaminating without-skill run.
-**Instead:** Always 2 separate Agent instances per skill eval.
+**Why bad:** AI Agents framework uses config entity agents with tool plugins. Writing custom agent PHP classes is fighting the framework.
+**Instead:** Define the "Project Manager" agent as a config entity (YAML in config/install/). Write tools as AiFunctionCall plugins.
+
+### Anti-Pattern 3: Entity Reference Instead of Group Relations
+
+**Why bad:** Using a plain `entity_reference` field to link Projects to Groups bypasses Group's permission system, role-based access, and relationship metadata.
+**Instead:** Use Group relation plugins (GroupProject, GroupTask). This integrates with Group's access control, membership, and admin UI automatically.
+
+### Anti-Pattern 4: Mixing Eval and Development Environments
+
+**Why bad:** Building the real module in a throwaway eval environment risks losing work. Running evals against the real module risks corrupting it.
+**Instead:** Baseline runs in disposable environment. Real module built in persistent environment. Clear separation.
+
+### Anti-Pattern 5: Testing All Skills in One Phase
+
+**Why bad:** A single mega-prompt exercising all skills tells you nothing about which skills triggered. Skill auto-triggering is contextual -- you need focused contexts.
+**Instead:** Isolated phases where 1-3 skills should trigger. Observe which actually do. Iterate descriptions if needed.
 
 ## Build Order (Dependency Chain)
 
 ```
-Phase 1: Subagent Definitions (no dependencies, blocks everything else)
-  1. .claude/agents/eval-executor.md
-  2. .claude/agents/eval-browser.md
+Phase 1: Plugin Packaging (no module dependencies)
+  1. Create .claude-plugin/plugin.json
+  2. Verify plugin loads: claude --plugin-dir ./
+  3. Verify auto-triggering: natural Drupal prompts trigger skills
+  4. Optimize descriptions if needed (skill-creator optimization loop)
+  --> Deliverable: installable Claude Code plugin
 
-Phase 2: Environment Setup (uses existing scripts, may need modification)
-  3. Verify/modify eval/setup-drupal-env.sh if --fresh flag needed
-     (can proceed with existing os-kg approach initially)
+Phase 2: Module Scaffold + Entity Types (depends: Phase 1 verified)
+  1. Create modules/group_ai_pm/ scaffold
+  2. Define Project + Task content entities
+  3. Define entity handlers (form, list, access, route_provider)
+  4. Install schema, base field definitions
+  5. Eval: scaffold + entities-fields skills should auto-trigger
+  --> Exercises: drupal-module-scaffold, drupal-entities-fields, drupal-config-storage
 
-Phase 3: Execution Loop (depends on Phase 1)
-  4. Orchestration runbook documenting:
-     - Model switching protocol
-     - Agent prompt templates (with/without skill)
-     - Grading procedure
-     - benchmark.json writing
-     - Teardown sequence
+Phase 3: Routing + Forms (depends: Phase 2 entities exist)
+  1. Define routes for CRUD operations
+  2. Create entity form classes
+  3. Create settings form with config schema
+  4. Controller for project dashboard
+  --> Exercises: drupal-routing-controllers, drupal-forms-api
 
-Phase 4: Browser Integration (depends on Phase 1, MUST-HAVE)
-  5. eval-browser + drush uli flow for E2E/UAT verification
-     (Most Drupal bugs surface in UI testing -- required for all skills with UI output)
+Phase 4: Group Integration (depends: Phase 2 entities, Phase 3 forms)
+  1. Create GroupProject and GroupTask relation plugins
+  2. Configure GroupType with relation plugins installed
+  3. Group-scoped access control
+  4. Group membership roles (PM, Developer, Observer)
+  --> Exercises: drupal-plugins-blocks, drupal-entities-fields, drupal-access-security
 
-Phase 5: Aggregation & Analysis
-  6. Cross-skill analysis template
-  7. Tier classification and optimization recommendations
+Phase 5: AI Agents Integration (depends: Phase 2 entities, Phase 4 group context)
+  1. Create AiFunctionCall tool plugins (CRUD operations)
+  2. Define Project Manager agent via config
+  3. Wire agent to group context
+  4. Test solve() programmatically
+  --> Exercises: drupal-plugins-blocks, drupal-routing-controllers
+
+Phase 6: Views + Blocks (depends: Phase 2 entities, Phase 4 group context)
+  1. Views data integration for Project/Task entities
+  2. Custom Views filter for group scoping
+  3. Block plugins for dashboard (status, task list, AI assistant)
+  --> Exercises: drupal-views-dev, drupal-plugins-blocks
+
+Phase 7: Theming + Caching (depends: Phase 3 controllers, Phase 6 blocks)
+  1. Twig templates for dashboard and task views
+  2. Asset library (CSS/JS)
+  3. Cache metadata on all render arrays
+  4. Cache tag invalidation on entity CRUD
+  --> Exercises: drupal-theming, drupal-caching
+
+Phase 8: Access Control (depends: Phase 4 group roles)
+  1. Custom permission definitions
+  2. Access control handlers for Project/Task
+  3. Group-aware route access checking
+  4. CSRF protection on state-changing operations
+  --> Exercises: drupal-access-security
+
+Phase 9: Batch/Queue (depends: Phase 2 entities)
+  1. Batch operation for bulk task updates
+  2. Queue worker for AI agent processing
+  3. Cron hook for periodic project status checks
+  --> Exercises: drupal-batch-queue-cron
+
+Phase 10: Testing (depends: all above)
+  1. Kernel tests for entity CRUD
+  2. Kernel tests for Group relations
+  3. Functional tests for form submission
+  4. Functional tests for AI tool execution
+  --> Exercises: drupal-testing
+
+Phase 11: Polish + Full Integration Eval
+  1. Coding standards pass (phpcs)
+  2. Full module install test
+  3. End-to-end workflow verification
+  4. Final delta report: with-plugin vs without-plugin per phase
+  --> Exercises: drupal-coding-standards (cross-cutting)
 ```
 
-**Critical path:** Subagent definitions (Phase 1) -> Execution loop (Phase 3). Everything else is parallel or deferrable.
+**Critical path:** Phase 1 (plugin) -> Phase 2 (entities) -> Phase 4 (group integration) -> Phase 5 (AI integration). Everything else can be reordered within dependency constraints.
+
+**Parallel opportunities:**
+- Phase 1 can happen independently of all module work
+- Phases 6, 7, 8, 9 are relatively independent once Phase 4 is complete
+- Phase 10 testing can start as early as Phase 2 for entity tests
 
 ## Integration Points Summary
 
-| Existing Component | Integration | Changes Needed |
-|-------------------|-------------|----------------|
-| `skills/drupal-*/evals/evals.json` | Read by orchestrator for prompts + expectations | None |
-| `skills/drupal-*/SKILL.md` | Path passed to with-skill agent prompt | None |
-| `eval/setup-drupal-env.sh` | Invoked by orchestrator via Bash | Optional `--fresh` flag |
-| `eval/teardown-drupal-env.sh` | Invoked by orchestrator via Bash | None |
-| `drupal-*-workspace/` | Write target for grading + benchmark JSON | None (follows existing convention) |
-| `.planning/` GSD infrastructure | Separate concern entirely | Not used by eval pipeline |
-| `os-knowledge-garden/` | Base image for ddev environments | No changes |
-| `.claude/agents/` directory | **NEW directory** to create | Create dir + 2 agent files |
+| Existing Component | v3.0 Integration | Changes Needed |
+|-------------------|-----------------|----------------|
+| `skills/drupal-*/SKILL.md` | Auto-discovered by plugin system | Potentially tune descriptions |
+| `skills/drupal-*/evals/evals.json` | Kept for v2.0 regression testing | None |
+| `eval/setup-fresh-drupal10.sh` | Extended for Group+AI module setup | New variant or flags |
+| `eval/teardown-drupal-env.sh` | Used for baseline env cleanup | None |
+| `.claude/agents/eval-grader.md` | Used for phase-level grading | May need updated rubric |
+| `install.sh` | Backward compat, deprecation path | Add deprecation notice |
+| `README.md` | Primary install method changes to plugin | Rewrite install section |
+| `.gitignore` | Exclude `modules/` from plugin cache if needed | Minimal update |
+
+## Scalability Considerations
+
+| Concern | Current (14 skills) | v3.0 (14 skills + module) | Future (20+ skills) |
+|---------|---------------------|---------------------------|---------------------|
+| Skill description budget | ~5,600 chars / 16,000 budget | Same (module does not add skills) | Monitor with `/context` command |
+| Plugin load time | N/A (no plugin) | Fast (14 SKILL.md frontmatter reads) | Fast (descriptions only loaded) |
+| Module complexity | N/A | Medium (2 entities, 4 tools, 6 plugins) | N/A -- module is fixed scope |
+| Eval time per phase | N/A | ~10 min (setup + baseline + build + grade) | Same |
+| ddev resource usage | 2 instances per skill eval | 1 persistent + 1 throwaway per phase | Same |
 
 ## Sources
 
-- **Phase 7 continue-here.md** (HIGH): Confirmed model control, knowledge isolation, ddev patterns
-- **Existing grading.json** (HIGH): `drupal-routing-controllers-workspace/iteration-2/eval-api-status-endpoint/with_skill/run-1/grading.json` -- actual schema
-- **Existing benchmark.json** (HIGH): `drupal-routing-controllers-workspace/iteration-2/benchmark.json` -- actual schema
-- **skill-creator grader.md** (HIGH): Official grader agent spec with full grading.json schema
-- **skill-creator schemas.md** (HIGH): Official JSON schemas for all eval artifacts
-- **gsd-executor.md** (HIGH): Example subagent frontmatter (name, description, tools, skills)
-- **PROJECT.md** (HIGH): v2.0 milestone requirements
-- **MEMORY.md** (HIGH): Eval execution rules confirmed across 7 sessions
+- [Claude Code Plugins docs](https://code.claude.com/docs/en/plugins) (HIGH): Plugin structure, manifest, directory layout
+- [Claude Code Plugins Reference](https://code.claude.com/docs/en/plugins-reference) (HIGH): Full manifest schema, component specifications
+- [Claude Code Skills docs](https://code.claude.com/docs/en/skills) (HIGH): Auto-triggering, description matching, frontmatter fields
+- [Drupal Group module](https://www.drupal.org/project/group) (HIGH): Version 3.3.5, D10/D11 compat
+- [Group addRelationship() change record](https://www.drupal.org/node/3292844) (HIGH): Group 3.x API rename confirmed
+- [Drupal AI module](https://www.drupal.org/project/ai) (HIGH): Version 1.2.11, provider abstraction
+- [Drupal AI Agents module](https://www.drupal.org/project/ai_agents) (HIGH): Version 1.2.3, agent framework
+- [AI Agents developer docs](https://project.pages.drupalcode.org/ai/2.0.x/agents/running/) (MEDIUM): solve() method, plugin manager
+- [QED42 AI Agents guide](https://www.qed42.com/insights/exploring-drupals-ai-agents-a-practical-guide-for-site-builders) (MEDIUM): AiFunctionCall plugin pattern, tool creation
+- [AI Provider developer guide](https://project.pages.drupalcode.org/ai/1.1.x/developers/writing_an_ai_provider/) (MEDIUM): OperationType system, plugin structure
+- [Skill auto-trigger deep dive](https://mikhail.io/2025/10/claude-code-skills/) (MEDIUM): How available_skills list is built
+- [Anthropic skills repo](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) (HIGH): skill-creator anatomy reference
+- [Shared bundle class for group relationships](https://www.drupal.org/node/3383311) (MEDIUM): Group 3.x plugin architecture
+- [Document AI module architecture issue](https://www.drupal.org/project/ai/issues/3566997) (LOW): Architecture documentation in progress
