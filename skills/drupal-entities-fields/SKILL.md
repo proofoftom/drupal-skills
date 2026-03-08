@@ -87,10 +87,15 @@ use Drupal\Core\Entity\EntityChangedTrait;
 class Product extends ContentEntityBase implements ProductInterface {
 
   use EntityChangedTrait;
+  use EntityOwnerTrait;
 
   // ... baseFieldDefinitions() and interface methods
 }
 ```
+
+> **CRITICAL -- Content entities with an owner MUST use EntityOwnerTrait:**
+> WRONG: Defining `"owner" = "uid"` in entity_keys but not using `EntityOwnerTrait`. Calling `$entity->getOwner()` will fatal because `ContentEntityBase` does not provide it. Also WRONG: using `Drupal\system\Entity\User` — the correct namespace is `Drupal\user\Entity\User`.
+> RIGHT: `use EntityOwnerTrait;` in the entity class, extend `EntityOwnerInterface` in the interface, and call `EntityOwnerTrait::getDefaultEntityOwner` for default value (NOT the deprecated `User::getCurrentUserId`).
 
 ### D11.1+ attribute syntax
 
@@ -337,7 +342,7 @@ Handlers provide the UI and behavior for entity types. Use defaults when possibl
 
 **Do you need a custom list page?**
 NO -> Use `EntityListBuilder` (content) or `ConfigEntityListBuilder` (config) as-is, or omit for no listing.
-YES -> Extend `EntityListBuilder` and override `buildHeader()` + `buildRow()`. For **sortable columns**, also override `getEntityIds()` with `tableSort()`:
+YES -> Extend `EntityListBuilder`, override `createInstance()` to inject services, and override `buildHeader()` + `buildRow()`. For **sortable columns**, also override `getEntityIds()` with `tableSort()`:
 
 ```php
 protected function getEntityIds() {
@@ -363,6 +368,15 @@ $header['name'] = [
 
 > WRONG: Defining `buildHeader()` with sortable-looking columns but not overriding `getEntityIds()`. Without the `tableSort()` call, column headers render as plain text with no click-to-sort behavior.
 > RIGHT: ALWAYS override `getEntityIds()` with `$query->tableSort($header)` when you want sortable list builder columns.
+
+> **CRITICAL -- Injecting services into EntityListBuilder:**
+> WRONG: Changing the constructor signature to accept services directly. `EntityListBuilder::createInstance()` calls `new static($entity_type, $storage)` — your constructor MUST accept `EntityTypeInterface` + `EntityStorageInterface` as its first two params.
+> RIGHT: Override `createInstance()` to inject extra services, keeping the parent constructor params:
+> ```php
+> public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+>   return new static($entity_type, $container->get('entity_type.manager')->getStorage($entity_type->id()), $container->get('date.formatter'));
+> }
+> ```
 
 **Do you need custom add/edit forms?**
 NO for content entities -> Use `ContentEntityForm` directly. It auto-builds forms from base field definitions.
@@ -433,6 +447,12 @@ public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
 | `changed` | Auto-set modification timestamp | (none needed) | `timestamp` |
 | `email` | Email address | `email_default` | `email_mailto` |
 | `uri` | URL/URI | `uri` | `uri_link` |
+| `list_string` | Select list (text keys) | `options_select` | `list_default` |
+| `list_integer` | Select list (integer keys) | `options_select` | `list_default` |
+| `datetime` | Date/time value | `datetime_default` | `datetime_default` |
+
+> WRONG: Using `list_string` or `options_select` widget without `drupal:options` in your `.info.yml` dependencies. The field type and widget live in the Options module — your module will fail to install without it. Similarly, `datetime` fields require `drupal:datetime`.
+> RIGHT: Always declare the module that provides each field type: `list_string`/`list_integer`/`list_float` → `drupal:options`, `datetime` → `drupal:datetime`, `text_long` → `drupal:text`.
 
 Display options control how the field appears. `setDisplayOptions('form', ...)` sets the form widget. `setDisplayOptions('view', ...)` sets the view formatter. `setDisplayConfigurable('form', TRUE)` allows admin UI configuration.
 
@@ -440,22 +460,7 @@ For file and image fields, see `references/files-images.md` in this skill direct
 
 ## Entity interface and complete file ecosystem
 
-Every entity type should have an interface. Content entity interfaces extend `ContentEntityInterface`. Config entity interfaces extend `ConfigEntityInterface`.
-
-```php
-namespace Drupal\products\Entity;
-
-use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Entity\EntityChangedInterface;
-
-interface ProductInterface extends ContentEntityInterface, EntityChangedInterface {
-
-  public function getName();
-  public function setName($name);
-  public function getCreatedTime();
-  public function setCreatedTime($timestamp);
-}
-```
+Content entity interfaces extend `ContentEntityInterface`, `EntityChangedInterface`, and `EntityOwnerInterface` (if entity has an owner). Config entity interfaces extend `ConfigEntityInterface`.
 
 ### Complete content entity file ecosystem
 
@@ -480,9 +485,9 @@ Every PHP handler class in the annotation/attribute MUST exist as a file. If you
 
 Same structure as content entities, plus `config/schema/*.schema.yml` (REQUIRED). Config entities also require a delete form handler (extend `EntityConfirmFormBase`) and `ImporterForm` extending `EntityForm` (manual form building — no auto-build from base fields).
 
-### Menu and action links
-
-Define `module.links.menu.yml` for admin menu entries and `module.links.action.yml` for "Add" buttons on collection pages. Route names follow the pattern `entity.{entity_type}.collection` and `entity.{entity_type}.add_form`.
+> **CRITICAL -- Entity types with admin UI MUST have link YAML files:**
+> WRONG: Defining entity links and handlers but omitting `module.links.menu.yml`, `module.links.action.yml`, and `module.links.task.yml`. Without these, the entity has no admin menu entries, no "Add" buttons on collection pages, and no view/edit/delete tabs.
+> RIGHT: ALWAYS create all three link files when your entity has an admin UI with `AdminHtmlRouteProvider`.
 
 ## Cross-references
 

@@ -2,6 +2,7 @@
 
 namespace Drupal\group_ai_pm\Plugin\Block;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -52,17 +53,21 @@ class ProjectStatusBlock extends BlockBase implements ContainerFactoryPluginInte
    */
   public function build() {
     $storage = $this->entityTypeManager->getStorage('project');
-    $query = $storage->getQuery();
-    $query->accessCheck(FALSE);
-
     $statuses = ['planning', 'active', 'review', 'completed'];
     $build = [
       '#type' => 'table',
       '#header' => ['Status', 'Count'],
       '#rows' => [],
+      '#cache' => [
+        'tags' => ['project_list'],
+        'contexts' => ['user.permissions'],
+        'max-age' => Cache::PERMANENT,
+      ],
     ];
 
     foreach ($statuses as $status) {
+      $query = $storage->getQuery();
+      $query->accessCheck(FALSE);
       $count = $query
         ->condition('status', $status)
         ->count()

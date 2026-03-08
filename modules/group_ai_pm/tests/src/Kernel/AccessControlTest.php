@@ -3,7 +3,6 @@
 namespace Drupal\Tests\group_ai_pm\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\Core\Access\AccessResult;
 
 /**
  * Tests access control handlers for Project and Task entities.
@@ -15,7 +14,17 @@ class AccessControlTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['group_ai_pm', 'system', 'user', 'field', 'datetime', 'views', 'group'];
+  protected static $modules = [
+    'group_ai_pm',
+    'system',
+    'user',
+    'field',
+    'datetime',
+    'text',
+    'options',
+    'views',
+    'group',
+  ];
 
   /**
    * {@inheritdoc}

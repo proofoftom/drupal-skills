@@ -14,7 +14,17 @@ class EntityFormIntegrationTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['group_ai_pm', 'system', 'user', 'field', 'datetime', 'views', 'group'];
+  protected static $modules = [
+    'group_ai_pm',
+    'system',
+    'user',
+    'field',
+    'datetime',
+    'text',
+    'options',
+    'views',
+    'group',
+  ];
 
   /**
    * {@inheritdoc}

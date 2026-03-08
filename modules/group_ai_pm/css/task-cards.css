@@ -1,0 +1,84 @@
+/**
+ * Styling for task cards.
+ */
+
+.task-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: #fafafa;
+}
+
+.task-card__title {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.task-card__title a {
+  color: #1e88e5;
+  text-decoration: none;
+}
+
+.task-card__title a:hover {
+  text-decoration: underline;
+}
+
+.task-card__meta {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.task-card__status,
+.task-card__priority {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.task-card__status {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.task-card__status--done {
+  background-color: #c8e6c9;
+  color: #388e3c;
+}
+
+.task-card__status--in_progress {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.task-card__priority {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.task-card__priority--critical {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.task-card__priority--high {
+  background-color: #ffe0b2;
+  color: #e65100;
+}
+
+.task-card__details {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #efefef;
+  font-size: 14px;
+}
+
+.task-card__assignee,
+.task-card__due-date {
+  margin: 4px 0;
+  color: #424242;
+}

@@ -1,0 +1,83 @@
+/**
+ * Styling for project summaries.
+ */
+
+.project-summary {
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.project-summary__title {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.project-summary__title a {
+  color: #1976d2;
+  text-decoration: none;
+}
+
+.project-summary__title a:hover {
+  text-decoration: underline;
+}
+
+.project-summary__status {
+  margin-bottom: 12px;
+}
+
+.project-summary__status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.project-summary__status-badge--planning {
+  background-color: #e8eaf6;
+  color: #3f51b5;
+}
+
+.project-summary__status-badge--active {
+  background-color: #c8e6c9;
+  color: #2e7d32;
+}
+
+.project-summary__status-badge--review {
+  background-color: #ffe0b2;
+  color: #e65100;
+}
+
+.project-summary__status-badge--completed {
+  background-color: #a5d6a7;
+  color: #1b5e20;
+}
+
+.project-summary__description {
+  margin: 12px 0;
+  padding: 12px;
+  background-color: #fafafa;
+  border-left: 3px solid #1976d2;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #424242;
+}
+
+.project-summary__footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 14px;
+  color: #666666;
+}
+
+.project-summary__task-count {
+  display: inline-block;
+}

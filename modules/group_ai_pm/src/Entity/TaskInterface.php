@@ -4,11 +4,12 @@ namespace Drupal\group_ai_pm\Entity;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\user\EntityOwnerInterface;
 
 /**
  * Interface for Task entities.
  */
-interface TaskInterface extends ContentEntityInterface, EntityChangedInterface {
+interface TaskInterface extends ContentEntityInterface, EntityChangedInterface, EntityOwnerInterface {
 
   /**
    * Gets the task title.

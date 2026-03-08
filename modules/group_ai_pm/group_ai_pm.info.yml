@@ -5,5 +5,8 @@ core_version_requirement: ^10 || ^11
 package: Custom
 dependencies:
   - drupal:datetime
+  - drupal:options
+  - drupal:text
+  - drupal:views
   - group:group
 configure: group_ai_pm.settings

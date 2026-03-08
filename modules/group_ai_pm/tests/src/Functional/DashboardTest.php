@@ -14,7 +14,17 @@ class DashboardTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['group_ai_pm', 'system', 'user', 'field', 'datetime', 'views', 'group'];
+  protected static $modules = [
+    'group_ai_pm',
+    'system',
+    'user',
+    'field',
+    'datetime',
+    'text',
+    'options',
+    'views',
+    'group',
+  ];
 
   /**
    * {@inheritdoc}
@@ -25,7 +35,7 @@ class DashboardTest extends BrowserTestBase {
    * Tests dashboard access for anonymous user.
    */
   public function testDashboardAccessAnonymous() {
-    $this->drupalGet('/admin/group-ai-pm/dashboard');
+    $this->drupalGet('/admin/content/project-dashboard');
     $this->assertSession()->statusCodeEquals(403);
   }
 
@@ -36,7 +46,7 @@ class DashboardTest extends BrowserTestBase {
     $user = $this->drupalCreateUser(['access content']);
     $this->drupalLogin($user);
 
-    $this->drupalGet('/admin/group-ai-pm/dashboard');
+    $this->drupalGet('/admin/content/project-dashboard');
     $this->assertSession()->statusCodeEquals(403);
   }
 
@@ -47,7 +57,7 @@ class DashboardTest extends BrowserTestBase {
     $user = $this->drupalCreateUser(['view project']);
     $this->drupalLogin($user);
 
-    $this->drupalGet('/admin/group-ai-pm/dashboard');
+    $this->drupalGet('/admin/content/project-dashboard');
     $this->assertSession()->statusCodeEquals(200);
   }
 
@@ -67,7 +77,7 @@ class DashboardTest extends BrowserTestBase {
       $project->save();
     }
 
-    $this->drupalGet('/admin/group-ai-pm/dashboard');
+    $this->drupalGet('/admin/content/project-dashboard');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('Projects');
   }
@@ -92,7 +102,7 @@ class DashboardTest extends BrowserTestBase {
     ]);
     $project2->save();
 
-    $this->drupalGet('/admin/group-ai-pm/dashboard');
+    $this->drupalGet('/admin/content/project-dashboard');
     $this->assertSession()->statusCodeEquals(200);
 
     // Check for project titles in the page.
@@ -107,7 +117,7 @@ class DashboardTest extends BrowserTestBase {
     $user = $this->drupalCreateUser(['view project']);
     $this->drupalLogin($user);
 
-    $this->drupalGet('/admin/group-ai-pm/dashboard');
+    $this->drupalGet('/admin/content/project-dashboard');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('No projects yet');
   }
@@ -129,13 +139,14 @@ class DashboardTest extends BrowserTestBase {
       $project->save();
     }
 
-    // Both users should see the dashboard with the same count due to accessCheck.
+    // Both users should see the dashboard with the same count due to
+    // accessCheck.
     $this->drupalLogin($user1);
-    $this->drupalGet('/admin/group-ai-pm/dashboard');
+    $this->drupalGet('/admin/content/project-dashboard');
     $this->assertSession()->statusCodeEquals(200);
 
     $this->drupalLogin($user2);
-    $this->drupalGet('/admin/group-ai-pm/dashboard');
+    $this->drupalGet('/admin/content/project-dashboard');
     $this->assertSession()->statusCodeEquals(200);
   }
 
@@ -154,7 +165,7 @@ class DashboardTest extends BrowserTestBase {
     ]);
     $project->save();
 
-    $this->drupalGet('/admin/group-ai-pm/dashboard');
+    $this->drupalGet('/admin/content/project-dashboard');
     $this->assertSession()->statusCodeEquals(200);
 
     // Verify project information appears on dashboard.

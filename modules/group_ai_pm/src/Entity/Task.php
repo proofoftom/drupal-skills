@@ -19,6 +19,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\group_ai_pm\TaskListBuilder",
  *     "access" = "Drupal\group_ai_pm\TaskAccessControlHandler",
+ *     "views_data" = "Drupal\views\EntityViewsData",
  *     "form" = {
  *       "default" = "Drupal\Core\Entity\ContentEntityForm",
  *       "add" = "Drupal\Core\Entity\ContentEntityForm",
@@ -295,7 +296,7 @@ class Task extends ContentEntityBase implements TaskInterface {
       ->setLabel(new TranslatableMarkup('Owner'))
       ->setDescription(new TranslatableMarkup('The user who owns this task.'))
       ->setSetting('target_type', 'user')
-      ->setDefaultValueCallback('Drupal\system\Entity\User::getCurrentUserId')
+      ->setDefaultValueCallback(static::class . '::getCurrentUserId')
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'entity_reference_label',
@@ -323,6 +324,46 @@ class Task extends ContentEntityBase implements TaskInterface {
       ->setDescription(new TranslatableMarkup('The time that the task was last edited.'));
 
     return $fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOwner() {
+    return $this->get('uid')->entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOwnerId() {
+    return $this->get('uid')->target_id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setOwner($account) {
+    $this->set('uid', $account->id());
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setOwnerId($uid) {
+    $this->set('uid', $uid);
+    return $this;
+  }
+
+  /**
+   * Gets the current user ID for field defaults.
+   *
+   * @return array
+   *   The default value array.
+   */
+  public static function getCurrentUserId() {
+    return [\Drupal::currentUser()->id()];
   }
 
 }

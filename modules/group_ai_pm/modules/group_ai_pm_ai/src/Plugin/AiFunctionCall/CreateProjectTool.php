@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\group_ai_pm\Plugin\AiFunctionCall;
+namespace Drupal\group_ai_pm_ai\Plugin\AiFunctionCall;
 
 use Drupal\ai_agents\Plugin\AiFunctionCall\AiFunctionCallBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -8,15 +8,15 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * AI function to query projects with optional status filter.
+ * AI function to create a project entity.
  *
  * @AiFunctionCall(
- *   id = "query_projects_tool",
- *   label = @Translation("Query Projects"),
- *   description = @Translation("Query projects with optional status filter")
+ *   id = "create_project_tool",
+ *   label = @Translation("Create Project"),
+ *   description = @Translation("Create a new project with title, description, and status")
  * )
  */
-class QueryProjectsTool extends AiFunctionCallBase implements ContainerFactoryPluginInterface {
+class CreateProjectTool extends AiFunctionCallBase implements ContainerFactoryPluginInterface {
 
   /**
    * The entity type manager.
@@ -49,29 +49,19 @@ class QueryProjectsTool extends AiFunctionCallBase implements ContainerFactoryPl
    * {@inheritdoc}
    */
   public function execute() {
-    $status = $this->functionCall->getArgumentsObject()->status ?? NULL;
+    $title = $this->functionCall->getArgumentsObject()->title ?? '';
+    $description = $this->functionCall->getArgumentsObject()->description ?? '';
+    $status = $this->functionCall->getArgumentsObject()->status ?? 'planning';
 
     $storage = $this->entityTypeManager->getStorage('project');
-    $query = $storage->getQuery();
+    $project = $storage->create([
+      'title' => $title,
+      'description' => $description,
+      'status' => $status,
+    ]);
+    $project->save();
 
-    if ($status) {
-      $query->condition('status', $status);
-    }
-
-    $ids = $query->execute();
-    $projects = $storage->loadMultiple($ids);
-
-    $results = [];
-    foreach ($projects as $project) {
-      $results[] = [
-        'id' => $project->id(),
-        'title' => $project->getTitle(),
-        'status' => $project->getStatus(),
-        'description' => $project->getDescription(),
-      ];
-    }
-
-    return json_encode($results);
+    return "Project created successfully with ID: {$project->id()}";
   }
 
   /**
@@ -79,9 +69,19 @@ class QueryProjectsTool extends AiFunctionCallBase implements ContainerFactoryPl
    */
   public function getArguments() {
     return [
+      'title' => [
+        'type' => 'string',
+        'description' => 'The project title',
+        'required' => TRUE,
+      ],
+      'description' => [
+        'type' => 'string',
+        'description' => 'The project description',
+        'required' => FALSE,
+      ],
       'status' => [
         'type' => 'string',
-        'description' => 'Filter by project status (optional)',
+        'description' => 'The project status (planning, active, review, completed)',
         'enum' => ['planning', 'active', 'review', 'completed'],
         'required' => FALSE,
       ],

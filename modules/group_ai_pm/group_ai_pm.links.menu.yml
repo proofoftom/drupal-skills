@@ -1,0 +1,23 @@
+entity.project.collection:
+  title: 'Projects'
+  route_name: entity.project.collection
+  parent: system.admin_content
+  weight: 10
+
+entity.task.collection:
+  title: 'Tasks'
+  route_name: entity.task.collection
+  parent: system.admin_content
+  weight: 11
+
+group_ai_pm.dashboard:
+  title: 'Project Dashboard'
+  route_name: group_ai_pm.dashboard
+  parent: system.admin_content
+  weight: 9
+
+group_ai_pm.settings:
+  title: 'Group AI PM Settings'
+  route_name: group_ai_pm.settings
+  parent: system.admin_config_system
+  description: 'Configure Group AI Project Management settings.'
