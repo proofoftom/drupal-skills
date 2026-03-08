@@ -1,0 +1,20 @@
+{
+  "skill": "drupal-testing",
+  "with_score": "9/9",
+  "without_score": "7/9",
+  "delta": "22.2%",
+  "differentiators": [
+    "setUp() with parent::setUp() as first line (with: correct, without: no setUp at all)",
+    "$this->container->get() for service loading (with: correct, without: \\Drupal::service() static wrapper)"
+  ],
+  "shared_passes": [
+    "KernelTestBase (not BrowserTestBase)",
+    "static $modules array",
+    "@group annotation",
+    "tests/src/Kernel/ path and namespace",
+    "Module enables",
+    "phpunit passes",
+    "phpcs clean"
+  ],
+  "timestamp": "2026-03-07T14:50:00Z"
+}

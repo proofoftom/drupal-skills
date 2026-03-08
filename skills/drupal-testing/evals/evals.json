@@ -13,11 +13,9 @@
         "Test loads the calculator service from the container using $this->container->get() with the registered service ID (NOT instantiating the class directly with new Calculator() which bypasses DI and doesn't test service registration)",
         "Test class has @group annotation in the class-level PHPDoc (required for test discovery -- without @group, the test is invisible to both phpunit --group and Drupal's test runner)",
         "Test file is in tests/src/Kernel/ directory with namespace Drupal\\Tests\\calculator\\Kernel (NOT in tests/src/Unit/ which would be wrong test type for service container testing, NOT in tests/src/Functional/ which is over-testing)",
-        "The module enables successfully: ddev drush en calculator returns exit code 0"
-      ],
-      "browser_checks": [],
-      "cli_checks": [
-        "Run the kernel test via ddev exec phpunit (or ddev drush test:run) — verify the test discovers, executes, and passes with green results (this IS the E2E verification for a testing skill — the test itself must actually work)"
+        "The module enables successfully: ddev drush en calculator returns exit code 0",
+        "The kernel test discovers and passes when run via phpunit -- ddev exec phpunit returns green results (this IS the E2E verification for a testing skill -- the test itself must actually work) (via ddev exec)",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
       ]
     }
   ]

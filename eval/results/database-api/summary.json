@@ -1,0 +1,24 @@
+{
+  "skill": "drupal-database-api",
+  "date": "2026-03-07",
+  "with_skill": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.89,
+    "failed_expectations": [
+      "No addTag() on select queries — queries not alterable by other modules"
+    ]
+  },
+  "without_skill": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.89,
+    "failed_expectations": [
+      "No addTag() on select queries — queries not alterable by other modules"
+    ]
+  },
+  "delta": 0.0,
+  "notes": "0% delta. Both failed only on addTag(). Both correctly used serial PK, dynamic insert/select, addExpression for aggregation, no SQL injection. Haiku knows database abstraction patterns well."
+}

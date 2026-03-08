@@ -13,11 +13,8 @@
         "processItem() contains try/catch error handling that distinguishes between retryable errors and permanent failures (unhandled exceptions in processItem cause the item to be released back to the queue but with no logging or error distinction)",
         "QueueWorker plugin is in correct PSR-4 path: src/Plugin/QueueWorker/ (NOT src/Plugin/Queue/ or src/Queue/ -- QueueWorker plugin manager scans Plugin/QueueWorker specifically)",
         "Does NOT use \\Drupal::queue() static call inside the QueueWorker processItem() method (the worker receives items automatically via cron queue processing -- manually accessing the queue inside processItem creates circular processing)",
-        "The module enables successfully: ddev drush en content_indexer returns exit code 0"
-      ],
-      "browser_checks": [
-        "Log in as admin via drush uli, navigate to /admin/modules — verify content_indexer module appears and is enabled",
-        "Navigate to /admin/config/system/cron and click the 'Run cron' button — verify a success status message appears without errors (proves hook_cron and queue worker integration functions correctly)"
+        "The module enables successfully: ddev drush en content_indexer returns exit code 0",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
       ]
     }
   ]

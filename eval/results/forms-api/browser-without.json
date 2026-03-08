@@ -1,0 +1,14 @@
+{
+  "checks": [
+    {
+      "expectation": "Log in as admin via drush uli, navigate to /admin/config/search/search-settings -- verify the form renders with fields for similarity_threshold (showing 0.7), result_limit (showing 5), and cache_ttl (showing 300) with correct default values (via eval-browser)",
+      "passed": true,
+      "evidence": "Page rendered with title 'Search Settings', HTTP 200. Found three spinbutton form fields: similarity_threshold=0.7, result_limit=5, cache_ttl=300. All default values match expectations."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "total": 1
+  }
+}

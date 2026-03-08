@@ -1,0 +1,17 @@
+{
+  "skill": "drupal-testing",
+  "variant": "without",
+  "expectations": [
+    {"id": 1, "text": "Test extends KernelTestBase", "met": true, "evidence": "extends KernelTestBase"},
+    {"id": 2, "text": "protected static $modules includes 'calculator'", "met": true, "evidence": "$modules = ['calculator']"},
+    {"id": 3, "text": "setUp() calls parent::setUp() as first line", "met": false, "evidence": "No setUp() method exists — no explicit parent::setUp() call"},
+    {"id": 4, "text": "Loads service via $this->container->get()", "met": false, "evidence": "Uses \\Drupal::service() static wrapper instead of $this->container->get()"},
+    {"id": 5, "text": "@group annotation present", "met": true, "evidence": "@group calculator"},
+    {"id": 6, "text": "Test in tests/src/Kernel/ with correct namespace", "met": true, "evidence": "Drupal\\Tests\\calculator\\Kernel"},
+    {"id": 7, "text": "Module enables successfully", "met": true, "evidence": "Exit code 0"},
+    {"id": 8, "text": "phpunit passes (via ddev exec)", "met": true, "evidence": "OK (3 tests, 9 assertions)"},
+    {"id": 9, "text": "phpcs passes without errors", "met": true, "evidence": "0 errors, 0 warnings"}
+  ],
+  "score": "7/9",
+  "notes": "No setUp()/parent::setUp(), uses \\Drupal::service() instead of container->get(). Both are key DI container awareness gaps."
+}

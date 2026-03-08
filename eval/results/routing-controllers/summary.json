@@ -1,0 +1,25 @@
+{
+  "skill": "drupal-routing-controllers",
+  "date": "2026-03-07",
+  "with_skill": {
+    "passed": 7,
+    "failed": 2,
+    "total": 9,
+    "pass_rate": 0.78,
+    "failed_expectations": [
+      "Controller does NOT use static \\Drupal::service() — controller line 87 uses \\Drupal::service('date.formatter')",
+      "phpcs passes without errors — 1 ERROR (missing newline after closing brace)"
+    ]
+  },
+  "without_skill": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.89,
+    "failed_expectations": [
+      "Routes use _permission — uses _entity_access instead"
+    ]
+  },
+  "delta": -11.1,
+  "notes": "Negative delta. WITH variant ironically used static \\Drupal::service() in controller (the exact anti-pattern the skill teaches against) AND had a phpcs formatting error. WITHOUT variant only failed on _permission vs _entity_access distinction."
+}

@@ -1,0 +1,16 @@
+{
+  "skill": "drupal-batch-queue-cron",
+  "variant": "without",
+  "expectations": [
+    {"id": 1, "text": "hook_cron() only discovers work and adds to queue via createItem()", "met": true, "evidence": "hook_cron queries nodes and calls createItem()"},
+    {"id": 2, "text": "Queue name matches QueueWorker plugin ID", "met": true, "evidence": "Both use 'content_indexer_worker'"},
+    {"id": 3, "text": "QueueWorker has cron time setting", "met": true, "evidence": "cron = {\"time\" = 15} in @QueueWorker annotation"},
+    {"id": 4, "text": "processItem() has try/catch distinguishing retryable vs permanent", "met": false, "evidence": "Has try/catch with logging but does NOT distinguish retryable (RequeueException) from permanent (SuspendQueueException)"},
+    {"id": 5, "text": "QueueWorker in correct PSR-4 path src/Plugin/QueueWorker/", "met": true, "evidence": "src/Plugin/QueueWorker/ContentIndexerWorker.php"},
+    {"id": 6, "text": "No \\Drupal::queue() in processItem()", "met": true, "evidence": "No queue access in processItem()"},
+    {"id": 7, "text": "Module enables successfully", "met": true, "evidence": "Exit code 0"},
+    {"id": 8, "text": "phpcs passes without errors", "met": true, "evidence": "0 errors, 0 warnings — clean pass"}
+  ],
+  "score": "7/8",
+  "notes": "Only failed on retryable vs permanent failure distinction. Has try/catch but generic — doesn't use RequeueException/SuspendQueueException. phpcs clean."
+}

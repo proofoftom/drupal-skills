@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Template filename uses hyphens not underscores: e.g., featured-resources-list.html.twig (Drupal convention maps underscores in hook name to hyphens in filename -- wrong naming means template is silently never found and output falls back to empty)",
+      "passed": true,
+      "evidence": "File exists at /tmp/d10-theming-without/web/modules/custom/featured_resources/templates/featured-resources-list.html.twig — uses hyphens throughout, matching Drupal's underscore-to-hyphen convention from hook name 'featured_resources_list'."
+    },
+    {
+      "text": "hook_theme() declares ALL template variables with default values in the 'variables' key (undeclared variables are undefined in Twig causing silent rendering failures -- the variables array IS the template's API contract)",
+      "passed": true,
+      "evidence": "featured_resources.module lines 13-16: 'featured_resources_list' => ['variables' => ['resources' => []], 'template' => 'featured-resources-list', ...]. The single variable 'resources' is declared with a default of empty array."
+    },
+    {
+      "text": "Render array uses #theme key referencing the hook_theme entry name (NOT building raw HTML strings with Markup::create() or concatenating HTML into #markup -- raw HTML bypasses theme overrides and security filtering)",
+      "passed": true,
+      "evidence": "FeaturedResourcesController.php lines 41-48: $build = ['#theme' => 'featured_resources_list', '#resources' => $resources, '#attached' => [...]]. No Markup::create() or #markup with raw HTML present anywhere."
+    },
+    {
+      "text": "CSS/JS attached via #attached['library'] referencing module_name/library_name format (NOT inline <script>/<style> tags, NOT drupal_add_css() which was removed in D8)",
+      "passed": true,
+      "evidence": "FeaturedResourcesController.php lines 44-48: '#attached' => ['library' => ['featured_resources/featured_resources_css']]. Correct module_name/library_name format. No inline tags or drupal_add_css() found."
+    },
+    {
+      "text": "featured_resources.libraries.yml file exists defining the CSS library with a css key containing at least one file path",
+      "passed": true,
+      "evidence": "featured_resources.libraries.yml exists with library 'featured_resources_css' defining css: { theme: { css/featured-resources.css: {} } }."
+    },
+    {
+      "text": "Template file exists in templates/ subdirectory of the module (correct standard location for module templates)",
+      "passed": true,
+      "evidence": "File confirmed at /tmp/d10-theming-without/web/modules/custom/featured_resources/templates/featured-resources-list.html.twig."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en featured_resources returns exit code 0",
+      "passed": true,
+      "evidence": "Command 'ddev drush en featured_resources -y' returned exit code 0 with output: '[notice] Already installed: featured_resources'."
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to the module's page route (e.g., /featured-resources) -- verify the themed template renders visible output (not raw HTML, not PHP errors, not a blank page) (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report: passed: true. Evidence: 'HTTP 200. Template rendered with Olivero theme. No errors.'"
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": true,
+      "evidence": "phpcs result provided: 0 errors, 0 warnings. PASSES."
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0
+  }
+}

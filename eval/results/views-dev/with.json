@@ -1,0 +1,59 @@
+{
+  "skill": "drupal-views-dev",
+  "variant": "with-skill",
+  "session": 19,
+  "date": "2026-03-07",
+  "expectations": [
+    {
+      "text": "hook_views_data() includes 'group' key with a human-readable label on the table definition",
+      "passed": true,
+      "evidence": "resource_directory.module line 10: $data['resource_links']['table']['group'] = t('Resources')"
+    },
+    {
+      "text": "hook_views_data() is used for the custom table (NOT hook_views_data_alter())",
+      "passed": true,
+      "evidence": "resource_directory_views_data() defined; no views_data_alter found"
+    },
+    {
+      "text": "Custom filter plugin extends FilterPluginBase or InOperator",
+      "passed": true,
+      "evidence": "CategoryFilter extends InOperator"
+    },
+    {
+      "text": "Filter plugin file is in the correct PSR-4 path: src/Plugin/views/filter/ with lowercase 'views'",
+      "passed": true,
+      "evidence": "src/Plugin/views/filter/CategoryFilter.php — lowercase confirmed"
+    },
+    {
+      "text": "hook_views_data() table definition includes 'base' key",
+      "passed": true,
+      "evidence": "resource_directory.module lines 13-17: $data['resource_links']['table']['base'] present"
+    },
+    {
+      "text": "The module enables successfully",
+      "passed": true,
+      "evidence": "ddev drush pm:list confirmed Enabled"
+    },
+    {
+      "text": "resource_links table appears as available base table option in Views UI (via eval-browser)",
+      "passed": true,
+      "evidence": "Browser: 'Resource Links' appeared in base table dropdown"
+    },
+    {
+      "text": "Views listing page loads without 'Broken handler' errors (via eval-browser)",
+      "passed": true,
+      "evidence": "Browser: no 'broken' keyword found"
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice",
+      "passed": false,
+      "evidence": "phpcs FAILED: CategoryFilter.php line 46 — Parameter $options has null default value but not marked nullable"
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.89
+  }
+}

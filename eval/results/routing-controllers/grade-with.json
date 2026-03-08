@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Route parameter is named `{user}` (matching the entity type machine name) for automatic entity upcasting -- the controller does NOT manually call User::load() or \\Drupal\\user\\Entity\\User::load() (Drupal auto-loads when param name matches entity type)",
+      "passed": true,
+      "evidence": "user_activity.routing.yml line 2: `path: '/user/{user}/activity'` and line 10: `path: '/api/user/{user}/activity'`. Controller src/Controller/UserActivityController.php contains no User::load() or \\Drupal\\user\\Entity\\User::load() calls. Controller methods accept `UserInterface $user` typed argument confirming upcasting is used."
+    },
+    {
+      "text": "Route file defines `_title_callback` pointing to a controller method for dynamic page title (not just a static `_title` string -- dynamic titles need a callback that receives the upcasted entity)",
+      "passed": true,
+      "evidence": "user_activity.routing.yml line 5: `_title_callback: '\\Drupal\\user_activity\\Controller\\UserActivityController::title'`. The corresponding method at UserActivityController.php line 51 accepts `UserInterface $user` and returns `$this->t('Activity for @name', ['@name' => $user->getDisplayName()])` — a dynamic title using the upcasted entity."
+    },
+    {
+      "text": "The custom service class does NOT extend ControllerBase -- services are standalone classes with constructor injection via .services.yml arguments (not the create() factory pattern which is for controllers)",
+      "passed": true,
+      "evidence": "src/UserActivityService.php line 11: `class UserActivityService {` — no extends clause. user_activity.services.yml line 4: `arguments: ['@entity_type.manager']`. Constructor at line 26 accepts `EntityTypeManagerInterface $entity_type_manager`. No create() factory method present."
+    },
+    {
+      "text": "Controller does NOT use static \\Drupal::service() or \\Drupal::entityTypeManager() calls -- injects all dependencies via create() + constructor (static calls bypass DI, making code untestable)",
+      "passed": false,
+      "evidence": "src/Controller/UserActivityController.php line 87: `$last_access_date = \\Drupal::service('date.formatter')` — a static service call. This bypasses DI. The `date.formatter` service is not injected via the constructor or create() method."
+    },
+    {
+      "text": "Routes use `_permission` for access control (not `_access: 'TRUE'` which bypasses all access checking including for anonymous users)",
+      "passed": true,
+      "evidence": "user_activity.routing.yml line 7: `_permission: 'access content'` for the HTML route, and line 14: `_permission: 'access content'` for the JSON route. Neither route uses `_access: 'TRUE'`."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en user_activity -y returns exit code 0",
+      "passed": true,
+      "evidence": "Command `ddev drush en user_activity -y` in d10-routing-with returned exit code 0 with output: '[notice] Already installed: user_activity'."
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to /user/1/activity -- verify the page renders with a dynamic title containing the admin user's display name and shows activity summary content (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report: passed=true. Evidence: \"Page title: 'Activity for admin | Drush Site-Install' — contains admin display name. Activity summary content present: 'nodes authored: 0', 'last access: 03/07/2026 - 07:36'. HTTP 200.\""
+    },
+    {
+      "text": "Navigate to /api/user/1/activity -- verify the response contains valid JSON with activity data fields (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report: passed=true. Evidence: \"HTTP 200. Response is valid JSON: {\\\"uid\\\":\\\"1\\\",\\\"display_name\\\":\\\"admin\\\",\\\"nodes_authored\\\":0,\\\"last_access\\\":\\\"1772894207\\\"}. Contains all expected activity data fields.\""
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": false,
+      "evidence": "phpcs reported 1 ERROR and 1 WARNING. ERROR at line 96: 'Expected newline after closing brace' (the `} else {` pattern on a single line). WARNING at line 87: '\\Drupal calls should be avoided in classes, use dependency injection instead'. One error is sufficient to fail phpcs."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 2,
+    "total": 9,
+    "pass_rate": 0.78
+  }
+}

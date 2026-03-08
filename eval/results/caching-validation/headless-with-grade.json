@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "Block class overrides getCacheContexts() method AND merges with parent: Cache::mergeContexts(parent::getCacheContexts(), [...]) (NOT just inline #cache contexts -- block-level cache methods are the canonical way, and parent merge preserves block placement contexts)",
+      "passed": true,
+      "evidence": "RelatedContentBlock.php lines 137-143: getCacheContexts() method returns Cache::mergeContexts(parent::getCacheContexts(), ['user', 'url.path']). Correctly overrides the method and merges with parent."
+    },
+    {
+      "text": "Block class overrides getCacheTags() method AND merges with parent: Cache::mergeTags(parent::getCacheTags(), [...]) (NOT just inline #cache tags -- overriding without parent merge loses tags from block configuration)",
+      "passed": true,
+      "evidence": "RelatedContentBlock.php lines 148-154: getCacheTags() method returns Cache::mergeTags(parent::getCacheTags(), ['node_list']). Correctly overrides the method and merges with parent."
+    },
+    {
+      "text": "getCacheTags() or #cache tags include 'node_list' tag for list-level invalidation (when ANY node is created/updated/deleted, the list needs re-evaluation -- per-node tags alone miss new content)",
+      "passed": true,
+      "evidence": "RelatedContentBlock.php line 152: getCacheTags() merges ['node_list'] with parent tags. Also line 111: #cache tags in build() include 'node_list'."
+    },
+    {
+      "text": "Uses Cache::PERMANENT for max-age or omits max-age entirely (NOT a hardcoded number like 3600 -- content with proper cache tags should use PERMANENT and rely on tag invalidation, not time-based expiry)",
+      "passed": true,
+      "evidence": "RelatedContentBlock.php line 113: '#cache' => ['max-age' => Cache::PERMANENT]. Also line 160: getCacheMaxAge() returns Cache::PERMANENT."
+    },
+    {
+      "text": "Does NOT set max-age to 0 anywhere (max-age: 0 bubbles up and kills the ENTIRE page cache via Dynamic Page Cache -- use lazy_builder instead for per-user content)",
+      "passed": true,
+      "evidence": "Searched all module files for max-age.*0 or max_age.*0 patterns -- no matches found. Cache::PERMANENT is used throughout."
+    },
+    {
+      "text": "Does NOT use \\Drupal::cache() or manual cache API for render caching (render arrays use #cache metadata for automatic caching, not manual cache get/set)",
+      "passed": true,
+      "evidence": "Searched all module files for \\Drupal::cache(), cache_get, cache_set, CacheBackendInterface patterns -- no matches found. Module uses only #cache render array metadata and block cache method overrides."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en related_content_block returns exit code 0",
+      "passed": true,
+      "evidence": "ddev drush en related_content_block -y returned '[notice] Already installed: related_content_block' with exit code 0. Module was already enabled, confirming successful enablement."
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": true,
+      "evidence": "ddev exec vendor/bin/phpcs --standard=Drupal,DrupalPractice web/modules/custom/related_content_block/ returned exit code 0 with no output (no errors or warnings)."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  }
+}

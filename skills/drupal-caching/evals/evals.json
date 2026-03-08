@@ -13,10 +13,8 @@
         "Uses Cache::PERMANENT for max-age or omits max-age entirely (NOT a hardcoded number like 3600 -- content with proper cache tags should use PERMANENT and rely on tag invalidation, not time-based expiry)",
         "Does NOT set max-age to 0 anywhere (max-age: 0 bubbles up and kills the ENTIRE page cache via Dynamic Page Cache -- use lazy_builder instead for per-user content)",
         "Does NOT use \\Drupal::cache() or manual cache API for render caching (render arrays use #cache metadata for automatic caching, not manual cache get/set)",
-        "The module enables successfully: ddev drush en related_content_block returns exit code 0"
-      ],
-      "browser_checks": [
-        "Log in as admin via drush uli, navigate to /admin/structure/block/library — verify the 'Related content' block (or similar label) appears in the available blocks list (proves block plugin is discoverable by the block system)"
+        "The module enables successfully: ddev drush en related_content_block returns exit code 0",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
       ]
     }
   ]

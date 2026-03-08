@@ -1,0 +1,22 @@
+{
+  "skill": "drupal-config-storage",
+  "date": "2026-03-07",
+  "with_skill": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0,
+    "failed_expectations": []
+  },
+  "without_skill": {
+    "passed": 7,
+    "failed": 1,
+    "total": 8,
+    "pass_rate": 0.875,
+    "failed_expectations": [
+      "Schema uses 'label' type for announcement_text — used 'string' instead (not translatable)"
+    ]
+  },
+  "delta": 12.5,
+  "notes": "Differentiator: 'label' vs 'string' schema type for translatable config. WITH variant correctly used 'label' for config translation support. All other patterns identical."
+}

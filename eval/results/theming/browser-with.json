@@ -1,0 +1,14 @@
+{
+  "checks": [
+    {
+      "expectation": "Log in as admin via drush uli, navigate to the module's page route (e.g., /featured-resources) -- verify the themed template renders visible output (not raw HTML, not PHP errors, not a blank page) (via eval-browser)",
+      "passed": true,
+      "evidence": "Authenticated as admin, navigated to /featured-resources successfully (HTTP 200). Page title is 'Featured Resources'. Rendered themed output includes 'Featured Learning Resources' section with visible links (Drupal Documentation, Theme System Guide, Render Arrays API, Twig Templates). No PHP errors detected (no fatal error, parse error, or undefined function messages in page content). Page layout and styling properly rendered with Olivero theme."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "total": 1
+  }
+}

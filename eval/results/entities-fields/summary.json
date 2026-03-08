@@ -1,0 +1,20 @@
+{
+  "skill": "drupal-entities-fields",
+  "date": "2026-03-07",
+  "with_skill": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0,
+    "failed_expectations": []
+  },
+  "without_skill": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0,
+    "failed_expectations": []
+  },
+  "delta": 0.0,
+  "notes": "0% delta. Both produced correct content entities with parent::baseFieldDefinitions(), form/view display options, AdminHtmlRouteProvider, no config_export. Haiku knows entity patterns well."
+}

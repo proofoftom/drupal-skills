@@ -1,0 +1,22 @@
+{
+  "skill": "drupal-batch-queue-cron",
+  "with_score": "6/8",
+  "without_score": "7/8",
+  "delta": "-12.5%",
+  "differentiators": [
+    "NEGATIVE: with-skill missed docblocks (phpcs errors) while without-skill was clean",
+    "NEGATIVE: with-skill had no try/catch at all, without-skill at least had generic try/catch"
+  ],
+  "shared_passes": [
+    "hook_cron only discovers and queues",
+    "Queue name matches QueueWorker plugin ID",
+    "cron time setting present",
+    "Correct PSR-4 path",
+    "No circular \\Drupal::queue() in processItem()",
+    "Module enables"
+  ],
+  "shared_failures": [
+    "Neither distinguishes retryable vs permanent failures (RequeueException/SuspendQueueException)"
+  ],
+  "timestamp": "2026-03-07T14:35:00Z"
+}

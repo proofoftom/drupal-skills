@@ -1,0 +1,16 @@
+{
+  "skill": "drupal-plugins-blocks",
+  "variant": "with",
+  "expectations": [
+    {"id": 1, "text": "create() has exactly 4 params: $container, $configuration, $plugin_id, $plugin_definition", "met": true, "evidence": "Correct 4-param create() signature"},
+    {"id": 2, "text": "parent::__construct with 3 plugin params BEFORE injected services", "met": true, "evidence": "parent::__construct called on line 41, service stored on line 42"},
+    {"id": 3, "text": "blockForm() not buildForm()", "met": true, "evidence": "blockForm() used correctly"},
+    {"id": 4, "text": "blockSubmit() saves to $this->configuration", "met": true, "evidence": "blockSubmit() saves to $this->configuration['items_count']"},
+    {"id": 5, "text": "defaultConfiguration() with item count default", "met": true, "evidence": "Returns ['items_count' => 5]"},
+    {"id": 6, "text": "D11 #[Block] attribute with new TranslatableMarkup() OR D10 @Block with @Translation()", "met": true, "evidence": "D11 #[Block] attribute with new TranslatableMarkup() — correct"},
+    {"id": 7, "text": "Module enables successfully", "met": true, "evidence": "Module enabled, exit code 0"},
+    {"id": 8, "text": "phpcs passes without errors", "met": true, "evidence": "0 errors, 1 warning (line length only)"}
+  ],
+  "score": "8/8",
+  "notes": "Perfect score. D11 #[Block] attribute, correct create/constructor pattern, blockForm/blockSubmit, defaultConfiguration. phpcs clean."
+}

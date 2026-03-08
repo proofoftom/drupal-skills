@@ -1,0 +1,14 @@
+{
+  "checks": [
+    {
+      "expectation": "Log in as admin via drush uli, navigate to the module's page route (e.g., /featured-resources) -- verify the themed template renders visible output (not raw HTML, not PHP errors, not a blank page) (via eval-browser)",
+      "passed": true,
+      "evidence": "Successfully authenticated via drush uli. Navigated to /featured-resources. Page title: 'Featured Resources | Drush Site-Install'. HTML validation: page has valid <main> element, contains no error/exception/fatal/parse error messages. HTTP 200 response. Body class includes 'featured-resources' path class. Template rendered with Olivero theme assets (CSS, fonts, toolbar). No raw HTML leakage or PHP errors detected."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "total": 1
+  }
+}

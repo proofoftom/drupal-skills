@@ -1,0 +1,14 @@
+{
+  "checks": [
+    {
+      "expectation": "Log in as admin via drush uli, navigate to /admin/reports/view-analytics -- verify the analytics report page loads without errors and displays the report structure (via eval-browser)",
+      "passed": true,
+      "evidence": "Successfully authenticated as admin via drush uli. Navigated to /admin/reports/view-analytics and received HTTP 200. Page title is 'View Analytics'. Main content area displays 'Top 10 most viewed nodes' report table with proper structure (Node Title and View Count columns). No rendering or application errors detected. Table elements present and accessible."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "total": 1
+  }
+}

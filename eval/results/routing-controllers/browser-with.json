@@ -1,0 +1,19 @@
+{
+  "checks": [
+    {
+      "expectation": "Log in as admin via drush uli, navigate to /user/1/activity -- verify the page renders with a dynamic title containing the admin user's display name and shows activity summary content (via eval-browser)",
+      "passed": true,
+      "evidence": "Page title: 'Activity for admin | Drush Site-Install' — contains admin display name. Activity summary content present: 'nodes authored: 0', 'last access: 03/07/2026 - 07:36'. HTTP 200. Page renders successfully."
+    },
+    {
+      "expectation": "Navigate to /api/user/1/activity -- verify the response contains valid JSON with activity data fields (via eval-browser)",
+      "passed": true,
+      "evidence": "HTTP 200. Response is valid JSON: {\"uid\":\"1\",\"display_name\":\"admin\",\"nodes_authored\":0,\"last_access\":\"1772894207\"}. Contains all expected activity data fields: uid, display_name, nodes_authored, last_access."
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2
+  }
+}

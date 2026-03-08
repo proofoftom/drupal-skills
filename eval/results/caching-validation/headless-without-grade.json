@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "Block class overrides getCacheContexts() method AND merges with parent: Cache::mergeContexts(parent::getCacheContexts(), [...]) (NOT just inline #cache contexts -- block-level cache methods are the canonical way, and parent merge preserves block placement contexts)",
+      "passed": false,
+      "evidence": "No getCacheContexts() method override exists in RelatedContentBlock.php. The class only uses inline #cache contexts in the build() render array (lines 138-141: 'contexts' => ['url.path', 'user']). No Cache::mergeContexts() or parent::getCacheContexts() call found."
+    },
+    {
+      "text": "Block class overrides getCacheTags() method AND merges with parent: Cache::mergeTags(parent::getCacheTags(), [...]) (NOT just inline #cache tags -- overriding without parent merge loses tags from block configuration)",
+      "passed": false,
+      "evidence": "No getCacheTags() method override exists in RelatedContentBlock.php. The class uses inline #cache tags in build() (lines 132-136) and has a custom helper getCacheTagsForRelatedNodes() (line 158), but does NOT override the block-level getCacheTags() method and does NOT call parent::getCacheTags()."
+    },
+    {
+      "text": "getCacheTags() or #cache tags include 'node_list' tag for list-level invalidation (when ANY node is created/updated/deleted, the list needs re-evaluation -- per-node tags alone miss new content)",
+      "passed": true,
+      "evidence": "RelatedContentBlock.php line 133: 'tags' => Cache::mergeTags(['node_list'], ...) -- 'node_list' tag is included in the inline #cache tags within the build() render array."
+    },
+    {
+      "text": "Uses Cache::PERMANENT for max-age or omits max-age entirely (NOT a hardcoded number like 3600 -- content with proper cache tags should use PERMANENT and rely on tag invalidation, not time-based expiry)",
+      "passed": true,
+      "evidence": "RelatedContentBlock.php line 143: 'max_age' => Cache::PERMANENT -- explicitly uses Cache::PERMANENT constant."
+    },
+    {
+      "text": "Does NOT set max-age to 0 anywhere (max-age: 0 bubbles up and kills the ENTIRE page cache via Dynamic Page Cache -- use lazy_builder instead for per-user content)",
+      "passed": true,
+      "evidence": "Grep for 'max.age.*0|max_age.*0' in the module directory returned no matches. No max-age of 0 is set anywhere in the module."
+    },
+    {
+      "text": "Does NOT use \\Drupal::cache() or manual cache API for render caching (render arrays use #cache metadata for automatic caching, not manual cache get/set)",
+      "passed": true,
+      "evidence": "Grep for '\\Drupal::cache()' in the module directory returned no matches. The module uses only #cache render array metadata, not manual cache API calls."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en related_content_block returns exit code 0",
+      "passed": true,
+      "evidence": "ddev drush en related_content_block -y returned '[notice] Already installed: related_content_block' with exit code 0."
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": false,
+      "evidence": "phpcs found 9 ERRORS and 2 WARNINGS: inline comments after statements (lines 133-135, 139-140), extra spaces after commas, and lines exceeding 80 characters. Full output: 'FOUND 9 ERRORS AND 2 WARNINGS AFFECTING 5 LINES'."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 3,
+    "total": 8,
+    "pass_rate": 0.625
+  }
+}

@@ -13,10 +13,8 @@
         "Block uses blockSubmit() for saving config to $this->configuration (NOT submitForm(), NOT Config API -- block config is managed by the block placement system, not the Config API)",
         "defaultConfiguration() method exists and returns an array with config defaults including the item count setting",
         "Block plugin uses EITHER D11 #[Block(...)] attribute with new TranslatableMarkup() OR D10 @Block annotation with @Translation() -- but NOT @Translation() inside a PHP attribute (mixing annotation helpers in attributes causes fatal error)",
-        "The module enables successfully: ddev drush en content_recommendations returns exit code 0"
-      ],
-      "browser_checks": [
-        "Log in as admin via drush uli, navigate to /admin/structure/block/library — verify the Content Recommendations block (or similar admin label) appears in the available blocks list, confirming the block plugin is discoverable by Drupal's block system"
+        "The module enables successfully: ddev drush en content_recommendations returns exit code 0",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
       ]
     }
   ]

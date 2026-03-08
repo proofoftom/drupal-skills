@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Route parameter is named `{user}` (matching the entity type machine name) for automatic entity upcasting -- the controller does NOT manually call User::load() or \\Drupal\\user\\Entity\\User::load() (Drupal auto-loads when param name matches entity type)",
+      "passed": true,
+      "evidence": "user_activity.routing.yml line 2 uses path '/user/{user}/activity' and line 13 uses '/api/user/{user}/activity'. Grep of src/Controller/ for 'User::load' and '\\Drupal\\user\\Entity\\User::load' returned no matches. Both controller methods receive a typed UserInterface parameter, confirming auto-upcasting is used."
+    },
+    {
+      "text": "Route file defines `_title_callback` pointing to a controller method for dynamic page title (not just a static `_title` string -- dynamic titles need a callback that receives the upcasted entity)",
+      "passed": true,
+      "evidence": "user_activity.routing.yml line 5: '_title_callback: '\\Drupal\\user_activity\\Controller\\UserActivityController::getTitle''. The corresponding method at UserActivityController.php line 74 accepts a UserInterface parameter and returns a dynamic string using the user's display name."
+    },
+    {
+      "text": "The custom service class does NOT extend ControllerBase -- services are standalone classes with constructor injection via .services.yml arguments (not the create() factory pattern which is for controllers)",
+      "passed": true,
+      "evidence": "UserActivityService.php line 12: 'class UserActivityService {' — no extends clause. Constructor at line 36 accepts Connection and EntityTypeManagerInterface. user_activity.services.yml lines 3-6 wire it with arguments '@database' and '@entity_type.manager'. No create() factory method present in the service."
+    },
+    {
+      "text": "Controller does NOT use static \\Drupal::service() or \\Drupal::entityTypeManager() calls -- injects all dependencies via create() + constructor (static calls bypass DI, making code untestable)",
+      "passed": true,
+      "evidence": "Grep of src/Controller/ for '\\Drupal::' returned no matches. Both UserActivityController.php and UserActivityApiController.php use create() + constructor injection only. The static \\Drupal::service() call at line 59 is in UserActivityService.php (the service), not in any controller — the expectation explicitly scopes to the Controller."
+    },
+    {
+      "text": "Routes use `_permission` for access control (not `_access: 'TRUE'` which bypasses all access checking including for anonymous users)",
+      "passed": false,
+      "evidence": "user_activity.routing.yml lines 7 and 17 both use '_entity_access: \"user.view\"' — not '_permission'. The expectation specifically requires '_permission' as the access mechanism. '_entity_access' is a different access key and does not satisfy this requirement."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en user_activity -y returns exit code 0",
+      "passed": true,
+      "evidence": "Command output: '[notice] Already installed: user_activity' with exit code 0, confirming successful enable."
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to /user/1/activity -- verify the page renders with a dynamic title containing the admin user's display name and shows activity summary content (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report: page rendered with title 'Activity for admin | Drush Site-Install', content shows 'Nodes Authored: 0', 'Last Access: 03/07/2026 - 07:36'. HTTP 200."
+    },
+    {
+      "text": "Navigate to /api/user/1/activity -- verify the response contains valid JSON with activity data fields (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report: API returned valid JSON with fields uid=1, username=admin, nodes_authored=0, last_access=1772894210. HTTP 200."
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": true,
+      "evidence": "phpcs result shows 0 ERRORS and 1 WARNING (line 59 of UserActivityService.php: '\\Drupal calls should be avoided in classes'). Warnings do not constitute failures — the expectation asks for no errors, and the provided result confirms 0 errors."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.89
+  }
+}

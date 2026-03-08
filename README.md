@@ -1,6 +1,6 @@
 # Drupal Skills for Claude
 
-13 Claude Code skills for generating correct, production-ready Drupal 10/11 module code.
+14 Claude Code skills for generating correct, production-ready Drupal 10/11 module code.
 
 ## Quick Start
 
@@ -46,6 +46,12 @@ That's it. Skills activate automatically when you ask Claude Code to work on Dru
 |-------|-------------|
 | drupal-views-dev | Views data integration and custom Views plugins |
 | drupal-batch-queue-cron | Batch API, queue workers, and cron hooks |
+
+### Cross-Cutting
+
+| Skill | What It Does |
+|-------|-------------|
+| drupal-coding-standards | phpcs compliance for Drupal/DrupalPractice coding standards |
 
 ## Usage
 

@@ -1,0 +1,17 @@
+{
+  "skill": "drupal-module-scaffold",
+  "with_score": "6/6",
+  "without_score": "4/6",
+  "delta": "33.3%",
+  "differentiators": [
+    "drupal:node project-prefixed dependency format (with: correct, without: bare 'node')",
+    "No empty .module file discipline (with: omitted correctly, without: empty placeholder created)"
+  ],
+  "shared_passes": [
+    "core_version_requirement: ^10 || ^11",
+    "type: module explicit",
+    "Module enables successfully",
+    "phpcs clean (no errors)"
+  ],
+  "timestamp": "2026-03-07T14:15:00Z"
+}

@@ -1,0 +1,14 @@
+{
+  "checks": [
+    {
+      "expectation": "Log in as admin via drush uli, navigate to /admin/config/system/announcements -- verify the settings form loads with fields for announcement_text (showing 'Welcome'), display_enabled (checked), and max_display_count (showing 3) with their correct default values from config/install (via eval-browser)",
+      "passed": true,
+      "evidence": "Successfully authenticated via drush uli login URL. Form loaded at https://d10-config-with.ddev.site/admin/config/system/announcements with page title 'Site Announcements | Drush Site-Install'. Verified form fields: announcement_text field contains 'Welcome', display_enabled checkbox is checked (true), max_display_count spinbutton shows '3'. All default values match expected config/install defaults."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "total": 1
+  }
+}

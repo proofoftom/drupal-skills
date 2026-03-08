@@ -1,0 +1,19 @@
+{
+  "checks": [
+    {
+      "expectation": "Log in as admin via drush uli, navigate to the KnowledgeResource entity add form -- verify the form renders with fields for related_topic, author, resource_type (dropdown with article/research_paper/tool/documentation options), and created (via eval-browser)",
+      "passed": true,
+      "evidence": "Page rendered with title 'Create Knowledge Resource | Drush Site-Install', HTTP 200. Form fields confirmed: Related Topic textbox (e20), Author textbox (e21), Resource Type dropdown (e22) with options Article, Research Paper, Tool, Documentation, Date textbox (e28) for created timestamp."
+    },
+    {
+      "expectation": "Navigate to the KnowledgeResource entity list page -- verify the list builder page loads without errors (via eval-browser)",
+      "passed": true,
+      "evidence": "Page rendered with title 'Knowledge Resources | Drush Site-Install', HTTP 200 at /admin/content/knowledge_resource. List builder page loaded successfully without errors."
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2
+  }
+}

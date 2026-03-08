@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "config/install/site_announcements.settings.yml exists with default values matching the prompt (config object must exist from install, not only after form is saved)",
+      "passed": true,
+      "evidence": "/tmp/d10-config-without/web/modules/custom/site_announcements/config/install/site_announcements.settings.yml exists with: announcement_text: 'Welcome', display_enabled: true, max_display_count: 3"
+    },
+    {
+      "text": "config/schema/site_announcements.schema.yml exists with typed mapping entries for all config keys (missing schema breaks config export/import validation and config translation)",
+      "passed": true,
+      "evidence": "/tmp/d10-config-without/web/modules/custom/site_announcements/config/schema/site_announcements.schema.yml exists with typed mapping entries for all three keys: announcement_text (string), display_enabled (boolean), max_display_count (integer)"
+    },
+    {
+      "text": "Schema uses 'label' type for translatable human-readable text like announcement_text (NOT 'string' -- string type is never translated, label type enables config translation for multilingual sites)",
+      "passed": false,
+      "evidence": "config/schema/site_announcements.schema.yml line 6 shows 'type: string' for announcement_text, NOT 'type: label'. The schema uses the incorrect type that does not enable config translation."
+    },
+    {
+      "text": "Schema uses correct types: 'boolean' for display_enabled, 'integer' for max_display_count (NOT 'string' for everything -- wrong types cause silent type-casting bugs during config import)",
+      "passed": true,
+      "evidence": "config/schema/site_announcements.schema.yml line 9 shows 'type: boolean' for display_enabled, line 12 shows 'type: integer' for max_display_count. Both are correct."
+    },
+    {
+      "text": "Does NOT use \\Drupal::state() or State API for settings that need to be exported between environments (State is environment-specific and NOT included in config export)",
+      "passed": true,
+      "evidence": "Grep for '\\Drupal::state()' and '->state()' across all module files returned no matches. The form uses ConfigFormBase with $this->config('site_announcements.settings') exclusively."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en site_announcements returns exit code 0",
+      "passed": true,
+      "evidence": "Command 'ddev drush en site_announcements -y' returned: '[notice] Already installed: site_announcements' with EXIT:0"
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to /admin/config/system/announcements -- verify the settings form loads with fields for announcement_text (showing 'Welcome'), display_enabled (checked), and max_display_count (showing 3) with their correct default values from config/install (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report: 'Form loaded. announcement_text=\\'Welcome\\', display_enabled=checked, max_display_count=\\'3\\'. HTTP 200.'"
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": true,
+      "evidence": "phpcs result provided: 0 errors, 0 warnings. PASSES."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 1,
+    "total": 8,
+    "pass_rate": 0.875
+  }
+}

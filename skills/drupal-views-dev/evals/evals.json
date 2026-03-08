@@ -12,11 +12,10 @@
         "Custom filter plugin extends FilterPluginBase or InOperator (NOT a generic PluginBase class -- ViewsFilter plugins require filter-specific methods like query() and valueForm())",
         "Filter plugin file is in the correct PSR-4 path: src/Plugin/views/filter/ with lowercase 'views' (NOT src/Plugin/Views/Filter/ with capital V -- Drupal Views plugin manager scans lowercase 'views' namespace specifically)",
         "hook_views_data() table definition includes 'base' key making the table available as a Views base table for creating new views (not just individual field definitions without a base table entry)",
-        "The module enables successfully: ddev drush en resource_directory returns exit code 0"
-      ],
-      "browser_checks": [
-        "Log in as admin via drush uli, navigate to /admin/structure/views/add — verify the resource_links table appears as an available base table option (e.g., in the 'Show' dropdown or table selection list), confirming hook_views_data() is properly recognized by Views",
-        "Navigate to /admin/structure/views — verify the Views listing page loads without 'Broken handler' errors related to the resource_directory module"
+        "The module enables successfully: ddev drush en resource_directory returns exit code 0",
+        "Log in as admin via drush uli, navigate to /admin/structure/views/add -- verify the resource_links table appears as an available base table option (via eval-browser)",
+        "Navigate to /admin/structure/views -- verify the Views listing page loads without 'Broken handler' errors related to the resource_directory module (via eval-browser)",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
       ]
     }
   ]

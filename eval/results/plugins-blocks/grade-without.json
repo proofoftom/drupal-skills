@@ -1,0 +1,16 @@
+{
+  "skill": "drupal-plugins-blocks",
+  "variant": "without",
+  "expectations": [
+    {"id": 1, "text": "create() has exactly 4 params: $container, $configuration, $plugin_id, $plugin_definition", "met": true, "evidence": "Correct 4-param create() signature"},
+    {"id": 2, "text": "parent::__construct with 3 plugin params BEFORE injected services", "met": true, "evidence": "parent::__construct called before service storage"},
+    {"id": 3, "text": "blockForm() not buildForm()", "met": true, "evidence": "blockForm() used correctly"},
+    {"id": 4, "text": "blockSubmit() saves to $this->configuration", "met": true, "evidence": "blockSubmit() saves to $this->configuration['items_count']"},
+    {"id": 5, "text": "defaultConfiguration() with item count default", "met": true, "evidence": "Returns ['items_count' => 5]"},
+    {"id": 6, "text": "D11 #[Block] attribute with new TranslatableMarkup() OR D10 @Block with @Translation()", "met": true, "evidence": "D10 @Block annotation with @Translation() — valid"},
+    {"id": 7, "text": "Module enables successfully", "met": true, "evidence": "Module enabled, exit code 0"},
+    {"id": 8, "text": "phpcs passes without errors", "met": false, "evidence": "1 ERROR: multi-line constructor missing trailing comma. Also services.yml named incorrectly (not in expectations)."}
+  ],
+  "score": "7/8",
+  "notes": "Strong but phpcs error on trailing comma. Also services.yml misnamed (not graded). All structural block patterns correct."
+}
