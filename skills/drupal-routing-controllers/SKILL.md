@@ -268,6 +268,11 @@ class MyController extends ControllerBase {
 }
 ```
 
+> **CRITICAL -- NEVER use static \Drupal:: calls in controllers:**
+> WRONG: `\Drupal::service('my_service')` or `\Drupal::entityTypeManager()` inside any controller method.
+> RIGHT: Inject ALL services via `create()` + constructor. This is the #1 most common DI violation.
+> Static \Drupal:: calls are ONLY acceptable in `.module` files (procedural code that cannot use constructor injection).
+
 The DI flow works like this:
 1. Drupal finds the route and resolves the controller.
 2. It checks if the controller implements `ContainerInjectionInterface` (which `ControllerBase` does).
@@ -275,7 +280,7 @@ The DI flow works like this:
 4. `create()` pulls specific services from the container and passes them to the constructor.
 5. The constructor stores them as class properties for use in controller methods.
 
-> WRONG: Using `\Drupal::service('my_module.my_service')` or `\Drupal::entityTypeManager()` inside controller, form, or service classes. Static service calls bypass dependency injection, making code untestable and tightly coupled.
+> WRONG: Using `\Drupal::service('my_module.my_service')` or `\Drupal::entityTypeManager()` inside controller, form, or service classes. Static service calls bypass dependency injection, making code untestable and tightly coupled. See the CRITICAL callout above -- this is the #1 DI violation.
 > RIGHT: Inject services via `create()` + constructor. Static `\Drupal::` calls are ONLY acceptable in `.module` files (procedural code), because procedural code cannot use constructor injection. Inside any class that extends `ControllerBase`, `FormBase`, or implements `ContainerInjectionInterface`, always inject.
 
 > WRONG: Injecting the entire service container into a class. This hides the actual dependencies, makes code harder to understand and test, and defeats the purpose of dependency injection.

@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Create a module called `view_analytics` for a Drupal 10 site that tracks how often content is viewed. Store tracking data in a custom database table with columns: nid (int), uid (int), viewed_at (int, timestamp), and referrer (varchar 255). Write the schema definition, a function to record views, and a page at /admin/reports/view-analytics showing the top 10 most viewed nodes using an aggregation query. Use Drupal's database abstraction layer for all queries. We want D11 compatibility.",
+      "prompt": "Create a module called `view_analytics` for a Drupal 10 site that tracks how often content is viewed. Store tracking data in a custom database table with columns: nid (int), uid (int), viewed_at (int, timestamp), and referrer (varchar 255). Write the schema definition, a function to record views, and a page at /admin/reports/view-analytics showing the top 10 most viewed nodes using an aggregation query. Use Drupal's database abstraction layer for all queries. Ensure queries are alterable by other modules using appropriate query tags. We want D11 compatibility.",
       "expected_output": "A database module with hook_schema(), insert via database abstraction, aggregation query with COUNT, and an admin report page",
       "files": [],
       "expectations": [
@@ -13,10 +13,9 @@
         "Aggregation uses ->addExpression('COUNT(nid)', 'view_count') or equivalent on a dynamic select query (NOT raw SQL COUNT() in a ->query() string -- dynamic queries integrate with Drupal's query alter system)",
         "At least one select query includes ->addTag() enabling hook_query_TAG_alter() for other modules (without tags, queries cannot be altered by access control or other modules)",
         "Does NOT concatenate PHP variables into SQL strings -- uses :placeholders in static queries or condition() methods in dynamic queries for all variable input (SQL injection prevention)",
-        "The module enables successfully: ddev drush en view_analytics returns exit code 0"
-      ],
-      "browser_checks": [
-        "Log in as admin via drush uli, navigate to /admin/reports/view-analytics — verify the analytics report page loads without errors and displays the report structure (table headers, empty state message, or data rows)"
+        "The module enables successfully: ddev drush en view_analytics returns exit code 0",
+        "Log in as admin via drush uli, navigate to /admin/reports/view-analytics -- verify the analytics report page loads without errors and displays the report structure (via eval-browser)",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
       ]
     }
   ]

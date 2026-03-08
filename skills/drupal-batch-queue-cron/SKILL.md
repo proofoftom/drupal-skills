@@ -194,6 +194,7 @@ QueueWorker plugins process queue items during cron with a time budget.
 namespace Drupal\sports\Plugin\QueueWorker;
 
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Connection;
@@ -226,13 +227,23 @@ class TeamCleaner extends QueueWorkerBase implements ContainerFactoryPluginInter
   }
 
   public function processItem($data) {
-    $id = isset($data->id) && $data->id ? $data->id : NULL;
-    if (!$id) {
-      throw new \Exception('Missing team ID');
+    try {
+      $id = isset($data->id) && $data->id ? $data->id : NULL;
+      if (!$id) {
+        throw new \Exception('Missing team ID');
+      }
+      $this->database->delete('teams')
+        ->condition('id', $id)
+        ->execute();
     }
-    $this->database->delete('teams')
-      ->condition('id', $id)
-      ->execute();
+    catch (SuspendQueueException $e) {
+      // Systemic failure -- rethrow to suspend queue processing.
+      throw $e;
+    }
+    catch (\Exception $e) {
+      // Log and skip bad items (don't rethrow = item deleted from queue).
+      \Drupal::logger('sports')->error('Queue processing failed: @msg', ['@msg' => $e->getMessage()]);
+    }
   }
 
 }
