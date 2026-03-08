@@ -57,7 +57,11 @@ Full details: milestones/v2.0-ROADMAP.md
   2. Natural Drupal development prompts (e.g., "create a custom entity type") activate the relevant skill without explicit skill references, at >80% rate across a sample of 10+ prompts
   3. Plugin root contains a minimal CLAUDE.md with only non-obvious project rules (not LLM-generated boilerplate)
   4. install.sh is marked deprecated with clear migration instructions pointing to plugin-based installation
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 13-01-PLAN.md -- Create plugin manifest, CLAUDE.md, deprecate install.sh
+- [ ] 13-02-PLAN.md -- Auto-trigger validation and test infrastructure
 
 ### Phase 14: Module Foundation
 **Goal**: A functional Drupal module exists with Project and Task entities, CRUD routes, forms, and configuration -- buildable and installable on a fresh Drupal 10 site
@@ -116,7 +120,7 @@ Phases execute in numeric order: 13 -> 14 -> 15 -> 16 -> 17
 |-------|-----------|----------------|--------|-----------|
 | 1-7 | v1.0 | 26/28 | Shipped | 2026-03-07 |
 | 8-12 | v2.0 | 23/23 | Shipped | 2026-03-08 |
-| 13. Plugin Packaging | v3.0 | 0/TBD | Not started | - |
+| 13. Plugin Packaging | v3.0 | 0/2 | Planned | - |
 | 14. Module Foundation | v3.0 | 0/TBD | Not started | - |
 | 15. Group & AI Integration | v3.0 | 0/TBD | Not started | - |
 | 16. Views, Theming & Processing | v3.0 | 0/TBD | Not started | - |
