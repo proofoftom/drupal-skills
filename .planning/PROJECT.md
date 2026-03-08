@@ -28,7 +28,7 @@ Claude can generate correct, production-ready Drupal module code across all majo
 
 ### Active
 
-(Defined in REQUIREMENTS.md for v3.0 -- pending creation)
+(Defined in REQUIREMENTS.md for v4.0)
 
 ### Out of Scope
 
@@ -94,23 +94,28 @@ Claude can generate correct, production-ready Drupal module code across all majo
 | CRITICAL NEVER callout placement | Placing callout before DI flow produced +44.4% swing | ✓ Good -- content placement matters |
 | Single-run eval design | Sufficient for tier classification; variance analysis deferred | ⚠️ Revisit if signal unclear |
 | Neutral skills accepted | 4 skills cover baseline Haiku knowledge -- no iteration needed | ✓ Good -- honest classification |
+| Eval-driven module development | Each v3.0 phase was an eval round, module emerged from measurement | ✓ Good -- honest delta, cumulative build |
+| Browser eval deprecated (v2.0) | Zero discriminatory value for backend patterns | ⚠️ Revived for v4.0 UX testing |
+| Three-tier assertions (v4.0) | Static + runtime + browser covers backend AND frontend quality | — Pending |
 
-## Current Milestone: v3.0 Group AI Project Management
+## Current Milestone: v4.0 UX Overhaul
 
-**Goal:** Build a real Drupal contrib module (Group-based project management with Drupal AI/AI Agents integration) as the ultimate integration eval — validating that all 14 skills auto-trigger and produce better code than baseline, in a realistic development workflow.
+**Goal:** Transform the group_ai_pm module from functional-but-bare-bones into a polished, Linear-quality project management experience -- with Vue.js Kanban boards, AJAX interactions, keyboard shortcuts, and proper Drupal navigation integration -- validated through eval-driven development with browser-based UX assertions.
 
 **Target features:**
-- Plugin packaging: restructure repo as Claude Code plugin with auto-triggering skill descriptions
-- Description optimization: run skill-creator optimization loop if skills don't auto-trigger from natural prompts
-- Group-based project management contrib module with AI/AI Agents integration
-- Phase-level eval: without-plugin baseline first, then build real version with plugin installed
-- Each phase isolates a skill domain (entities, routing, forms, caching, etc.)
-- Real contribution to Group module ecosystem
+- Dashboard overview: project stats, recent activity, quick actions as primary entry point
+- Per-project Kanban board (Vue 3): drag-and-drop task management across status columns
+- Drupal AJAX for simpler interactions: status toggles, inline editing
+- Local task tabs connecting entity pages under /admin/content/
+- Keyboard shortcuts, smooth animations, filtered/sorted views
+- Rich task display: status badges, assignee avatars, due dates, priority indicators
+- REST/JSON:API endpoints for Vue.js ↔ Drupal communication
 
-**Eval methodology shift from v2.0:**
-- v2.0: headless `claude -p` with explicit "read SKILL.md" → measures skill content value
-- v3.0: plugin installed, skills must auto-trigger from natural prompts → measures full product experience
-- Without-plugin baseline generated first per phase, then real module built with plugin
+**Eval methodology shift from v3.0:**
+- v3.0: headless code gen + static/runtime assertions → measures backend code quality
+- v4.0: three-tier assertions (static + runtime + browser) → measures UX quality too
+- eval-browser (agent-browser) revived for frontend/interaction testing: does Kanban render, does drag-drop work, does AJAX fire
+- Continues cumulative build: extends v3.0 module output
 
 ---
-*Last updated: 2026-03-08 after v3.0 milestone started*
+*Last updated: 2026-03-08 after v4.0 milestone started*
