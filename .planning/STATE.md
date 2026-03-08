@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Group AI Project Management
 status: in_progress
-stopped_at: Phase 14 eval complete — module promoted, skills patched
-last_updated: "2026-03-08T12:00:00.000Z"
-last_activity: 2026-03-08 -- Phase 14 eval pipeline complete (+25% delta after skill iteration)
+stopped_at: Phase 15 eval designed — evals.json written, ready to execute pipeline
+last_updated: "2026-03-08T09:01:39.618Z"
+last_activity: 2026-03-08 -- Phase 15 eval design complete (10 expectations targeting access-security + plugins-blocks)
 progress:
   total_phases: 5
   completed_phases: 2
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** Phase 14 - Module Foundation (eval-driven, see workflow note below)
+**Current focus:** Phase 15 - Group & AI Integration (eval-driven)
 
 ## Current Position
 
-Phase: 14 of 17 (Module Foundation) -- COMPLETE
+Phase: 15 of 17 (Group & AI Integration) -- IN PROGRESS
 Plan: eval pipeline (not GSD plans)
-Status: Phase 14 complete — module promoted to modules/group_ai_pm/
-Last activity: 2026-03-08 -- Reverted contaminated GSD executor run of Phase 14 (HEAD at dbe9ff6)
+Status: Evals designed, pipeline ready to execute
+Last activity: 2026-03-08 -- Phase 15 evals.json written with 10 discriminating expectations
 
-Progress: [██░░░░░░░░] 20% (v3.0)
+Progress: [██░░░░░░░░] 40% (v3.0)
 
 ## WORKFLOW CHANGE: Eval-Driven Phases (Phase 14+)
 
@@ -48,6 +48,7 @@ Phase 14+ uses the eval pipeline, not GSD executors. GSD executor agents have fu
 6. Iterate on skills if delta insufficient
 
 **Skills tested in Phase 14:** scaffold, entities-fields, routing-controllers, forms-api, config-storage
+**Skills tested in Phase 15:** access-security, plugins-blocks
 **Reference:** MEMORY.md has full phase-to-skill mapping and pipeline details
 **Reference:** /skill-creator protocol for eval viewer, grading schemas, benchmark format
 
@@ -81,6 +82,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-08
-Stopped at: Phase 14 COMPLETE — module promoted, skills patched, ready for Phase 15
-Resume action: Phase 15 (Group + AI integration) — write evals.json, run eval pipeline
-Resume file: None
+Stopped at: Phase 15 eval design complete — evals.json written, pipeline ready
+Resume action: Execute Phase 15 pipeline (set up temp dirs, run headless, grade, iterate)
+Resume file: .planning/phases/15-group-ai-integration/.continue-here.md
