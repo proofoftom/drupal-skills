@@ -10,7 +10,7 @@ Requirements for v3.0 milestone. Each maps to roadmap phases.
 ### Plugin Packaging
 
 - [x] **PLUG-01**: Plugin manifest (.claude-plugin/plugin.json) registers all 14 skills with correct namespace
-- [ ] **PLUG-02**: Skill descriptions optimized for auto-triggering from natural Drupal development prompts (>80% activation rate)
+- [x] **PLUG-02**: Skill descriptions optimized for auto-triggering from natural Drupal development prompts (>80% activation rate)
 - [x] **PLUG-03**: Minimal CLAUDE.md at plugin root with only non-obvious, project-specific rules (developer-written, not LLM-generated)
 - [x] **PLUG-04**: install.sh deprecated with migration path documented for plugin-based installation
 
@@ -80,7 +80,7 @@ Requirements for v3.0 milestone. Each maps to roadmap phases.
 
 ### Eval & Validation
 
-- [ ] **EVAL-01**: Auto-trigger validation confirming skills activate from natural development prompts with plugin installed
+- [x] **EVAL-01**: Auto-trigger validation confirming skills activate from natural development prompts with plugin installed
 - [ ] **EVAL-02**: Without-plugin baseline generated per phase for comparison
 - [ ] **EVAL-03**: Phase-level delta report comparing with-plugin vs without-plugin output quality
 - [ ] **EVAL-04**: Full module install test and end-to-end workflow verification
@@ -123,10 +123,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | PLUG-01 | Phase 13 | Complete |
-| PLUG-02 | Phase 13 | Pending |
+| PLUG-02 | Phase 13 | Complete |
 | PLUG-03 | Phase 13 | Complete |
 | PLUG-04 | Phase 13 | Complete |
-| EVAL-01 | Phase 13 | Pending |
+| EVAL-01 | Phase 13 | Complete |
 | SCAF-01 | Phase 14 | Pending |
 | SCAF-02 | Phase 14 | Pending |
 | SCAF-03 | Phase 14 | Pending |
