@@ -1,0 +1,75 @@
+{
+  "variant": "with-plugin",
+  "phase": "14-module-foundation",
+  "model": "claude-haiku-4-5-20251001",
+  "timestamp": "2026-03-08",
+  "module_path": "/tmp/d10-gapm-with/web/modules/custom/group_ai_pm/",
+  "expectations": [
+    {
+      "text": ".info.yml uses `core_version_requirement: ^10 || ^11`",
+      "passed": true,
+      "evidence": "group_ai_pm.info.yml line 5: `core_version_requirement: '^10 || ^11'`"
+    },
+    {
+      "text": "Dependencies in .info.yml use project-prefixed format",
+      "passed": true,
+      "evidence": "Lines 7-10: `drupal:datetime`, `group:group`, `ai:ai`, `ai_agents:ai_agents`"
+    },
+    {
+      "text": "NO static \\Drupal:: service calls in ANY PHP class under src/",
+      "passed": false,
+      "evidence": "Static \\Drupal:: calls in: ProjectListBuilder.php:32, TaskListBuilder.php:38, DashboardController.php:85, Project.php:219, Task.php:293"
+    },
+    {
+      "text": "Config schema file exists with `type: config_object`",
+      "passed": true,
+      "evidence": "config/schema/group_ai_pm.schema.yml line 2: `type: config_object`"
+    },
+    {
+      "text": "Config install defaults file with ALL keys",
+      "passed": true,
+      "evidence": "config/install/group_ai_pm.settings.yml has default_project_status, default_task_status, ai_provider"
+    },
+    {
+      "text": "Settings form route has `_admin_route: TRUE`",
+      "passed": false,
+      "evidence": "No `options:` section or `_admin_route` key on settings route"
+    },
+    {
+      "text": "Settings form route uses `_form` key",
+      "passed": true,
+      "evidence": "routing.yml line 4: `_form: 'Drupal\\group_ai_pm\\Form\\SettingsForm'`"
+    },
+    {
+      "text": "ConfigFormBase buildForm() returns parent::buildForm()",
+      "passed": true,
+      "evidence": "SettingsForm.php line 67: `return parent::buildForm($form, $form_state);`"
+    },
+    {
+      "text": "ConfigFormBase submitForm() calls parent::submitForm()",
+      "passed": true,
+      "evidence": "SettingsForm.php line 80: `parent::submitForm($form, $form_state);`"
+    },
+    {
+      "text": "EntityListBuilder overrides getEntityIds() with tableSort()",
+      "passed": false,
+      "evidence": "No getEntityIds() override in ProjectListBuilder or TaskListBuilder"
+    },
+    {
+      "text": "Entity base table names prefixed with module name",
+      "passed": false,
+      "evidence": "Project.php: base_table = \"group_ai_project\". Task.php: base_table = \"group_ai_task\". Uses partial prefix 'group_ai_' not full 'group_ai_pm_'"
+    },
+    {
+      "text": "Entity keys includes \"owner\" = \"uid\"",
+      "passed": true,
+      "evidence": "Project.php line 41: \"owner\" = \"uid\". Task.php line 41: \"owner\" = \"uid\". Key mapping present (EntityOwnerTrait not used but key is correct)."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 4,
+    "total": 12,
+    "pass_rate": 0.667
+  }
+}

@@ -1,0 +1,13 @@
+group_ai_pm.settings:
+  type: config_object
+  label: 'Group AI Project Management settings'
+  mapping:
+    default_project_status:
+      type: string
+      label: 'Default project status'
+    default_task_status:
+      type: string
+      label: 'Default task status'
+    ai_provider:
+      type: string
+      label: 'AI Provider'

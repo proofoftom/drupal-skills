@@ -164,6 +164,10 @@ class Product extends ContentEntityBase implements ProductInterface {
 > WRONG: Using `@Translation("Product")` inside `#[ContentEntityType(...)]` attribute syntax. The `@Translation` annotation helper does not work in PHP attributes.
 > RIGHT: Use `new TranslatableMarkup('Product')` in attributes. Import `Drupal\Core\StringTranslation\TranslatableMarkup` at the top of the file.
 
+> **CRITICAL -- ALWAYS prefix `base_table` with your module name:**
+> WRONG: `base_table = "product"` or `base_table = "task"` — bare table names are global in Drupal's database and WILL collide with other modules.
+> RIGHT: `base_table = "my_module_product"` — prefix with the full module machine name (e.g., `group_ai_pm_project`, `group_ai_pm_task`).
+
 ## Config entity type definition
 
 Config entities store admin-defined settings and are exported to YAML. They extend `ConfigEntityBase` and define fields as class properties (not `baseFieldDefinitions()`).
@@ -333,7 +337,32 @@ Handlers provide the UI and behavior for entity types. Use defaults when possibl
 
 **Do you need a custom list page?**
 NO -> Use `EntityListBuilder` (content) or `ConfigEntityListBuilder` (config) as-is, or omit for no listing.
-YES -> Extend `EntityListBuilder` and override `buildHeader()` + `buildRow()`.
+YES -> Extend `EntityListBuilder` and override `buildHeader()` + `buildRow()`. For **sortable columns**, also override `getEntityIds()` with `tableSort()`:
+
+```php
+protected function getEntityIds() {
+  $query = $this->getStorage()->getQuery()
+    ->accessCheck(TRUE)
+    ->pager(50);
+  $header = $this->buildHeader();
+  $query->tableSort($header);
+  return $query->execute();
+}
+```
+
+In `buildHeader()`, use `'field'`, `'specifier'`, and `'sort'` keys:
+
+```php
+$header['name'] = [
+  'data' => $this->t('Name'),
+  'field' => 'name',
+  'specifier' => 'name',
+  'sort' => 'asc',
+];
+```
+
+> WRONG: Defining `buildHeader()` with sortable-looking columns but not overriding `getEntityIds()`. Without the `tableSort()` call, column headers render as plain text with no click-to-sort behavior.
+> RIGHT: ALWAYS override `getEntityIds()` with `$query->tableSort($header)` when you want sortable list builder columns.
 
 **Do you need custom add/edit forms?**
 NO for content entities -> Use `ContentEntityForm` directly. It auto-builds forms from base field definitions.
@@ -447,55 +476,17 @@ modules/custom/products/
 
 Every PHP handler class in the annotation/attribute MUST exist as a file. If you reference `ProductListBuilder` in handlers, the file must exist.
 
-### Complete config entity file ecosystem
+### Config entity file ecosystem
 
-```
-modules/custom/products/
-  products.info.yml
-  products.links.menu.yml
-  products.links.action.yml
-  config/
-    schema/
-      products.schema.yml           # REQUIRED for config export
-  src/
-    Entity/
-      Importer.php                  # Config entity class
-      ImporterInterface.php         # Entity interface
-    ImporterListBuilder.php         # List builder handler
-    Form/
-      ImporterForm.php              # Add/edit form (MUST build form manually)
-      ImporterDeleteForm.php        # Delete confirmation form
-```
-
-Config entities require a delete form handler (extend `EntityConfirmFormBase`) because there is no `ContentEntityDeleteForm` equivalent for config entities.
+Same structure as content entities, plus `config/schema/*.schema.yml` (REQUIRED). Config entities also require a delete form handler (extend `EntityConfirmFormBase`) and `ImporterForm` extending `EntityForm` (manual form building — no auto-build from base fields).
 
 ### Menu and action links
 
-```yaml
-# products.links.menu.yml
-entity.product.collection:
-  title: 'Product list'
-  route_name: entity.product.collection
-  description: 'List Product entities'
-  parent: system.admin_structure
-  weight: 100
-```
-
-```yaml
-# products.links.action.yml
-entity.product.add_form:
-  route_name: 'entity.product.add_form'
-  title: 'Add Product'
-  appears_on:
-    - entity.product.collection
-```
+Define `module.links.menu.yml` for admin menu entries and `module.links.action.yml` for "Add" buttons on collection pages. Route names follow the pattern `entity.{entity_type}.collection` and `entity.{entity_type}.add_form`.
 
 ## Cross-references
 
-See also: **drupal-module-scaffold** (if installed) for module creation, .info.yml setup, and PSR-4 namespace structure. If not available, ensure you create a `module_name.info.yml` with `core_version_requirement: ^10 || ^11` and place all PHP classes under `src/`.
-
-See also: **drupal-routing-controllers** (if installed) for custom routes beyond entity route providers, controller patterns, and service injection. If not available, use `AdminHtmlRouteProvider` for entity CRUD routes and only add `.routing.yml` entries for non-entity routes.
-
-See also: **drupal-forms-api** (if installed) for form customization beyond default entity forms. If not available, extend `ContentEntityForm` for content entities (auto-builds from base fields) or `EntityForm` for config entities (manual form building required).
-
-For file and image field handling, see `references/files-images.md` in this skill directory.
+- **drupal-module-scaffold**: module creation, .info.yml, PSR-4 structure
+- **drupal-routing-controllers**: custom routes, controller DI, service injection
+- **drupal-forms-api**: form customization beyond default entity forms
+- File/image fields: see `references/files-images.md` in this skill directory

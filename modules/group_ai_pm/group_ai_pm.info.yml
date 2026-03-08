@@ -1,0 +1,11 @@
+name: Group AI Project Management
+description: 'Provides project management entities and dashboard for Group and AI integration.'
+type: module
+core_version_requirement: ^10 || ^11
+package: Custom
+dependencies:
+  - drupal:datetime
+  - group:group
+  - ai:ai
+  - ai_agents:ai_agents
+configure: group_ai_pm.settings
