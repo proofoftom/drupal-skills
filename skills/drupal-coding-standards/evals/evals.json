@@ -1,0 +1,21 @@
+{
+  "skill_name": "drupal-coding-standards",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a module called `event_notifier` for a Drupal 10 site. The module should: (1) Define a custom service that checks whether notifications are enabled via a config object and returns a message. (2) Create a controller at /event-notifier/status that uses the service to display the notification status. The controller must inject the service via the create() pattern. (3) Implement hook_cron() in the .module file to log a message when cron runs. (4) The controller should handle the case where the config value might be NULL by accepting a nullable parameter in a helper method. Include proper error handling with try/catch. We want D11 compatibility.",
+      "expected_output": "A module with a service class, controller with DI, hook_cron implementation, and proper coding standards compliance",
+      "files": [],
+      "expectations": [
+        "All classes (service class and controller class) have docblock comments with a summary line (/** * Description. */)",
+        "All public methods have docblock comments with @param and @return tags where applicable",
+        "hook_cron() implementation uses exactly `/** * Implements hook_cron(). */` with no @param or @return tags",
+        "No @file docblock in class files (src/*.php) -- @file docblocks only appear in .module or .install files if present",
+        "try/catch blocks use cuddled brace style: `} catch (` on the same line as the closing brace (NOT catch on a new line after the closing brace)",
+        "Any method parameter with a default value of NULL uses the ?type nullable syntax (e.g., ?string $value = NULL, NOT string $value = NULL)",
+        "The module enables successfully: ddev drush en event_notifier returns exit code 0",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
+      ]
+    }
+  ]
+}
