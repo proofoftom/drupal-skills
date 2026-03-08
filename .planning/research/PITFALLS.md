@@ -1,295 +1,439 @@
-# Domain Pitfalls
+# Pitfalls Research
 
-**Domain:** Automated eval pipeline for Claude Code skills (subagents, ddev, agent-browser, batch execution)
-**Researched:** 2026-03-06
-**Overall confidence:** HIGH (derived from v1.0 empirical evidence across 9+ eval runs, project memory, source code analysis)
+**Domain:** Group-based project management with Drupal AI/AI Agents integration + Claude Code plugin packaging + phase-level eval methodology
+**Researched:** 2026-03-07
+**Confidence:** HIGH for plugin packaging, MEDIUM for Group/AI integration (APIs are evolving), HIGH for eval methodology (empirical v2.0 data)
 
-**Scope:** This document covers pitfalls specific to ADDING an automated eval pipeline (v2.0) to the existing Drupal skills project. v1.0 skill-authoring pitfalls are preserved in the appendix for reference but are not the focus.
+**Scope:** Pitfalls specific to ADDING v3.0 features (Group module, Drupal AI integration, plugin restructuring, new eval methodology) to the existing Drupal Skills project. v2.0 eval pipeline pitfalls remain in git history.
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that produce invalid eval data, waste entire sessions, or require full reruns.
+Mistakes that cause rewrites, invalidate the eval, or produce a non-functional plugin.
 
-### Pitfall 1: Subagent Model Inheritance is Invisible and Uncontrollable
+### Pitfall 1: Plugin Skill Auto-Triggering Is Unreliable Without Description Engineering
 
-**What goes wrong:** The Agent tool has no `model` parameter (schema enforces `additionalProperties: false`). Subagents silently inherit the main session's active model. If the orchestrator runs on Opus, eval-executor agents also run on Opus -- producing inflated without-skill scores that invalidate the entire A/B comparison.
+**What goes wrong:**
+Skills packaged in a plugin do not auto-trigger when developers ask natural Drupal questions. The plugin installs fine, skills appear in `/context`, but Claude ignores them and works from training data alone. The entire v3.0 eval (plugin-installed vs no-plugin) produces 0% delta -- not because skills lack value, but because they never activate.
 
-**Why it happens:** The assumption that subagent model can be configured per-call (like temperature or system prompt) is natural but wrong. Claude Code's Agent tool does not expose model selection. GSD's `model_profile` system also does NOT control Agent tool model -- this was verified empirically in v1.0 session 1.
+**Why it happens:**
+Claude Code loads only skill **descriptions** (name + description field) into the system prompt at session start, with a budget of 2% of context window (~16,000 chars fallback). With 14 skills, each description gets roughly 1,100 characters max. If descriptions are passive ("Covers cache metadata patterns") rather than directive ("Use WHENEVER producing render arrays that display entity or config data"), Claude's relevance matching fails. Community testing shows ~50% activation rate with standard descriptions, improving to ~95% with imperative directive descriptions. Additionally, 14 drupal skills at ~200 chars each = ~2,800 chars, but the description character limit per skill is 1,024 chars -- staying well within budget. The risk is not budget overflow but description quality.
 
-**Consequences:** Eval data is invalid but looks valid. Without-skill Opus scores match with-skill Opus scores, producing false 0% deltas. You cannot detect this from grading results alone because both runs produce high-quality code.
+**How to avoid:**
+- Use imperative directive descriptions: "Use WHENEVER [trigger condition]. Do NOT use for [anti-pattern]." This is the pattern already used in existing SKILL.md files (confirmed in drupal-caching and drupal-module-scaffold).
+- Test auto-triggering empirically: write 10 natural developer prompts per skill, run each with the plugin installed, measure activation rate. Target >80%.
+- If activation is low, add a `UserPromptSubmit` hook that evaluates each prompt against skill triggers. This is a fallback, not a first resort.
+- Set `SLASH_COMMAND_TOOL_CHAR_BUDGET=30000` if skills are excluded from context (check `/context` for warnings).
+- Write descriptions in third person ("Applies correct cache metadata...") per official Anthropic best practices -- inconsistent point-of-view causes discovery problems.
 
-**Prevention:**
-- v1.0 workaround: Use `/model sonnet` in the main session before spawning eval agents, then `/model opus` after for grading. This is manual and error-prone -- easy to forget the switch-back.
-- v2.0 solution: Build a dedicated `eval-executor` subagent with `model: sonnet` in its `.md` frontmatter. This locks the model at the subagent definition level, not the call site. The orchestrator stays on Opus throughout.
-- Validation gate: After each eval run, compare code style. If without-skill code shows Opus-level sophistication (detailed comments, edge case handling, non-obvious patterns), the model was wrong.
+**Warning signs:**
+- `/context` shows skills excluded or truncated
+- Natural prompts like "add caching to this block" do not trigger drupal-caching skill
+- v3.0 eval shows 0% delta across all phases despite v2.0 showing HIGH deltas on same skills
 
-**Detection:** Compare code verbosity and quality between with/without runs. Sonnet produces shorter, more formulaic code. Opus produces more detailed, context-aware code. If without-skill output reads like Opus, model inheritance leaked.
-
-**Phase to address:** Subagent architecture phase -- must be solved before any eval runs begin.
-
----
-
-### Pitfall 2: Knowledge Contamination Defeats the Entire Eval
-
-**What goes wrong:** The without-skill agent has indirect access to SKILL.md content through leak paths, producing artificially high without-skill scores and false 0% deltas.
-
-**Why it happens:** Multiple contamination vectors exist, and any single leak invalidates results:
-1. **Same agent, two calls:** A single agent that runs with-skill first retains SKILL.md knowledge for the without-skill run. Context cannot be "unlearned."
-2. **Project-level files:** CLAUDE.md, `.claude/settings.json`, or installed skills in `~/.claude/skills/` contain or reference skill content.
-3. **GSD executor discovery:** The GSD executor proactively scans the project for skills and loads them into context -- confirmed in v1.0.
-4. **Eval prompt leakage:** The eval prompt itself (evals.json expectations) contains implementation hints that teach the agent what patterns to produce.
-5. **Workspace cross-contamination:** If with-skill and without-skill agents share a workspace directory, generated files from the first run are visible to the second.
-
-**Consequences:** The fundamental A/B comparison is invalid. Skills that genuinely add value show 0% delta. This was the MOST damaging pitfall in v1.0 -- though ultimately the 0% deltas were attributed to non-discriminating assertions (#3), contamination had to be ruled out first, consuming significant debugging time.
-
-**Prevention:**
-- **Two separate Agent subagent calls per skill.** Never reuse an agent across with/without.
-- **No skills installed globally.** Skills must NOT be in `~/.claude/skills/`. Verify before each batch with `ls ~/.claude/skills/drupal-* 2>/dev/null`.
-- **No CLAUDE.md skill references.** The project CLAUDE.md must not mention skill content or paths.
-- **Skip GSD executor.** Orchestrate eval runs directly from the main session; the GSD executor layer auto-discovers skills.
-- **Minimal eval prompts.** The prompt given to without-skill agents should describe WHAT to build, not HOW. No Drupal-specific implementation hints.
-- **Separate workspace directories.** Each agent gets its own `/tmp/os-kg-*` directory.
-- **Pre-flight contamination check:** Before spawning without-skill agent, verify no SKILL.md in agent context, no `~/.claude/skills/drupal-*`, no skill references in CLAUDE.md.
-
-**Detection:** If without-skill code contains patterns that are non-obvious and specific to SKILL.md (e.g., cache max-age 0 avoidance, D11 Hook attribute syntax, specific entity annotation field ordering from Sipos), contamination occurred.
-
-**Phase to address:** Subagent architecture phase. Must be validated in the first eval run before proceeding to batch execution.
+**Phase to address:**
+Plugin packaging phase (description optimization). Must validate auto-triggering BEFORE running phase-level evals, or eval results are meaningless.
 
 ---
 
-### Pitfall 3: Non-Discriminating Assertions Produce Meaningless Evals
+### Pitfall 2: Eval Methodology Conflates Plugin Activation Failure with Skill Content Failure
 
-**What goes wrong:** Assertions test patterns that Sonnet already knows from training data. Both with-skill and without-skill produce identical correct code, yielding 0% delta across the board.
+**What goes wrong:**
+v3.0 shifts from "explicit `read SKILL.md`" (v2.0) to "plugin installed, skills must auto-trigger from natural prompts" (v3.0). When a phase-level eval shows 0% delta, you cannot distinguish between: (a) the skill content is not useful for this task, (b) the skill never activated, or (c) the skill activated but the prompt was too easy. This ambiguity makes eval results unactionable.
 
-**Why it happens:** This is the single most impactful finding from v1.0. Eval authors (often Sonnet-powered agents) naturally write assertions for patterns they know -- which are exactly the patterns Sonnet already handles correctly. This is circular: testing "what I know" guarantees passing without the skill. v1.0 empirical data:
-- 9 of 13 skills showed 0% delta with standard assertions (routing, forms, plugins, config, access, theming, database, views, batch)
-- Only 4 skills with genuinely non-obvious assertions showed meaningful deltas (caching +75%, scaffold +43%, entities +21%, testing +19%)
+**Why it happens:**
+v2.0 controlled for activation by explicitly telling the agent to read SKILL.md. v3.0 removes this control, introducing a new variable (activation) on top of the existing variable (content value). Two uncontrolled variables in one experiment = no causal attribution.
 
-**Consequences:** Skills that genuinely add value appear worthless. The entire eval investment produces no actionable data.
+**How to avoid:**
+- **Three-tier eval design per phase:**
+  1. **Without-plugin baseline:** No plugin installed. Headless `claude -p` with haiku. Measures baseline capability.
+  2. **With-plugin (auto-trigger):** Plugin installed but no explicit skill instruction. Measures full product experience (activation + content).
+  3. **With-plugin (explicit):** Plugin installed AND prompt includes "use the drupal-X skill". Measures content value independent of activation.
+- Compare tier 2 vs tier 3: if tier 3 shows delta but tier 2 does not, the problem is activation (description), not content.
+- Compare tier 1 vs tier 3: should match v2.0 deltas (validated baseline).
+- Log whether skills activated: check Claude's tool use for `Skill(drupal-*)` calls.
 
-**Prevention:**
-- **Assertions MUST come from SKILL.md non-obvious patterns, not general Drupal knowledge.** Read each SKILL.md and identify patterns that are counter-intuitive, book-specific, or conflict with common practice.
-- **Target "golden rules" and "gotchas":** Caching golden rule (never set max-age 0), entity annotation field ordering requirements, hook_theme render array structure, config schema strictness, proper test base class selection.
-- **Anti-test before finalizing:** For each assertion, ask: "Would Sonnet without this specific book knowledge produce this pattern?" If yes, the assertion is non-discriminating. Remove it.
-- **Calibration skills:** Use caching (75% delta in v1.0) and scaffold (43% delta) as calibration benchmarks. If the new pipeline produces lower deltas on these skills, something is wrong with the pipeline, not the skills.
-- **Empirical validation:** Run one calibration skill's eval before batch execution. If delta is unexpectedly 0%, assertions need more work before running all 13.
+**Warning signs:**
+- Phase eval shows 0% delta on a skill that had HIGH delta in v2.0 (caching, scaffold, routing-controllers, testing)
+- No `Skill()` tool calls visible in session transcript
+- Tier 2 and tier 3 produce different results
 
-**Detection:** 0% delta on skills whose SKILL.md contains clearly non-obvious patterns. All skills scoring 100%/100% is a red flag, not a success.
-
-**Phase to address:** Eval design phase. Must be complete before any eval runs. This is the highest-leverage pitfall -- getting assertions right is worth more than any other pipeline improvement.
-
----
-
-### Pitfall 4: ddev-router Health Check Failures Stall the Pipeline
-
-**What goes wrong:** `ddev start` fails with traefik/ddev-router health check errors on approximately 50% of first starts. The error looks like a configuration problem but is a Docker networking race condition.
-
-**Why it happens:** The ddev-router (traefik) container needs time to register new project routes. When multiple ddev projects start in sequence, the router can get into a bad state. The os-knowledge-garden install compounds this with heavy Drupal install (`--demo=cascadia`) taking 2-5 minutes.
-
-**Consequences:** Eval setup fails, requiring manual intervention. In a batch execution loop, one failure stalls the entire session. v1.0 experienced this on roughly half of all environment setups.
-
-**Prevention:**
-- **Auto-retry with router restart built into setup script:** After a failed `ddev start`, automatically run `docker restart ddev-router && sleep 20 && ddev start`. This should be in the script, not manual.
-- **Serialize ddev starts:** The setup script already uses `flock -x 200` on `/tmp/ddev-start.lock`. Keep this.
-- **Fresh Drupal 10 over os-knowledge-garden:** v2.0 targets fresh D10 installs. This eliminates os-kg-specific traefik complexity (Qdrant, Solr, extra services). Faster startup, fewer failure modes.
-- **Health check before proceeding:** After `ddev start` succeeds, run `curl -sk https://<project>.ddev.site/` and verify 200 before declaring environment ready.
-- **Parallel instance limit:** Never run more than 2 ddev instances simultaneously.
-
-**Detection:** `ddev start` exits non-zero with health check timeout in stderr. Easy to detect programmatically.
-
-**Phase to address:** Environment setup phase. Build retry logic into the setup script itself.
+**Phase to address:**
+Eval methodology design phase. Must be decided before ANY phase-level eval runs.
 
 ---
 
-### Pitfall 5: Context Window Overflow During Batch Execution
+### Pitfall 3: Group Module 3.x API Terminology Has Changed -- Old Documentation Misleads
 
-**What goes wrong:** The orchestrating session accumulates context from multiple eval runs until it hits the context window limit. The session becomes sluggish, loses state, or silently drops early context (including grading methodology).
+**What goes wrong:**
+Development uses Group 2.x API names (`GroupContent`, `GroupContentEnabler`, `addContent()`, `GroupContentEnablerManager`) because most tutorials and StackOverflow answers reference the older API. The code compiles against Group 3.x but produces EntityNotFoundException errors at runtime, or silently creates wrong entity types.
 
-**Why it happens:** Each skill eval involves: reading evals.json, reading SKILL.md (for with-skill), spawning 2 agents (whose outputs return to context), reading generated files for grading, writing grading results. For 13 skills, this is ~26 agent outputs plus ~50+ file reads. v1.0 limited sessions to 3-4 skills for this reason.
+**Why it happens:**
+Group 3.x renamed fundamental concepts:
+- `GroupContent` entity -> `GroupRelationship` entity
+- `GroupContentType` entity -> `GroupRelationshipType` entity
+- `GroupContentEnabler` plugin -> `GroupRelationType` plugin
+- `GroupContentEnablerManager` service -> `GroupRelationTypeManager` service
+- `Group::addContent()` -> `Group::addRelationship()` (returns created entity in 3.x)
+- Plugin directory: `src/Plugin/Group/ContentEnabler/` -> `src/Plugin/Group/Relation/`
+- Plugin handlers replaced most methods on the plugin base class
 
-**Consequences:** Late-session evals get worse grading quality because grading criteria from early context has been evicted. The orchestrator may forget completed skills and re-run them, or skip incomplete ones.
+Most documentation, tutorials, and even some Drupal.org issue queue discussions still reference 2.x terminology. Claude's training data likely contains more 2.x examples than 3.x.
 
-**Prevention:**
-- **Hard limit: 3-4 skills per orchestrator session.** Do not attempt all 13 in one session.
-- **Externalize state to disk:** Write `benchmark.json` and `grading.json` after each skill. The next session reads disk state, not memory.
-- **Minimize context consumption:** Have the grading agent read files and return only pass/fail per assertion, not entire file contents.
-- **Session handoff via `.continue-here.md`:** Write completed/remaining skills, iteration numbers, and anomalies after each session.
-- **Stateless orchestrator:** Each session should be able to start from scratch by reading disk state. No implicit memory dependencies between sessions.
+**How to avoid:**
+- Pin Group module version in composer.json: `"drupal/group": "^3.3"`. Never `^2 || ^3`.
+- Create a SKILL.md reference card mapping old to new terminology. Include it in the drupal-entities-fields skill or a new Group-specific skill.
+- Validate ALL Group API calls against 3.x codebase, not documentation. The source at `modules/contrib/group/src/` is authoritative.
+- Use `GroupRelationBase` for custom relation plugins, NOT `GroupContentEnablerBase`.
+- Handler pattern: define handlers as services with naming convention `group.relation_handler.[HANDLER_TYPE].[PLUGIN_ID]`.
 
-**Detection:** Model responses become shorter, less detailed, or repeat questions already answered. Context warning messages appear (like the ones this session is generating).
+**Warning signs:**
+- Code references `GroupContent` class or `group_content` entity type
+- Plugin files in `src/Plugin/Group/ContentEnabler/` directory
+- Method calls to `$group->addContent()` instead of `$group->addRelationship()`
+- `@GroupContentEnabler` annotation instead of `@GroupRelationType`
 
-**Phase to address:** Batch execution architecture phase. Design the session boundary strategy before starting eval runs.
+**Phase to address:**
+Entity/data model phase (first phase that touches Group module). Must have correct API terms from day one.
+
+---
+
+### Pitfall 4: Plugin Directory Structure Has Strict Requirements -- Skills in Wrong Location Are Silently Ignored
+
+**What goes wrong:**
+Restructuring the existing `skills/` repo into a Claude Code plugin results in skills not loading. Plugin installs, `plugin.json` validates, but zero skills appear in `/context` or autocomplete. No error messages -- completely silent failure.
+
+**Why it happens:**
+Claude Code plugins require a specific directory structure:
+- `plugin.json` MUST be inside `.claude-plugin/` directory
+- Skills MUST be at plugin root in `skills/` directory (NOT inside `.claude-plugin/`)
+- Each skill needs `skills/<skill-name>/SKILL.md` structure
+- Plugin is cached to `~/.claude/plugins/cache/` on install -- external references via `../` are stripped
+
+The existing repo structure (`skills/drupal-*/SKILL.md`) is already correct for the skills directory layout. But the common mistake is putting skills inside `.claude-plugin/skills/` or using absolute paths in plugin.json.
+
+**How to avoid:**
+- Target plugin structure:
+  ```
+  drupal-skills/                    # Plugin root
+  ├── .claude-plugin/
+  │   └── plugin.json              # Only manifest here
+  ├── skills/                       # At root level
+  │   ├── drupal-caching/
+  │   │   ├── SKILL.md
+  │   │   └── references/
+  │   ├── drupal-module-scaffold/
+  │   │   └── SKILL.md
+  │   └── ... (14 total)
+  ├── agents/                       # Optional
+  ├── hooks/                        # Optional (for auto-trigger hooks)
+  └── settings.json                 # Optional defaults
+  ```
+- All paths in plugin.json MUST be relative starting with `./`
+- Use `${CLAUDE_PLUGIN_ROOT}` in any scripts/hooks, never absolute paths
+- Test with `claude --plugin-dir .` during development (bypasses cache)
+- Validate with `claude --debug` to see plugin loading messages
+- Verify skills appear: ask Claude "What skills are available?" after enabling plugin
+
+**Warning signs:**
+- `claude --debug` shows plugin loading but no skill registration messages
+- `/context` shows no drupal-* skills
+- Plugin installs without error but skills don't appear in autocomplete
+
+**Phase to address:**
+Plugin packaging phase. This is the FIRST thing to get right -- all subsequent phases depend on skills loading.
+
+---
+
+### Pitfall 5: Drupal AI Module Is Pre-1.0 Conceptually Despite Version Numbers -- API Will Change
+
+**What goes wrong:**
+Building tight integration with Drupal AI module's provider API or AI Agents framework, then discovering the API changed in a point release. Custom tools, agent configurations, or provider integrations break on `composer update`.
+
+**Why it happens:**
+While Drupal AI module is at version 1.2.11 (stable), and AI Agents at 1.2.3, the ecosystem is rapidly evolving. The 2026 roadmap lists 8 new capabilities (page generation, context management, background agents, design system integration). The AI Agents documentation explicitly states it is "WIP". The Tool API module (separate from AI core) is a recent addition providing `tool_ai_connector` for bridging to AI function calling. Module interdependencies are shifting: AI -> AI Agents -> Tool API is an emerging but not yet stable dependency chain.
+
+**How to avoid:**
+- Pin exact versions in composer.json: `"drupal/ai": "1.2.11"`, `"drupal/ai_agents": "1.2.3"`. Do NOT use `^1.2`.
+- Write integration code against the provider abstraction layer (`\Drupal::service('ai.provider')`) not specific provider implementations.
+- Wrap ALL AI module API calls in a service class with a clear interface. When APIs change, only the wrapper changes.
+- Design the module to work WITHOUT AI integration as a baseline (Group project management), with AI as an enhancement layer that can be enabled/disabled.
+- Subscribe to AI module release notes. Test against `dev` branch periodically.
+- Consider the Tool API module for defining custom tools that AI Agents can call, rather than building custom agent code directly.
+
+**Warning signs:**
+- Direct calls to provider-specific methods scattered throughout the codebase
+- No service abstraction layer between your module and `\Drupal::service('ai.provider')`
+- Module fails to install if AI module is not present (hard dependency when it should be optional)
+
+**Phase to address:**
+Architecture phase (service layer design). AI integration phase (implementation). Design the abstraction BEFORE writing integration code.
+
+---
+
+### Pitfall 6: Existing install.sh and Skill Paths Break When Restructured as Plugin
+
+**What goes wrong:**
+The existing `install.sh` script copies skills to `~/.claude/skills/`. When the repo is restructured as a plugin, you now have two install paths: the old `install.sh` (copies to `~/.claude/skills/`) and the new plugin system (via `claude plugin install`). Users who installed via `install.sh` and then install the plugin have duplicate skills -- one set in `~/.claude/skills/` and another from the plugin cache. Claude loads both, wastes context budget, and may get conflicting instructions from two copies of the same skill.
+
+**Why it happens:**
+The project evolved from "repo of skills you manually install" (v1.0/v2.0) to "packaged plugin you install via Claude Code" (v3.0). The transition creates a dual-installation surface.
+
+**How to avoid:**
+- Phase the transition: first release as plugin, then deprecate `install.sh` in the README.
+- Add a migration check to the plugin's `SessionStart` hook: if `~/.claude/skills/drupal-*` exists, warn the user to run `install.sh --uninstall` or manually remove the old skills.
+- Plugin skills use namespace `drupal-skills:drupal-caching` (plugin-name:skill-name), which cannot conflict with personal skills at `~/.claude/skills/drupal-caching`. BUT context budget is still consumed by both.
+- Alternatively: update `install.sh` to detect if the plugin is installed and abort with a message.
+- Add `--uninstall` flag to `install.sh` that removes all `~/.claude/skills/drupal-*` directories.
+
+**Warning signs:**
+- Users report skills appearing twice in `/context`
+- Context budget warnings about excluded skills
+- Total description budget consumed by 28 skills (14 x 2) instead of 14
+
+**Phase to address:**
+Plugin packaging phase. Must handle migration path as part of the packaging work.
 
 ---
 
 ## Moderate Pitfalls
 
-### Pitfall 6: agent-browser Unreliability for E2E Assertions
+### Pitfall 7: Group Module Access Control Overrides Core Node Access
 
-**What goes wrong:** agent-browser times out, fails to render JavaScript-heavy pages, or cannot handle ddev's self-signed certificates. E2E assertions fail not because the code is wrong but because the test tool is flaky.
+**What goes wrong:**
+Group module returns `AccessResult::forbidden()` for grouped content when the user lacks group-level permissions, even if they have core node permissions. This means existing Drupal roles and permissions do not work as expected for content within groups. Developers assume core access controls still apply and are surprised when admin users with "bypass node access" permission still get denied on grouped content.
 
-**Prevention:**
-- **Prefer curl for simple assertions:** `curl -sk` handles self-signed certs and non-standard ports reliably. Use it for status checks, page-contains (with grep), and API responses.
-- **Reserve agent-browser for UI-specific tests:** Only use when JavaScript execution is required (Ajax forms, dynamic blocks) or visual verification.
-- **Always use `--ignore-https-errors`** flag with agent-browser.
-- **Wrap calls with `timeout 30s`** to prevent indefinite hangs.
-- **Session cleanup in trap handler** to prevent leaked Chromium processes consuming RAM.
-- **drush uli for authenticated pages:** Use `drush uli` to get one-time login URLs instead of managing cookies.
+**How to avoid:**
+- Understand that Group module's access model is intentionally strict: group permissions REPLACE core permissions for grouped content. This is a feature, not a bug.
+- Configure Group role permissions explicitly for every content operation (view, create, edit, delete) on every group type.
+- Test access control for: anonymous, authenticated, group member, group admin, site admin. All five must be verified.
+- If AI Agents need to manipulate grouped content, they need group-level permissions, not just core permissions. The agent's user account must be a member of relevant groups.
 
-**Phase to address:** E2E assertion tooling phase. Decide curl vs agent-browser per assertion type upfront.
+**Warning signs:**
+- "Access denied" errors for admin users on grouped content
+- AI Agents failing to create/edit content within groups despite having core permissions
+- REST/JSON:API requests for grouped content returning 403
 
----
-
-### Pitfall 7: Drupal Registry Corruption on Unclean Module Removal
-
-**What goes wrong:** Removing module files with `rm -rf` before running `drush pm:uninstall` leaves Drupal's module registry pointing at nonexistent files. All subsequent operations throw fatal PHP errors.
-
-**Prevention:**
-- **Always `drush pm:uninstall <module>` before deleting files.** This is non-negotiable for reusable environments.
-- **For eval, prefer tearing down the entire ddev env** rather than selectively uninstalling. Faster and more reliable.
-- **v2.0 with fresh D10 instances:** Each eval gets a fresh environment, making module removal unnecessary.
-
-**Phase to address:** Environment lifecycle phase. Already addressed in teardown script; maintain in v2.0.
+**Phase to address:**
+Access/security phase. Must be addressed when building the Group entity types and permissions.
 
 ---
 
-### Pitfall 8: Grader Bias Toward Generous Scoring
+### Pitfall 8: Phase-Level Eval Environment Accumulates State Across Phases
 
-**What goes wrong:** The grading agent (Opus) tends toward generous interpretation. It marks assertions as "PASS" when code is close but not exactly right, or when the pattern exists in a different form than expected.
+**What goes wrong:**
+v3.0 builds a real module across multiple phases. Phase 3 (routing) depends on entities from Phase 2. Phase 5 (caching) depends on blocks from Phase 4. If the "without-plugin baseline" approach creates code in Phase 2 that is structurally incompatible with Phase 3's requirements, the entire baseline chain breaks and subsequent phase comparisons are invalid.
 
-**Prevention:**
-- **Binary assertions only:** Each assertion should be verifiable with grep/AST check, not subjective judgment. "File contains `CacheBackendInterface`" not "code uses proper caching patterns."
-- **Automated grading where possible:** Use grep, jq, `php -l` (syntax check), drush commands for objective verification. Reserve LLM grading for semantic checks only.
-- **Explicit rubric in evals.json:** Each assertion specifies exact strings, patterns, or file structures. The grader applies the rubric, not judgment.
-- **Separate grader from skill author:** Fresh agent with only the rubric, no skill context.
-- **Suspicious perfection check:** Any skill scoring 100%/100% with/without should be manually reviewed -- likely indicates non-discriminating assertions.
+**How to avoid:**
+- **Each phase baseline must start from a known-good snapshot.** After Phase N is built with the plugin, snapshot the ddev environment (export DB + files). The Phase N+1 baseline starts from this snapshot, not from Phase N's baseline output.
+- Alternative: define each phase as self-contained with explicit input fixtures. Phase 3 does not depend on Phase 2's output -- it depends on a pre-built fixture that provides the necessary entities.
+- Document phase dependencies explicitly: which phases require prior phase output vs which are independently evaluable.
+- Consider making some phases independent "skill islands" that can be evaluated without sequential dependency.
 
-**Phase to address:** Grading methodology phase. Define rubric format before eval runs.
+**Warning signs:**
+- Baseline breaks in later phases because earlier baseline code was structurally wrong
+- Accumulating technical debt in the baseline that makes fair comparison impossible
+- Phase eval results vary wildly depending on which baseline code was generated
 
----
-
-### Pitfall 9: Stale Docker/ddev State Between Runs
-
-**What goes wrong:** Docker containers, volumes, or network configs from previous eval runs persist and interfere with new runs. Port conflicts, stale databases, or orphaned containers cause setup failures.
-
-**Prevention:**
-- **Full teardown between skills:** Run `teardown-drupal-env.sh` and verify via `ddev list`.
-- **Pre-run cleanup:** `ddev list | grep -o 'os-kg-[^ ]*' | xargs -I{} ddev delete -O {}` to catch orphans.
-- **Docker prune on session start:** `docker container prune -f && docker network prune -f` at beginning of each session.
-- **Unique naming per eval run:** `os-kg-caching-with-iter3` -- never reuse names within a session.
-
-**Phase to address:** Environment setup phase. Build into setup/teardown scripts.
+**Phase to address:**
+Eval methodology design phase. Must decide phase independence vs chain before any eval runs.
 
 ---
 
-### Pitfall 10: Port Conflicts with Non-Standard ddev Ports
+### Pitfall 9: Group Module REST/JSON:API Content Creation Requires Group Context
 
-**What goes wrong:** ddev assigns dynamic HTTPS ports when default (443) is taken. Hardcoded URLs in e2e-assert.sh and eval scripts assume standard ports, causing all E2E assertions to fail against valid running sites.
+**What goes wrong:**
+Trying to create group content (tasks, milestones) via REST or JSON:API fails because the Group module requires `$context['group']` for access checks during entity creation. Standard `POST /jsonapi/node/task` does not provide this context, resulting in access denied errors even for authenticated users with correct permissions.
 
-**Prevention:**
-- **Use `ddev describe -j | jq -r '.raw.httpurl'`** to get actual URL with correct port.
-- **Pass full base URL to assertion scripts** rather than constructing from project name.
-- **Use `ddev exec curl localhost`** (inside container) to bypass port issues entirely for simple checks.
-- **Configure explicit ports** in ddev config.yaml for eval environments if consistency is needed.
+**How to avoid:**
+- Use Group module's relationship API for content creation: create the node first, then add it to the group via `$group->addRelationship($node, 'group_node:task')`.
+- For REST/JSON:API, create a custom REST resource or controller that handles the group context.
+- AI Agents that create content in groups must use a two-step process: entity creation + group relationship creation.
+- Consider the EntityGroupField contrib module for providing a computed field that simplifies the group assignment UX.
 
-**Phase to address:** Environment setup phase. Bake URL discovery into setup script output.
+**Warning signs:**
+- 403 errors on JSON:API POST requests for group-enabled content types
+- `TypeError: GroupRelationBase::createAccess()` errors when group context is null
+- AI Agents can create content but it does not appear within groups
 
----
-
-### Pitfall 11: Eval Prompt Wording Overfits to Specific Implementation
-
-**What goes wrong:** Assertions pass only when the eval prompt uses specific wording. Minor prompt rephrasing causes different (but equally valid) code that fails assertions. This means the eval measures prompt sensitivity, not skill value.
-
-**Prevention:**
-- **Assert patterns, not exact code:** Check for `use Drupal\Core\Cache\CacheBackendInterface` not a specific import order or line number.
-- **Accept multiple valid patterns:** Where Drupal allows alternatives (annotation vs attribute, YAML vs PHP config), accept both.
-- **Test invariants, not implementation:** "Module installs without error" and "route responds 200" are robust. "File line 42 contains X" is brittle.
-- **Run each eval with 2+ prompt variations** during validation to ensure assertions are prompt-independent.
-
-**Phase to address:** Eval design phase.
+**Phase to address:**
+Routing/API phase. Must be addressed when building REST endpoints for project management.
 
 ---
 
-## Minor Pitfalls
+### Pitfall 10: Headless `claude -p` vs Agent Subagent for v3.0 Eval Is a Fundamental Methodology Decision
 
-### Pitfall 12: CLAUDECODE Environment Variable Blocks Nested Sessions
+**What goes wrong:**
+v2.0 used headless `claude -p --model claude-haiku-4-5-20251001` for code generation because it produced clean A/B data (37.5% delta on caching vs 0% with agent harness). v3.0 wants to test the "full product experience" with plugin auto-triggering. These are fundamentally incompatible: `claude -p` cannot load plugins, and interactive sessions cannot be scripted reproducibly.
 
-**What goes wrong:** Nested Claude sessions fail because the `CLAUDECODE` env var from the parent session interferes with child processes.
+**How to avoid:**
+- For "content value" evaluation (does the skill help?): continue using headless `claude -p` with explicit skill injection, same as v2.0. This is the validated methodology.
+- For "activation" evaluation (does the skill auto-trigger?): use interactive Claude Code sessions with the plugin installed via `--plugin-dir`. This requires a different eval harness.
+- For "integration" evaluation (does the full module work?): build the real module with the plugin installed. Quality is assessed by code review and functional testing, not A/B comparison.
+- Do NOT try to run A/B activation tests via `claude -p`. Plugins are not loaded in headless mode.
+- Consider using `claude --plugin-dir /path/to/plugin -p "build the routing for project tasks"` if `--plugin-dir` works with `-p`. This needs empirical validation.
 
-**Prevention:** `unset CLAUDECODE` at the top of any script that runs inside a Claude session. Already implemented in `setup-drupal-env.sh`. Ensure all new scripts follow the same pattern.
+**Warning signs:**
+- Attempting to measure auto-trigger rate via headless pipeline
+- Conflating "skill activated" with "skill helped" in eval results
+- No clear separation between activation eval and content eval
 
-**Phase to address:** Already addressed. Verify in all new scripts.
-
----
-
-### Pitfall 13: Forgetting to Switch Model Back After Eval Spawning (v1.0 only)
-
-**What goes wrong:** After spawning eval agents on Sonnet via `/model`, the orchestrator forgets to switch back to Opus for grading. Grading runs on Sonnet, producing lower-quality analysis.
-
-**Prevention:** v2.0 eliminates this entirely -- eval-executor subagent is locked to Sonnet via frontmatter, orchestrator stays on Opus throughout. No manual model switching needed.
-
-**Phase to address:** Subagent architecture phase. Solved by design in v2.0.
-
----
-
-### Pitfall 14: RAM Exhaustion from Leaked Browser Processes
-
-**What goes wrong:** Each agent-browser call spawns a Chromium process. If sessions are not properly closed (e.g., script crashes before cleanup), Chromium processes accumulate and consume all available RAM. After 3-4 leaked sessions, the system becomes unresponsive.
-
-**Prevention:**
-- **Always use trap handlers** to close agent-browser sessions on script exit.
-- **Monitor with `pgrep -c chromium`** before each eval run. If count > 2, kill orphans.
-- **Prefer curl over agent-browser** to minimize browser process usage.
-
-**Phase to address:** E2E assertion tooling phase.
+**Phase to address:**
+Eval infrastructure phase. Must test whether `--plugin-dir` works with `-p` before designing the full eval.
 
 ---
 
-## Phase-Specific Warnings
+### Pitfall 11: SKILL.md Content May Need Group-Specific Patterns Not in Sipos Book
 
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|---------------|------------|
-| Subagent architecture | Model inheritance (#1), knowledge contamination (#2), model switch-back (#13) | Lock model in subagent frontmatter, separate agents per run, pre-flight contamination check |
-| Eval design (assertions) | Non-discriminating assertions (#3), overfitting to prompts (#11) | Source assertions from SKILL.md non-obvious patterns, assert patterns not exact code, calibrate against known-good skills |
-| Environment setup | ddev-router failures (#4), port conflicts (#10), stale state (#9) | Auto-retry in script, URL discovery via ddev describe, full teardown between runs |
-| Batch execution | Context overflow (#5), stale state (#9), RAM exhaustion (#14) | 3-4 skills per session, externalize state to disk, monitor Chromium processes |
-| E2E verification | agent-browser flakiness (#6), port conflicts (#10), RAM leaks (#14) | Prefer curl, reserve agent-browser for JS-only tests, trap cleanup handlers |
-| Grading | Grader bias (#8), non-discriminating assertions (#3) | Binary assertions, automated grep/drush checks, suspicious perfection review |
-| Module lifecycle | Registry corruption (#7), CLAUDECODE env (#12) | Tear down entire ddev env, unset CLAUDECODE in all scripts |
+**What goes wrong:**
+The existing 14 skills are extracted from the Sipos D10 book. The Group module, Drupal AI module, and project management patterns are NOT in the book. Building a Group-based module may require patterns that no existing skill covers: custom GroupRelationType plugins, AI provider service injection, Tool API definitions, group-scoped Views, group-aware access checking.
 
----
+**How to avoid:**
+- Identify knowledge gaps early: list every Group/AI API pattern the module will need, cross-reference against existing SKILL.md files.
+- Do NOT modify existing skills to add Group-specific content. The 14 skills are book-derived and validated via v2.0 evals. Adding non-book content risks regression.
+- If Group-specific patterns are needed, create a NEW skill (e.g., `drupal-group-integration`) that covers Group module development patterns. This keeps the book-sourced skills clean.
+- For AI module integration: the patterns are standard Drupal (services, plugins, dependency injection). The existing `drupal-plugins-blocks` and `drupal-routing-controllers` skills likely cover most of it. Validate empirically.
 
-## Appendix: v1.0 Skill-Authoring Pitfalls (preserved for reference)
+**Warning signs:**
+- Phases requiring Group-specific patterns produce 0% delta because no skill covers them
+- Temptation to add Group patterns to existing skills (scope creep)
+- Multiple phases blocked by missing Group API knowledge that existing skills cannot provide
 
-The following pitfalls from v1.0 research remain relevant to the skills themselves but are not the focus of v2.0 pipeline work:
-
-1. **Annotation-Only Code Examples** -- Skills must show both D10 annotations and D11 PHP attributes
-2. **Skills as Reference Docs** -- Skills must be decision guides, not API dumps
-3. **Trigger Description Tuning** -- Descriptions must match developer intent, not skill content
-4. **Cross-Reference Loops** -- Each Drupal concept owned by exactly one skill
-5. **500-Line Limit on Deep Topics** -- Use reference files for overflow
-6. **Drupal Version Confusion** -- Explicitly anchor to D10/D11, blacklist D7/D8 patterns
-7. **Missing YAML Ecosystem** -- Every PHP example needs corresponding YAML files
-8. **Non-Grounded Eval Prompts** -- Prompts should reference real project code
-9. **Training Data Conflicts** -- Skills must work with Claude's existing knowledge, not against it
-10. **Monolithic Skills** -- Validate groupings against real developer prompts
-
-These are documented in detail in the git history of this file (v1.0 research, 2026-03-05).
+**Phase to address:**
+Architecture phase. Identify which phases need Group-specific knowledge. Create a new skill if gap analysis warrants it.
 
 ---
+
+## Technical Debt Patterns
+
+Shortcuts that seem reasonable but create long-term problems.
+
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Hard-coding AI provider (e.g., Anthropic only) | Faster implementation | Locks out OpenAI/Gemini users, breaks when provider changes | Never -- use `ai.provider` abstraction from day one |
+| Skipping Group access control testing | Faster feature delivery | Users discover broken permissions in production | Never -- Group access is the module's core value |
+| Putting all 14 skills in plugin without description optimization | Ship plugin fast | Auto-trigger rate is ~50%, making the plugin feel broken | Only for internal testing; optimize descriptions before public release |
+| Using Group 2.x API calls that happen to work on 3.x | Code works today | Breaks on Group 3.4+ when deprecated 2.x shims are removed | Never -- use 3.x API from the start |
+| Tight coupling between project management entities and AI features | One codebase, simpler dev | Cannot install project management without AI module | Never -- AI should be an optional submodule or separate module |
+| Using existing v2.0 eval methodology for v3.0 without adaptation | Reuse proven pipeline | Cannot measure auto-triggering, which is v3.0's core question | For content value validation only; need separate activation eval |
+
+## Integration Gotchas
+
+Common mistakes when connecting to external services and APIs.
+
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| Group module + custom entities | Using `entity_type_id` in GroupRelationType annotation without enabling the relation in group type config | After creating the plugin, must also create a GroupRelationshipType config entity via UI or config install |
+| AI module + provider service | Calling `$provider->chat()` without checking if the provider supports the Chat operation type | Check `$provider->isUsable()` and handle the case where no provider is configured |
+| AI Agents + Group content | Assuming AI agent's user has group permissions because they have core permissions | Add the AI agent's user to relevant groups with appropriate group roles |
+| Plugin + existing install.sh | Shipping plugin without migration path for existing `~/.claude/skills/` users | Add uninstall instructions, migration hook, or dual-install detection |
+| Claude Code plugin + headless `claude -p` | Assuming `-p` mode loads plugins for eval | Verify empirically; likely need `--plugin-dir` flag explicitly |
+| Tool API + AI Agents | Defining tools without JSON Schema for input/output | Tool API requires typed schemas for AI function calling to work |
+
+## Performance Traps
+
+Patterns that work at small scale but fail as usage grows.
+
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| Loading all Group relationships eagerly | Slow page loads, high memory | Use paged queries, lazy loading of relationships | >100 relationships per group |
+| AI provider calls on every page load | Timeout errors, API rate limits, high cost | Cache AI responses with appropriate cache tags, use batch/queue for bulk operations | >10 concurrent users triggering AI |
+| No cache metadata on Group-related render arrays | Stale content after group membership changes | Add `group:ID` cache tags, `user.group_permissions` cache context | Any multi-user scenario |
+| Eval running 14 skills x 3 tiers sequentially | 6+ hour eval run | Run independent evaluations in parallel where possible, skip self-evident phases | Every full eval run |
+
+## Security Mistakes
+
+Domain-specific security issues beyond general web security.
+
+| Mistake | Risk | Prevention |
+|---------|------|------------|
+| AI agent with admin permissions creating content in any group | Privilege escalation -- AI creates content users cannot access | Scope AI agent permissions to specific groups; never give site-wide admin to AI service account |
+| Exposing AI provider API keys via Group content fields | API key theft, financial loss | Use Drupal Key module for credential storage; never store keys in config or content |
+| Group permissions not tested for anonymous users | Public access to private project data | Write explicit access tests for anonymous, authenticated, and non-member roles |
+| Trusting AI-generated content without sanitization | XSS via AI output injected into render arrays | Always use `#markup` with `Xss::filterAdmin()` or proper render element types for AI output |
+| Custom REST endpoints bypassing Group access checks | Ungrouped content creation, access control bypass | Use `$group->hasPermission()` in custom controllers, not just core `$account->hasPermission()` |
+
+## UX Pitfalls
+
+Common user experience mistakes in this domain.
+
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| Plugin skills auto-trigger on unrelated tasks | Claude uses drupal-caching skill when user is working on a Node.js project | Make skill descriptions highly specific with clear negative constraints ("Do NOT use for non-Drupal projects") |
+| No feedback when AI agent fails within Group context | User sees generic error, cannot debug | Surface AI agent errors in Drupal messages with contextual information about which tool failed and why |
+| Requiring Group module for basic project management | Users who want simple task tracking must install complex access control system | Make Group integration optional -- basic project management should work without Group module |
+| Phase-level eval prompts that are too specific to the module | Eval measures prompt memorization, not skill value | Write phase prompts that describe the GOAL, not the implementation |
+
+## "Looks Done But Isn't" Checklist
+
+Things that appear complete but are missing critical pieces.
+
+- [ ] **Plugin packaging:** Skills load in `/context` -- verify each of 14 skills appears, not just the first few
+- [ ] **Plugin packaging:** Skills auto-trigger -- test with 5+ natural prompts per skill, not just `/skill-name` invocation
+- [ ] **Plugin packaging:** Old `install.sh` users are handled -- migration path documented, dual-install detection works
+- [ ] **Group integration:** Custom GroupRelationType plugin -- verify it appears in Group Type configuration UI, not just that the plugin class exists
+- [ ] **Group integration:** Access control -- test all 5 user types (anon, auth, member, group-admin, site-admin), not just admin
+- [ ] **AI integration:** Provider abstraction -- verify module installs and basic features work WITHOUT AI module enabled
+- [ ] **AI integration:** Tool definitions -- verify tools appear in AI Agent Explorer, not just that the code compiles
+- [ ] **Eval methodology:** Activation logging -- verify you can determine which skills activated from eval transcripts
+- [ ] **Eval methodology:** Baseline validity -- verify without-plugin baseline produces working (if less optimal) code, not broken code
+- [ ] **Eval methodology:** Phase independence -- verify Phase N+1 baseline does not depend on Phase N baseline's specific implementation
+
+## Recovery Strategies
+
+When pitfalls occur despite prevention, how to recover.
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Skills not auto-triggering (#1) | LOW | Optimize descriptions iteratively. Add hooks if needed. Does not require code changes. |
+| Eval conflates activation and content (#2) | MEDIUM | Add explicit-trigger tier to eval. Re-run affected phases only. |
+| Wrong Group API version (#3) | HIGH | Find-and-replace all 2.x terms. Rewrite plugin classes. Rebuild config entities. |
+| Plugin structure wrong (#4) | LOW | Move directories to correct locations. Re-install plugin. |
+| AI API breaks on update (#5) | MEDIUM | Service abstraction layer limits blast radius. Update wrapper, not callsites. |
+| Dual install confusion (#6) | LOW | Ship `install.sh --uninstall`. Document in README. |
+| Group access blocks AI agent (#7) | MEDIUM | Create dedicated AI service account, add to groups, assign group roles. |
+| Phase eval chain breaks (#8) | HIGH | Redesign as independent phases with fixtures. Significant rework. |
+| REST/JSON:API group context missing (#9) | MEDIUM | Add custom controller or two-step creation pattern. |
+| Headless eval cannot test auto-trigger (#10) | MEDIUM | Accept different methodology for activation vs content evals. |
+
+## Pitfall-to-Phase Mapping
+
+How roadmap phases should address these pitfalls.
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| Auto-trigger unreliability (#1) | Plugin packaging + description optimization | Run activation test suite: 10 prompts x 14 skills, >80% activation rate |
+| Eval methodology conflation (#2) | Eval design phase | Document three-tier eval design, validate with one calibration phase |
+| Group 3.x API terminology (#3) | Entity/data model phase | grep for 2.x terms in codebase, zero matches required |
+| Plugin directory structure (#4) | Plugin packaging phase | `claude --debug` shows all 14 skills registered |
+| Drupal AI API instability (#5) | Architecture phase | AI service abstraction interface defined, module installs without AI module |
+| install.sh migration (#6) | Plugin packaging phase | Test: install via install.sh, then install plugin, verify no duplicates |
+| Group access overrides (#7) | Access/security phase | Automated tests for all 5 user types on grouped content |
+| Phase eval state accumulation (#8) | Eval design phase | Each phase has documented fixtures or snapshot strategy |
+| REST group context (#9) | Routing/API phase | JSON:API POST to create task in group succeeds |
+| Headless vs interactive eval (#10) | Eval infrastructure phase | Empirical test: does `--plugin-dir` work with `-p`? |
+| Missing Group skill content (#11) | Architecture phase | Gap analysis document: patterns needed vs patterns covered |
 
 ## Sources
 
-- v1.0 empirical eval results: `.planning/phases/07-full-eval-optimize-loop/.continue-here.md` (HIGH confidence -- 9 skills evaluated, direct observations)
-- v1.0 phase 6 eval results: `.planning/phases/06-live-eval-loop/.continue-here.md` (HIGH confidence -- 4 skills with meaningful deltas)
-- Project memory: MEMORY.md eval execution rules (HIGH confidence -- validated across 7+ sessions)
-- Setup/teardown source code: `eval/setup-drupal-env.sh`, `eval/teardown-drupal-env.sh` (HIGH confidence)
-- e2e-assert.sh source code: `eval/e2e-assert.sh` (HIGH confidence)
-- Claude Code Agent tool schema: empirically verified `additionalProperties: false`, no model parameter (HIGH confidence)
-- ddev-router behavior: consistent with observed 50% failure rate across v1.0 sessions (HIGH confidence)
+- [Claude Code Skills Documentation](https://code.claude.com/docs/en/skills) -- Skill loading, description budget (2% of context window), auto-triggering behavior, frontmatter reference
+- [Claude Code Plugins Reference](https://code.claude.com/docs/en/plugins-reference) -- Plugin directory structure, plugin.json schema, component locations, common issues table
+- [Anthropic Skill Authoring Best Practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) -- Description writing guidelines, third-person requirement, 1024-char limit, testing recommendations
+- [Claude Code Skills Activation Issues](https://dev.to/oluwawunmiadesewa/claude-code-skills-not-triggering-2-fixes-for-100-activation-3b57) -- UserPromptSubmit hook workaround, forced evaluation pattern (LOW confidence -- unverified activation rates)
+- [Skills Activation Community Research](https://scottspence.com/posts/how-to-make-claude-code-skills-activate-reliably) -- Imperative vs passive description testing, SLASH_COMMAND_TOOL_CHAR_BUDGET env var
+- [Drupal Group Module](https://www.drupal.org/project/group) -- Group 3.3.0 release notes, API changes from 2.x to 3.x
+- [Drupal Group 3.x API Changes](https://www.drupal.org/node/3292844) -- `addContent()` -> `addRelationship()`, entity renames
+- [Drupal Group 3.x GroupRelationTypeManager](https://www.drupal.org/node/3232814) -- Service renames, handler pattern
+- [Adding Custom Permissions to Groups](https://www.hashbangcode.com/article/drupal-10-adding-custom-permissions-groups) -- GroupRelationType plugin implementation, Group 3.x code patterns
+- [Drupal AI Module](https://www.drupal.org/project/ai) -- Version 1.2.11, provider abstraction API
+- [Drupal AI Agents Module](https://www.drupal.org/project/ai_agents) -- Version 1.2.3, tool calling framework, WIP documentation
+- [Drupal AI Agents Getting Started](https://project.pages.drupalcode.org/ai/2.0.x/agents/) -- Agent architecture, tool calling, development approach
+- [Group Module REST/JSON:API Issue](https://www.drupal.org/project/group/issues/2872645) -- `$context['group']` required for content creation access checks
+- [Group Access Control Issue](https://www.drupal.org/project/group/issues/3162511) -- `forbidden()` result breaking regular node grants
+- v2.0 empirical eval data from MEMORY.md -- headless pipeline validated, 37.5% vs 0% agent harness delta on caching skill
+- Existing SKILL.md files (drupal-caching, drupal-module-scaffold) -- current description format with imperative directives
 
 ---
-*Pitfalls research for: Automated eval pipeline for Claude Code Drupal skills*
-*Researched: 2026-03-06*
+*Pitfalls research for: Group-based project management with AI/AI Agents integration + Claude Code plugin packaging*
+*Researched: 2026-03-07*

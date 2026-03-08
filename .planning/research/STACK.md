@@ -1,290 +1,217 @@
-# Technology Stack
+# Stack Research
 
-**Project:** Drupal Skills v2.0 -- Eval & Optimization Pipeline
-**Researched:** 2026-03-06
-**Scope:** NEW stack additions for automated eval pipeline only. Existing skill/SKILL.md stack is unchanged.
+**Domain:** Group-based project management module with AI/AI Agents integration + Claude Code plugin packaging
+**Researched:** 2026-03-07
+**Confidence:** MEDIUM — Drupal module versions verified via drupal.org; Claude Code plugin system verified via official docs; AI Agents custom agent patterns partially verified
 
-## Recommended Stack Additions
+## Recommended Stack
 
-### 1. Custom Subagents (Claude Code Native)
+### Core Technologies
 
-| Component | Version | Purpose | Why |
-|-----------|---------|---------|-----|
-| `eval-executor` subagent | Claude Code native (`.claude/agents/eval-executor.md`) | Run skill eval prompts against Drupal env with controlled model | Frontmatter `model: sonnet` ensures consistent, cost-effective eval execution without manual `/model` switching. Replaces fragile Agent-tool-based approach from Phase 6/7 |
-| `eval-browser` subagent | Claude Code native (`.claude/agents/eval-browser.md`) | Automated E2E/UAT assertions via browser | Runs agent-browser commands against ddev sites for page-contains, element-exists, form validation. Replaces bash-only e2e-assert.sh with AI-driven browser interaction |
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| Drupal Core | ^10.4 \|\| ^11 | Base CMS framework | Common denominator of all contrib module requirements. 10.4+ needed because AI module 1.2.x requires ^10.4. PHP 8.1+ (D10) or 8.3+ (D11). |
+| Group | 3.3.5 | Group entity framework -- projects, teams, workspaces | The standard for arbitrary entity grouping in Drupal. v3.x uses `GroupRelationship` entity (renamed from `GroupContent`), supports both content and config entities in groups. Fresh installs should always use 3.x over 2.x. |
+| AI (Artificial Intelligence) | 1.2.11 (stable) | Unified AI abstraction layer | Provider-agnostic AI integration. All AI Agents functionality depends on this. Includes AI Core, AI Automators, AI Assistants API, AI CKEditor, AI Logging. Requires `drupal/key` for credential storage. |
+| AI Agents | 1.2.3 (stable) | Agent framework with tool calling | Provides the agent + tool calling infrastructure for AI-powered project management. Ships with Field Type, Content Type, Taxonomy, Views, Module, and Webform agents. Custom agents created via admin UI or code (AIFunctionCall plugins). |
+| AI Provider Anthropic | 1.2.1 | Claude model integration | Connects AI module to Anthropic Claude models. Required for Claude as the LLM backend for Drupal AI agents. Requires API key via Key module. |
 
-**Confidence: HIGH** -- Verified from official Claude Code docs at code.claude.com/docs/en/sub-agents.
+### Supporting Libraries
 
-#### Subagent File Format (Verified)
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| Key | ^1.18 | Secure API key storage | Always -- required by AI module for storing provider API keys (Anthropic, OpenAI, etc.) |
+| AI Agents Explorer | (ships with ai_agents) | Agent testing UI | During development -- provides admin interface for testing agent configurations at /admin/config/ai/agents |
+| AI Agents Extra | (ships with ai_agents) | Additional agent tools | When built-in tools are insufficient -- extends the tool set available to agents |
+| AI Agents Form Integration | (ships with ai_agents) | Form-aware agent tools | When agents need to interact with Drupal forms |
+| Inline Entity Form | ^3.0 | Editing related entities inline | If project management UI needs inline task creation within groups |
+| Token | ^1.13 | Token replacement for templates | If AI prompts need dynamic token replacement from Drupal entities |
 
-```yaml
----
-name: eval-executor
-description: >-
-  Execute Drupal skill eval prompts in an isolated ddev environment.
-  Use when running with-skill or without-skill eval comparisons.
-tools: Read, Write, Edit, Bash, Glob, Grep
-model: sonnet
-permissionMode: bypassPermissions
-maxTurns: 50
-skills:
-  - drupal-routing-controllers  # Only for with-skill runs
----
+### Development Tools
 
-You are a Drupal module developer. Given a prompt and a ddev project directory,
-implement the requested Drupal module code. Do NOT ask questions -- just create the code.
-```
+| Tool | Purpose | Notes |
+|------|---------|-------|
+| DDEV | Local Drupal development environment | Already used in eval pipeline. Target: `--project-type=drupal --php-version=8.3` |
+| Drush | CLI for Drupal operations | Module enable/disable, config export, entity queries, cache rebuild |
+| PHPUnit | Drupal testing | Kernel and Functional tests for custom module code |
+| phpcs + drupal/coder | Coding standards | Already set up via coding-standards skill |
+| Claude Code | AI-assisted development | The tool we're building the plugin for |
 
-**Critical fields for eval pipeline:**
+### Claude Code Plugin Structure
 
-| Field | Value | Why |
-|-------|-------|-----|
-| `model` | `sonnet` | Controls cost and ensures consistent eval executor model. Accepts `sonnet`, `opus`, `haiku`, or `inherit` |
-| `permissionMode` | `bypassPermissions` | Eval agents must run unattended without permission prompts |
-| `skills` | list of skill names | Injects SKILL.md content into subagent context at startup. Use for with-skill runs; omit for without-skill runs |
-| `maxTurns` | `50` | Prevents runaway agents; Drupal module creation typically takes 15-30 turns |
-| `tools` | explicit list | Restrict to needed tools only. Subagents cannot spawn other subagents |
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| Plugin manifest | `.claude-plugin/plugin.json` | Plugin identity, version, metadata |
+| Skills | `skills/<skill-name>/SKILL.md` | 14 Drupal skills packaged as plugin skills |
+| Supporting files | `skills/<skill-name>/references/` | Reference docs per skill (auto-discovered by Claude when referenced in SKILL.md) |
 
-**Two-agent pattern for knowledge isolation:**
-- `eval-executor` (without skills field) -- baseline runs
-- `eval-executor-skilled` (with `skills: [drupal-X]`) -- with-skill runs
-- OR: use `--agents` CLI flag to pass JSON config dynamically per run, toggling skills field
-
-**Dynamic agent via CLI (recommended for flexibility):**
-
-```bash
-claude --agent eval-executor --agents '{
-  "eval-executor": {
-    "description": "Execute Drupal eval prompt in ddev environment",
-    "prompt": "You are a Drupal module developer...",
-    "tools": ["Read", "Write", "Edit", "Bash", "Glob", "Grep"],
-    "model": "sonnet",
-    "permissionMode": "bypassPermissions",
-    "maxTurns": 50,
-    "skills": ["drupal-caching"]
-  }
-}'
-```
-
-This avoids maintaining two separate agent files per skill. The orchestrator generates the JSON dynamically, including or excluding the `skills` field.
-
-#### Environment Variable Alternative
-
-```bash
-export CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-4-5-20250929
-```
-
-Sets the model for ALL subagents globally. Less granular than per-agent `model` field but useful as a fallback.
-
-### 2. agent-browser (Already Installed)
-
-| Component | Version | Purpose | Why |
-|-----------|---------|---------|-----|
-| agent-browser | 0.16.3 (globally installed via npm) | Headless browser automation for E2E assertions | Already used by e2e-assert.sh. CLI-first design fits bash scripting. Provides `open`, `snapshot`, `eval`, `click`, `type`, `fill`, `screenshot` commands |
-
-**Confidence: HIGH** -- Verified installed at `/home/proofoftom/.nvm/versions/node/v24.12.0/bin/agent-browser`, version 0.16.3.
-
-**No changes needed.** agent-browser is already integrated via `eval/e2e-assert.sh`. The eval-browser subagent will use it for more complex E2E scenarios (login flows, multi-page navigation, form submission verification).
-
-#### Key CLI Commands for Eval
-
-| Command | Use Case |
-|---------|----------|
-| `agent-browser --session S open <url>` | Navigate to Drupal page |
-| `agent-browser --session S snapshot` | Get accessibility tree (AI-readable page content) |
-| `agent-browser --session S eval <js>` | Run JS assertions (querySelector, etc.) |
-| `agent-browser --session S get text <sel>` | Extract text from specific elements |
-| `agent-browser --session S get title` | Check page title for errors |
-| `agent-browser --session S screenshot [path]` | Capture visual state for debugging |
-| `agent-browser --session S --ignore-https-errors open <url>` | Handle ddev self-signed certs |
-| `agent-browser --session S close` | Clean up browser process |
-
-**Critical flag:** `--ignore-https-errors` is required for ddev HTTPS sites with self-signed certificates.
-
-**Session management:** Use unique session names (`eval-{skill}-{run}`) to prevent collisions during parallel eval runs.
-
-### 3. ddev for Fresh Drupal 10 Environments
-
-| Component | Version | Purpose | Why |
-|-----------|---------|---------|-----|
-| ddev | v1.24.8 (installed) | Isolated Drupal 10 environments per eval run | Fast, reproducible, supports `--project-type=drupal10`. Replaces os-knowledge-garden cloning with fresh D10 installs for cleaner eval baselines |
-
-**Confidence: HIGH** -- Verified installed, `--project-type=drupal10` confirmed in help output.
-
-#### Fresh D10 Setup (Replaces os-knowledge-garden Cloning)
-
-The existing `eval/setup-drupal-env.sh` clones os-knowledge-garden. The new pipeline should use fresh Drupal 10 instead:
-
-```bash
-#!/usr/bin/env bash
-# eval/setup-fresh-drupal10.sh <unique-name>
-set -euo pipefail
-unset CLAUDECODE 2>/dev/null || true
-
-NAME="${1:?Usage: setup-fresh-drupal10.sh <unique-name>}"
-TARGET_DIR="/tmp/drupal10-${NAME}"
-
-# Clean up stale environment
-if [ -d "$TARGET_DIR" ]; then
-  (yes | ddev delete -O "drupal10-${NAME}" 2>/dev/null) || true
-  rm -rf "$TARGET_DIR"
-fi
-
-mkdir -p "$TARGET_DIR"
-cd "$TARGET_DIR"
-
-# Configure ddev for Drupal 10
-ddev config --project-name="drupal10-${NAME}" \
-  --project-type=drupal10 \
-  --docroot=web \
-  --php-version=8.2
-
-# Start ddev (serialized to prevent router conflicts)
-(flock -x 200; ddev start) 200>/tmp/ddev-start.lock
-
-# Create Drupal project via composer
-ddev composer create drupal/recommended-project:^10 --no-interaction
-
-# Install Drupal with minimal profile (fast, clean baseline)
-ddev drush site:install minimal --account-name=admin --account-pass=admin -y
-
-# Enable common modules that eval tasks may need
-ddev drush pm:install node,block,field_ui,views,views_ui,path -y
-
-echo "$TARGET_DIR"
-```
-
-**Why fresh D10 instead of os-knowledge-garden:**
-- Cleaner baseline: no pre-existing modules/config to interfere with eval
-- Faster setup: ~2 min for fresh D10 vs ~4 min for os-kg with cascadia demo
-- Reproducible: same starting state every time
-- Simpler teardown: no root-owned files from Docker volumes
-
-**Why `--project-type=drupal10` specifically:**
-- Skills are based on Sipos book (D10, 4th ed 2023)
-- D10 requires PHP 8.1+ (use 8.2 for stability)
-- D10 uses `drupal/recommended-project` composer template
-
-### 4. skill-creator Scripts (Already Available)
-
-| Script | Path | Purpose | Integration |
-|--------|------|---------|-------------|
-| `aggregate_benchmark.py` | `~/.claude/plugins/cache/claude-plugins-official/skill-creator/205b6e0b3036/skills/skill-creator/scripts/aggregate_benchmark.py` | Aggregate grading.json files into benchmark.json with stats | Run after all eval runs complete. Reads workspace layout: `eval-N/{with,without}_skill/run-N/grading.json` |
-| `generate_review.py` | `~/.claude/plugins/cache/claude-plugins-official/skill-creator/205b6e0b3036/skills/skill-creator/eval-viewer/generate_review.py` | Generate HTML eval viewer for human review | Run after aggregate_benchmark. Opens browser with side-by-side comparison |
-| `run_eval.py` | (same cache path)/scripts/run_eval.py | Run trigger evaluation (description testing) | For Phase 2 (description optimization), NOT content eval |
-| `grader.md` | (same cache path)/agents/grader.md | Grader agent specification | Load into grader subagent. Grades transcripts + outputs against expectations |
-
-**Confidence: HIGH** -- All scripts verified on disk, source code read and analyzed.
-
-#### Workspace Directory Layout (Required by aggregate_benchmark.py)
-
-```
-drupal-{skill}-workspace/
-  iteration-{N}/
-    eval-{eval-name}/
-      with_skill/
-        run-1/
-          outputs/          # Files created by eval-executor
-          transcript.md     # Execution log
-          grading.json      # Written by grader agent
-          timing.json       # Optional: wall-clock timing
-        run-2/
-          ...
-      without_skill/
-        run-1/
-          ...
-    benchmark.json          # Generated by aggregate_benchmark.py
-    benchmark.md            # Human-readable summary
-```
-
-This layout is already in use from Phase 6/7 iterations. No changes needed.
-
-#### grading.json Schema (Required by aggregate_benchmark.py)
-
+**Plugin manifest format** (verified from official docs):
 ```json
 {
-  "expectations": [
-    {"text": "...", "passed": true, "evidence": "..."}
-  ],
-  "summary": {
-    "passed": 5,
-    "failed": 1,
-    "total": 6,
-    "pass_rate": 0.83
-  }
+  "name": "drupal-skills",
+  "description": "13 Drupal domain skills + coding-standards for Claude Code. Covers module scaffolding, routing, entities, forms, caching, testing, theming, and more for Drupal 10/11 module development.",
+  "version": "1.0.0",
+  "author": {
+    "name": "proofoftom"
+  },
+  "repository": "https://github.com/proofoftom/drupal-skills",
+  "license": "MIT",
+  "keywords": ["drupal", "drupal-10", "drupal-11", "module-development", "php"]
 }
 ```
 
-The `summary.pass_rate` field is what aggregate_benchmark.py uses for delta calculations.
+**Skill invocation after plugin install:** `/drupal-skills:drupal-caching`, `/drupal-skills:drupal-routing-controllers`, etc.
 
-### 5. Orchestrator Script (New)
-
-| Component | Purpose | Why |
-|-----------|---------|-----|
-| `eval/run-skill-eval.sh` | Orchestrate single-skill eval cycle: setup ddev, spawn with/without agents, grade, aggregate | Replaces manual orchestration from main Claude session. Reduces context window pressure. Can be called in a loop for batch processing |
-
-**Not a new dependency** -- this is a bash script that ties existing components together. Details belong in ARCHITECTURE.md.
-
-## What NOT to Add
-
-| Technology | Why NOT |
-|------------|---------|
-| Playwright/Puppeteer directly | agent-browser already wraps Playwright with AI-friendly CLI. Adding raw Playwright adds complexity without benefit |
-| pytest/PHPUnit for assertions | skill-creator's grader agent + expectations model is the standard. Custom test frameworks diverge from skill-creator methodology |
-| Docker Compose for Drupal | ddev already manages Docker. Adding compose files duplicates ddev's job |
-| Custom eval dashboard | skill-creator's generate_review.py provides HTML viewer. Build custom only if generate_review proves insufficient |
-| claude -p (headless CLI) | Unreliable in nested sessions (hangs, black box). Custom subagents with `--agent` flag provide observability |
-| os-knowledge-garden for evals | Pre-existing modules contaminate eval baselines. Fresh D10 is cleaner |
-| Multiple runs per eval (3+) | Start with 1 run per config. Add multi-run only after pipeline is stable and delta signal is clear |
-| CLAUDE_CODE_SUBAGENT_MODEL env var | Per-agent `model: sonnet` in frontmatter is more precise. Global env var would affect ALL subagents including grader (which should run on opus) |
-
-## Alternatives Considered
-
-| Category | Recommended | Alternative | Why Not |
-|----------|-------------|-------------|---------|
-| Model control | `model: sonnet` in agent frontmatter | `CLAUDE_CODE_SUBAGENT_MODEL` env var | Env var is global; we need sonnet for executor but opus for grader |
-| Eval execution | Custom subagent files | `claude -p` headless CLI | Headless CLI hangs in nested sessions, no observability, documented failure mode from Phase 6 |
-| Knowledge isolation | Two agent configs (with/without skills field) | Single agent + prompt manipulation | `skills` field in frontmatter injects full SKILL.md content at startup; cannot be "un-injected" mid-session |
-| Browser testing | agent-browser CLI (installed) | Playwright MCP server | agent-browser already works, is simpler, and is designed for AI agent use. No MCP overhead |
-| Drupal env | Fresh D10 via ddev | os-knowledge-garden clone | Fresh D10 = clean baseline, faster setup, no interference from pre-existing modules |
-| Dynamic agent config | `--agents` CLI flag with JSON | Two static .md files per skill | CLI flag avoids 26 agent files (2 per 13 skills). Orchestrator generates JSON dynamically |
-
-## Version Summary
-
-| Tool | Installed Version | Status |
-|------|-------------------|--------|
-| ddev | v1.24.8 | Already installed, no update needed |
-| agent-browser | 0.16.3 | Already installed globally, no update needed |
-| Node.js | v24.12.0 | Already installed (agent-browser host) |
-| Python 3 | System | Required for skill-creator scripts (aggregate_benchmark.py, generate_review.py) |
-| Claude Code | Current | Custom subagent support via `.claude/agents/` and `--agents` flag |
-| skill-creator plugin | Installed at marketplace path | Provides grader.md, aggregate_benchmark.py, generate_review.py |
+**Auto-triggering:** Skills with good `description` fields in SKILL.md frontmatter will auto-trigger when Claude detects relevant context. This is the key v3.0 eval metric -- skills must trigger from natural prompts without explicit `/skill-name` invocation. Claude loads skill descriptions into context (2% of context window budget), then loads full skill content when it decides a skill is relevant.
 
 ## Installation
 
-No new packages to install. All dependencies are already present.
-
 ```bash
-# Verify everything is in place
-which ddev           # v1.24.8
-which agent-browser  # 0.16.3
-python3 --version    # 3.x
+# Drupal project setup (via DDEV)
+ddev config --project-type=drupal --php-version=8.3
+ddev start
+ddev composer create drupal/recommended-project
 
-# Verify skill-creator scripts
-ls ~/.claude/plugins/cache/claude-plugins-official/skill-creator/*/skills/skill-creator/scripts/aggregate_benchmark.py
-ls ~/.claude/plugins/cache/claude-plugins-official/skill-creator/*/skills/skill-creator/eval-viewer/generate_review.py
-ls ~/.claude/plugins/cache/claude-plugins-official/skill-creator/*/skills/skill-creator/agents/grader.md
+# Core contrib modules for the Group PM module
+ddev composer require 'drupal/group:^3.3'
+ddev composer require 'drupal/ai:^1.2'
+ddev composer require 'drupal/ai_agents:^1.2'
+ddev composer require 'drupal/ai_provider_anthropic:^1.2'
+ddev composer require 'drupal/key:^1.18'
 
-# Only new file to create:
-# eval/setup-fresh-drupal10.sh (replaces os-kg-based setup for eval pipeline)
-# .claude/agents/eval-executor.md (optional if using --agents CLI flag)
+# Development dependencies
+ddev composer require --dev drupal/coder squizlabs/php_codesniffer
+
+# Enable modules
+ddev drush en group ai ai_agents ai_provider_anthropic key -y
+
+# Claude Code plugin (local testing during development)
+claude --plugin-dir /home/proofoftom/Code/drupal-skills
 ```
+
+## Alternatives Considered
+
+| Recommended | Alternative | When to Use Alternative |
+|-------------|-------------|-------------------------|
+| Group 3.3.x | Organic Groups (og) | Never for new projects -- OG is legacy, Group is the modern standard |
+| Group 3.3.x | Group 2.3.x | Only if migrating from Group 1.x (2.x has migration path from 1.x, 3.x from 2.x via 3.3.1+) |
+| AI module 1.2.x | AI module 1.3.0-rc2 | Only if you need Drupal ^10.5 \|\| ^11.2 features and are willing to use RC |
+| AI Agents 1.2.x | AI Agents 1.3.0-beta2 | Only if you need bleeding-edge agent features and accept beta instability |
+| AI Provider Anthropic | AI Provider OpenAI | If project requires GPT models instead of Claude. Both work through AI module abstraction layer. |
+| Custom entities for tasks | Content types (nodes) for tasks | If simplicity matters more than clean entity design. Nodes work but custom entities are more appropriate for non-content data like tasks/milestones. |
+| Claude Code plugin | `~/.claude/skills/` install via install.sh | For personal use only. Plugin is for distribution; `install.sh --symlink` remains for local dev convenience. |
+
+## What NOT to Use
+
+| Avoid | Why | Use Instead |
+|-------|-----|-------------|
+| Drupal PM module | No stable D10/D11 release, last dev update Nov 2024, no active maintainer | Build custom entities on Group module |
+| Group 1.x (8.x-1.x) | Security fixes only, deprecated GroupContent API | Group 3.3.x with GroupRelationship API |
+| AI module 1.1.x | Older stable branch, missing features in 1.2.x, requires only ^10.2 but lacks newer APIs | AI 1.2.11 (stable) |
+| Direct Anthropic SDK calls | Bypasses AI module abstraction, tightly couples to single provider | AI module provider plugin system |
+| `.claude/commands/` directory | Legacy format, merged into skills but skills preferred for new work | `skills/<name>/SKILL.md` format |
+| Hardcoded API keys in settings.php | Security risk, breaks deployment portability | Key module with file-based or environment provider |
+| AI module 1.3.x | RC/beta quality, not covered by security advisory team yet | AI 1.2.11 (stable, security-covered) |
+| Separate marketplace repo | Over-engineering for initial release | Submit directly to anthropics/claude-plugins-official after validation |
+
+## Stack Patterns by Variant
+
+**If building the Group PM module as a standalone contrib:**
+- Use Group 3.3.x as the base, define custom group types (Project, Sprint)
+- Define custom content entities (Task, Milestone) with GroupRelation plugins in `src/Plugin/Group/Relation/`
+- AI Agents integration via custom AIFunctionCall plugins that operate within group scope
+- Keep AI module as a soft dependency (module works without it, enhanced with it)
+- Export default config in `config/install/` and `config/optional/` (optional for AI-dependent config)
+
+**If packaging skills as a Claude Code plugin:**
+- Add `.claude-plugin/plugin.json` manifest at repo root
+- Keep `skills/` directory at repo root (already correct location for both plugin and install.sh)
+- Skills auto-discovered from `skills/<name>/SKILL.md` when plugin enabled
+- Plugin namespace: all skills become `/drupal-skills:<skill-name>`
+- `references/` and `evals/` subdirectories remain -- Claude reads references when SKILL.md links them; evals/ ignored by plugin system
+- Install command: `/plugin install drupal-skills@<marketplace>` or `claude --plugin-dir ./`
+
+**If evaluating skill auto-triggering (v3.0 eval):**
+- Install plugin via `claude --plugin-dir /path/to/drupal-skills` for local testing
+- Use natural language prompts (no `/drupal-skills:skill-name` invocation)
+- Compare: plugin-installed vs no-plugin baseline
+- Key metric: does Claude auto-load the right skill from its description field?
+- Budget awareness: skill descriptions consume 2% of context window. With 14 skills, each description should be concise.
+
+## Version Compatibility
+
+| Package | Compatible With | Notes |
+|---------|-----------------|-------|
+| drupal/group:^3.3 | drupal/core:^10.3 \|\| ^11 | Requires PHP 8.1+ (D10) or 8.3+ (D11) |
+| drupal/ai:^1.2 | drupal/core:^10.4 \|\| ^11 | Requires drupal/key. **Bottleneck**: highest core minimum (10.4 vs 10.3 for others) |
+| drupal/ai_agents:^1.2 | drupal/core:^10.3 \|\| ^11 | Requires drupal/ai (version constraint inferred from ecosystem) |
+| drupal/ai_provider_anthropic:^1.2 | drupal/core:^10.3 \|\| ^11 | Requires drupal/ai. API key via Key module. |
+| Claude Code plugin system | Claude Code >= 1.0.33 | Plugin support including `/plugin` command. Skills require SKILL.md with YAML frontmatter. |
+
+**Effective minimum Drupal core:** 10.4 (bottleneck is AI module 1.2.x requiring ^10.4).
+
+**Recommended target:** Drupal 11 with PHP 8.3 -- all modules support it, best forward compatibility, simplest dependency resolution.
+
+## Key Integration Points
+
+### Group <-> AI Agents Integration
+
+The Group module provides the entity framework (projects, tasks as group relationships). AI Agents provides the automation layer. Integration happens through:
+
+1. **Custom AIFunctionCall plugins** -- Drupal plugins that can query/modify Group entities (create tasks, assign users to groups, update task status)
+2. **Custom AI Agents** -- Agents configured via admin UI or code that combine multiple tools for project management workflows
+3. **Tool property restrictions** -- Limiting agent tools to specific group types or entity bundles via the AI Agents config UI
+4. **Group-scoped agent access** -- Agents operating within a specific group's permission context
+
+### Group Module Architecture (v3.x)
+
+Key entities and concepts for the custom module:
+- `Group` entity -- the container (Project, Sprint, Team)
+- `GroupType` config entity -- bundle definition (like a content type for groups)
+- `GroupRelationship` entity -- the join entity linking content/users to a group (renamed from GroupContent in v3)
+- `GroupRelationType` config entity -- bundle definition for relationships
+- `GroupRelation` plugins -- define what can be added to a group (`src/Plugin/Group/Relation/`)
+- `RelationHandler` services -- handler classes in `src/Plugin/Group/RelationHandler/`
+- `Group::addRelationship()` -- API method (renamed from addContent() in v3), returns the created entity
+- Group permissions -- per-group-type permission layer on top of Drupal core permissions
+
+### AI Module Architecture
+
+- **AI Core** -- abstraction layer, operation types (chat, embeddings, image gen, speech-to-text, etc.)
+- **Providers** -- plugin system for LLM backends (Anthropic, OpenAI, Ollama, Huggingface, etc.)
+- **Key module** -- secure credential storage for API keys
+- **AI Agents** -- agent framework with tool calling, loops (max_loops config), and sub-agent delegation
+- **AIFunctionCall plugins** -- custom tool definitions for agents (the extension point for our module)
+- **Default prompts** -- agents ship with default prompts that can be overridden via config UI; once overridden, file-based prompts are not used
+
+### Claude Code Plugin Architecture
+
+- **Plugin manifest** -- `.claude-plugin/plugin.json` at repo root (the only file in `.claude-plugin/`)
+- **Skills directory** -- `skills/<name>/SKILL.md` with YAML frontmatter (description triggers auto-loading)
+- **Supporting files** -- `skills/<name>/references/` (existing structure, Claude reads when SKILL.md references them)
+- **Namespace** -- all skills prefixed with plugin name: `/drupal-skills:skill-name`
+- **Auto-triggering** -- description always in context; full skill loads when Claude determines it's relevant
+- **Distribution** -- via marketplace (GitHub repo with `.claude-plugin/marketplace.json`) or direct `--plugin-dir` flag
+- **Installation scopes** -- user (personal), project (team via VCS), local (gitignored)
 
 ## Sources
 
-- **Claude Code subagent docs** (PRIMARY): https://code.claude.com/docs/en/sub-agents -- Verified 2026-03-06. Frontmatter fields, model control, skills injection, permissionMode, --agents CLI flag, tool restrictions
-- **agent-browser CLI**: Verified locally via `agent-browser --help` and `agent-browser --version` (0.16.3). Source: https://github.com/vercel-labs/agent-browser
-- **ddev docs**: Verified locally via `ddev config --help`. `--project-type=drupal10` confirmed
-- **skill-creator scripts**: Verified on disk at `~/.claude/plugins/cache/claude-plugins-official/skill-creator/205b6e0b3036/skills/skill-creator/scripts/`. Source code for aggregate_benchmark.py and run_eval.py read and analyzed
-- **skill-creator grader.md**: Verified on disk. Grading schema with expectations/summary/claims/eval_feedback structure documented
-- **Phase 6/7 eval results**: From MEMORY.md. Documents known issues with claude -p, knowledge isolation requirements, and eval execution rules
+- [Group module project page](https://www.drupal.org/project/group) -- version 3.3.5, verified 2026-03-07 (HIGH confidence)
+- [Group 3.3.5 release notes](https://www.drupal.org/project/group/releases/3.3.5) -- requirements verified (HIGH confidence)
+- [Group v3 API changes: addRelationship()](https://www.drupal.org/node/3292844) -- API rename confirmed (MEDIUM confidence)
+- [Group documentation](https://www.drupal.org/docs/extending-drupal/contributed-modules/contributed-module-documentation/group) -- architecture concepts (MEDIUM confidence)
+- [AI module project page](https://www.drupal.org/project/ai) -- version 1.2.11, verified 2026-03-07 (HIGH confidence)
+- [AI module documentation](https://project.pages.drupalcode.org/ai/1.2.x/) -- sub-modules and architecture (MEDIUM confidence)
+- [AI Agents project page](https://www.drupal.org/project/ai_agents) -- version 1.2.3, verified 2026-03-07 (HIGH confidence)
+- [AI Agents documentation](https://ai-agents-project-eb5f6489e826e45857a7585a7d05c3e39463e30c9c8d5.pages.drupalcode.org/) -- built-in agents and config (MEDIUM confidence)
+- [QED42 AI Agents practical guide](https://www.qed42.com/insights/exploring-drupals-ai-agents-a-practical-guide-for-site-builders) -- agent structure and tool calling (MEDIUM confidence)
+- [AI Provider Anthropic](https://www.drupal.org/project/ai_provider_anthropic) -- version 1.2.1, verified 2026-03-07 (HIGH confidence)
+- [Claude Code Skills documentation](https://code.claude.com/docs/en/skills) -- skill anatomy, auto-triggering, frontmatter reference (HIGH confidence)
+- [Claude Code Plugins documentation](https://code.claude.com/docs/en/plugins) -- plugin structure, manifest, quickstart (HIGH confidence)
+- [Claude Code Plugins reference](https://code.claude.com/docs/en/plugins-reference) -- full plugin.json schema, directory structure, CLI commands (HIGH confidence)
+- [Official Anthropic plugin marketplace](https://github.com/anthropics/claude-plugins-official) -- marketplace structure and submission (HIGH confidence)
+- [Drupal PHP requirements](https://www.drupal.org/docs/getting-started/system-requirements/php-requirements) -- D10 needs PHP 8.1+, D11 needs PHP 8.3+ (HIGH confidence)
+
+---
+*Stack research for: Drupal Skills v3.0 -- Group AI Project Management*
+*Researched: 2026-03-07*

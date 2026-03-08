@@ -1,136 +1,296 @@
-# Feature Landscape: v2.0 Eval & Optimization Pipeline
+# Feature Research: v3.0 Group AI Project Management
 
-**Domain:** Automated skill evaluation pipeline for 13 Drupal skills
-**Researched:** 2026-03-06
-**Supersedes:** v1.0 FEATURES.md (which covered SKILL.md content features -- those are LOCKED)
+**Domain:** Drupal contrib module (Group-based project management with AI Agents integration) + Claude Code plugin packaging + skill auto-trigger evaluation
+**Researched:** 2026-03-07
+**Confidence:** MEDIUM (Group and AI modules verified via drupal.org docs; Claude Code plugin structure verified via official docs; integration patterns between them are novel and uncharted territory)
 
-## Table Stakes
+## Feature Landscape
 
-Features the eval pipeline MUST have to produce valid, actionable benchmark data. Missing any of these means eval results are unreliable or require heavy manual intervention.
+This milestone has three distinct feature domains that converge:
+
+1. **Plugin Packaging** -- restructure existing 14 skills as a Claude Code plugin with auto-triggering
+2. **Group-based Project Management Module** -- custom Drupal contrib module built on Group 3.x
+3. **AI Agents Integration** -- connect project management to Drupal AI/AI Agents framework
+
+Each domain has its own table stakes, but the real value is proving them together: building a real module with the plugin installed to validate auto-triggering across all skill domains.
+
+---
+
+### Table Stakes (Users Expect These)
+
+#### A. Plugin Packaging (Claude Code Plugin)
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| **With-skill / without-skill subagent pairs** | Knowledge isolation is the entire methodology. A single agent that reads SKILL.md then runs "without" is contaminated. Must be 2 separate subagents per eval. | Med | Skill-creator SKILL.md Step 1: "spawn two subagents in the same turn -- one with the skill, one without" |
-| **Model control via agent frontmatter** | Evals must run on Sonnet (the target user model), not Opus. Agent `.md` files support `model: sonnet` in YAML frontmatter. Eliminates fragile `/model` switching. | Low | Discovered from .claude/agents/*.md pattern. Phase 6 proved Sonnet is the right executor model. |
-| **Grader agent following skill-creator grader.md** | Grading must produce `grading.json` with exact schema: `expectations[].text/passed/evidence`, `summary.pass_rate`, `claims[]`, `eval_feedback`. Viewer depends on these exact field names. | Med | Read grader.md: fields must be `text`, `passed`, `evidence` -- NOT `name`/`met`/`details` |
-| **aggregate_benchmark.py integration** | Script reads `eval-*/with_skill/run-N/grading.json` directory tree. Produces `benchmark.json` with `run_summary.with_skill/without_skill` stats (mean/stddev/min/max) and delta. | Low | Script already exists at skill-creator path. Supports workspace layout natively. |
-| **generate_review.py viewer** | HTML viewer with Outputs tab (per-case review + feedback textbox) and Benchmark tab (quantitative comparison). Use `--static` flag for headless/cowork environments. | Low | Script exists. Use `--static` for file output. `--previous-workspace` for iteration 2+. |
-| **eval_metadata.json per eval directory** | Each eval dir needs `eval_id`, `eval_name`, `prompt`, `assertions[]`. The aggregate script reads `eval_metadata.json` for eval IDs. | Low | Must create fresh per iteration -- does not carry over automatically. |
-| **timing.json capture from subagent notifications** | When subagent completes, notification includes `total_tokens` and `duration_ms`. Must save immediately -- data is NOT persisted elsewhere. | Low | Skill-creator SKILL.md Step 3: "This is the only opportunity to capture this data" |
-| **Workspace directory structure** | `<skill>-workspace/iteration-N/eval-<name>/{with_skill,without_skill}/run-1/{outputs/,grading.json,timing.json}` | Low | Must match what aggregate_benchmark.py expects. Script auto-discovers eval-* dirs. |
-| **Differentiating assertions** | Assertions must test skill-specific knowledge, not standard Drupal patterns. Phase 6 lesson: standard assertions yield 0% delta because Sonnet already knows basics. | High | Critical insight from iteration 1. All 13 evals.json already rewritten with differentiating assertions (phase 07-06). |
-| **ddev environment per eval** | Each eval run needs a working Drupal instance. setup-drupal-env.sh creates ddev project, installs Drupal, enables test module. | Med | Existing scripts. Max 2 ddev instances at once (1 skill = 2 runs). |
-| **Clean teardown between skills** | Must `drush pm:uninstall` before `rm -rf` files, or tear down entire ddev env. Stale state corrupts subsequent evals. | Med | Eval rule #9. Delete stale ddev projects: `ddev list | grep -o 'os-kg-[^ ]*' | xargs -I{} ddev delete -O {}` |
+| **`.claude-plugin/plugin.json` manifest** | Required for Claude Code to recognize the plugin. Contains name, description, version, author. Without it, skills are not namespaced or discoverable as a plugin. | LOW | Name becomes the namespace prefix: `/drupal-skills:skill-name`. Version should be 3.0.0 to match milestone. |
+| **`skills/` directory with SKILL.md per skill** | Plugin structure requires `skills/<skill-name>/SKILL.md`. This is the exact layout already used in the repo. Current `skills/drupal-*/SKILL.md` maps 1:1. | LOW | Already matches the required structure. No restructuring needed -- the repo root IS the plugin directory. |
+| **Skill descriptions optimized for model invocation** | Skills must auto-trigger from natural prompts. The `description` field is the ONLY mechanism for model invocation. Current descriptions are good but may need tuning. Claude undertriggers by default, so descriptions need to be "pushy" per Anthropic best practices. | MEDIUM | Each description is max 1024 chars. Must be third-person. Must include both WHAT it does and WHEN to use it. Current descriptions already follow this pattern. |
+| **`disable-model-invocation: false` (default)** | All 14 skills should be model-invocable. The default is false, so no explicit setting needed. Skills should activate when Claude sees Drupal development context. | LOW | Already the default. Verify no skills accidentally have this set to true. |
+| **CLAUDE.md at plugin root** | System-level instructions applying across all skills. Should contain cross-cutting guidance like "always use D10 annotation syntax unless explicitly asked for D11 attributes" and "load coding-standards alongside any domain skill." | LOW | New file. Replaces what install.sh currently does by copying to ~/.claude/skills/. |
+| **install.sh updated or replaced** | Users need a way to install. Plugin system supports `claude --plugin-dir ./drupal-skills` for local dev and marketplace distribution for sharing. The existing install.sh (copy to ~/.claude/skills/) should still work as fallback. | LOW | Two installation paths: plugin-dir for dev, marketplace for distribution. Keep install.sh as legacy option. |
 
-## Differentiators
+#### B. Group-based Project Management Module
 
-Features that elevate this pipeline beyond manual eval runs. Not strictly required but dramatically reduce friction for 13-skill batch evaluation.
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| **Custom content entity: Task** | Core entity for project management. Must have title, description, status, priority, assignee (entity reference to user), due date, and group reference. Replaces what Drupal PM provides but scoped to Group context. | HIGH | Exercises drupal-entities-fields, drupal-module-scaffold skills. Needs base fields, form handlers, list builders, access handlers. |
+| **Custom content entity: Project** | Container for tasks within a group. Has title, description, status, owner. Relates to Group via GroupRelationship. Projects belong to exactly one group. | HIGH | Core data model. GroupRelation plugin needed to make Project a group content type. |
+| **Group integration via GroupRelation plugins** | Projects and Tasks must be group content -- accessible only to group members, with group-scoped permissions. Requires implementing GroupRelation plugins (src/Plugin/Group/Relation/). | HIGH | Group 3.x API. GroupRelationBase class must be extended. Exercises drupal-plugins-blocks skill (plugin DI pattern), drupal-access-security skill (access results). |
+| **Group-scoped permissions** | "create project", "edit any project", "edit own project", "delete own project", same for tasks. Must integrate with Group's flexible_permissions module. | MEDIUM | Group handles permission calculation via IndividualGroupPermissionCalculator. Module declares permissions in group relation plugin annotation/attribute. |
+| **Task status workflow** | At minimum: Open, In Progress, Done. Status transitions need to be enforced. Kanban-style status model is table stakes for project management. | MEDIUM | Could be a simple allowed_values list field, or a proper state machine. Start simple (allowed_values). |
+| **Views integration** | Users expect to see task lists, project boards, and group dashboards via Views. Need hook_views_data() for custom entity fields and/or entity-based Views integration. | MEDIUM | Exercises drupal-views-dev skill. Content entities automatically get Views integration, but custom base fields may need explicit Views data definitions. |
+| **Routes and admin pages** | List projects, view project, list tasks within project, task detail page. Standard CRUD routes via entity route provider + custom routes for dashboards. | MEDIUM | Exercises drupal-routing-controllers skill. Entity route providers handle most CRUD. Custom routes for project board views. |
+| **Config forms for module settings** | Default task statuses, AI provider selection, group-level AI settings. Standard ConfigFormBase with config schema. | LOW | Exercises drupal-forms-api, drupal-config-storage skills. |
+| **Proper cache metadata** | Task lists must invalidate when tasks change. Project views must respect group membership cache contexts. Cache tags on entities, cache contexts for group access. | MEDIUM | Exercises drupal-caching skill. Critical for Group module integration -- group membership is a cache context. |
+
+#### C. AI Agents Integration
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| **AI module dependency and provider configuration** | Module must depend on `ai` module and allow admin to configure which AI provider to use for project management features. Uses `ai.provider` service. | LOW | Standard dependency declaration in .info.yml. Config form for provider selection. |
+| **Custom AI Agent: Project Assistant** | An AI Agent plugin (`src/Plugin/AiAgent/ProjectAssistant.php`) that can answer questions about project status, summarize tasks, suggest priorities. Implements AiAgentInterface / extends AiAgentBase. | HIGH | Exercises drupal-plugins-blocks skill (plugin pattern). AI Agents use plugin discovery. Must implement `agentsCapabilities()`, `determineSolvability()`, `solve()`. |
+| **Custom tools for the agent** | The Project Assistant agent needs tools to: list tasks in a project, get task details, update task status, create tasks. These are the Drupal API operations the agent can invoke. | HIGH | AI Agents framework uses tool calling. Each tool maps to an entity API operation. Must implement proper access checks. |
+| **Task summarization/analysis service** | A service that calls the AI provider to analyze project state: overdue tasks, blocked items, sprint velocity. Uses provider-agnostic API (`ChatInput`/`ChatMessage`). | MEDIUM | Standard Drupal service with DI. Exercises drupal-routing-controllers skill (service DI). Provider-agnostic pattern via `getNormalized()`. |
+
+---
+
+### Differentiators (Competitive Advantage)
+
+These features are not required for the module to function but create compelling value and exercise more skill domains.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **Batch orchestration script** | Run all 13 skills through eval with a single command. Loop: setup ddev, spawn with/without agents, grade, aggregate, teardown, next skill. Currently requires ~30 manual steps per skill. | High | The single highest-ROI feature. Transforms 6-hour manual process into autonomous batch run. |
-| **eval-executor subagent (.claude/agents/eval-executor.md)** | Custom agent with `model: sonnet` frontmatter. Receives prompt + optional skill path. Saves outputs to specified directory. Standardized across all 13 skills. Eliminates per-skill prompt crafting. | Med | Replaces fragile `/model sonnet` dance. Agent file is ~20 lines of YAML+markdown. |
-| **eval-grader subagent (.claude/agents/eval-grader.md)** | Custom agent that reads skill-creator's grader.md instructions. Receives expectations + outputs_dir + transcript_path. Produces grading.json. Opus-level model for grading quality. | Med | Currently grading is inline. Dedicated agent makes it reproducible and parallelizable. |
-| **Programmatic assertion checking** | Write scripts for assertions that can be verified programmatically (file exists, grep for pattern, drush status check, curl endpoint). Faster, more reliable, reusable across iterations. | Med | Grader.md: "For assertions that can be checked programmatically, write and run a script rather than eyeballing it" |
-| **eval-browser subagent (agent-browser)** | Automated UAT via browser: `drush uli` generates one-time login URL, agent-browser navigates Drupal admin, verifies themed output, tests access control (anonymous vs authenticated). | High | Required for theming, access-security, forms-api evals where output is visual/interactive. Needs agent-browser MCP. |
-| **Iteration comparison** | Pass `--previous-workspace` to generate_review.py for side-by-side comparison of iterations. Shows what changed, whether feedback was addressed. | Low | Already built into generate_review.py. |
-| **Analyst pass after aggregation** | Read benchmark data and surface patterns: non-discriminating assertions (always pass both configs), high-variance evals (flaky), time/token tradeoffs. | Med | Skill-creator Step 4.3. Use agents/analyzer.md patterns. |
-| **Multi-run variance analysis** | Run each eval 3 times per configuration to get stddev. High variance = flaky eval, not meaningful delta. | Med | benchmark.json schema supports `runs_per_configuration: 3`. aggregate_benchmark.py calculates stddev. |
-| **Skill tier classification** | After all 13 skills have benchmark data, classify into tiers: High Delta (>15%), Moderate (5-15%), Low (<5%). Drives optimization priority. | Low | Post-batch analysis. Phase 6 established tier thresholds. |
+| **AI-powered task creation from natural language** | Users describe what needs to be done in plain text; AI agent creates properly structured tasks with appropriate fields, priority, and assignment suggestions. | HIGH | Exercises AI Agents text-to-action pattern. The differentiator is GROUP-SCOPED AI actions -- agent must respect group membership when suggesting assignees. |
+| **Batch task operations via AI** | "Move all overdue tasks to next sprint" or "Reassign John's tasks to Jane" -- AI interprets natural language commands and executes batch entity operations. | HIGH | Exercises drupal-batch-queue-cron skill. AI determines the batch operation, queue workers execute it. |
+| **Project health dashboard block** | Block plugin showing AI-generated project health analysis: risk items, velocity trends, completion predictions. Cached with appropriate tags/contexts. | MEDIUM | Exercises drupal-plugins-blocks, drupal-caching, drupal-theming skills in combination. Block calls AI service, renders themed output with cache metadata. |
+| **Task notification via cron** | Cron job that checks for overdue tasks, approaching deadlines, and sends notifications. Can optionally include AI-generated summaries. | MEDIUM | Exercises drupal-batch-queue-cron skill. Hook_cron + queue worker pattern for scalability. |
+| **Automated testing suite** | Kernel tests for entity CRUD, access control, AI service mocking. Functional tests for form submission, Views rendering. | HIGH | Exercises drupal-testing skill. Kernel tests for services/entities, functional tests for UI. AI provider can be mocked via test double. |
+| **Database schema for analytics** | Custom table tracking task state changes over time (task_history). hook_schema() + hook_update_N() for schema management. Exposed to Views. | MEDIUM | Exercises drupal-database-api, drupal-views-dev skills. Analytics data is supplementary to entity storage. |
+| **Twig templates for task cards and project boards** | Custom theme hooks and templates for task cards, kanban columns, project overview. CSS/JS library for drag-and-drop (stretch). | MEDIUM | Exercises drupal-theming skill. hook_theme() + preprocess functions + .libraries.yml. |
 
-## Anti-Features
+---
 
-Features to explicitly NOT build. Scope traps that would delay the pipeline without improving eval quality.
+### Anti-Features (Commonly Requested, Often Problematic)
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| **Custom HTML viewer** | generate_review.py already handles both server and static HTML modes. Writing custom HTML duplicates effort and misses viewer features (feedback capture, benchmark tab). | Use generate_review.py with `--static` flag. Skill-creator SKILL.md is emphatic: "use generate_review.py to create the viewer; there's no need to write custom HTML" |
-| **Description/trigger optimization** | PROJECT.md explicitly defers this. Content evals must prove value before optimizing triggers. Premature trigger optimization wastes cycles. | Run content evals first. Description optimization is a separate milestone after deltas are proven. |
-| **SKILL.md content changes** | Skills are LOCKED. Changing skill content based on eval results should only happen if eval findings specifically demand it. | Optimize assertions and eval methodology, not skill content. |
-| **os-knowledge-garden as eval environment** | os-kg has OpenSocial + custom modules that add complexity/flakiness. Fresh Drupal 10 ddev instances are faster, more controlled. | Use `ddev config --project-type=drupal --php-version=8.3` with standard `--demo=cascadia` or clean install. |
-| **Parallel multi-skill eval runs** | Running 2+ skills simultaneously means 4+ ddev instances. Docker resource contention causes flaky failures. | Run 1 skill at a time (2 ddev instances max). Sequential is slower but reliable. |
-| **claude -p for eval runs** | Black box, hangs silently, no observability. Memory rule #4: "No headless `claude -p`". | Use Agent subagents for full observability of eval runs. |
-| **Interactive git rebase or manual commits during eval** | Eval runs should not create git state. Commits happen after batch analysis, not per-skill. | Orchestrator commits after all evals complete. |
-| **Blind comparison (comparator.md)** | Skill-creator's blind A/B comparison is for comparing two VERSIONS of a skill. We're comparing skill-vs-no-skill, which is simpler -- just compare pass rates. | Blind comparison adds complexity with no additional signal for our use case. |
+| Feature | Why Requested | Why Problematic | Alternative |
+|---------|---------------|-----------------|-------------|
+| **Full Gantt chart / timeline visualization** | Project management tools typically have timeline views | Massive frontend complexity (JS libraries, drag-resize, dependency arrows). Way out of scope for a module that validates Drupal skills. | Simple list views with due dates and status columns. Views provides adequate tabular/grid display. |
+| **Real-time collaboration / WebSocket updates** | Modern PM tools show live updates | Drupal is not architected for real-time. Adding WebSocket infrastructure is a separate infrastructure concern that does not exercise any Drupal skill. | Standard page reload. Cache invalidation ensures fresh data on next request. |
+| **Standalone chat interface for AI agent** | Chatbot-style UI for interacting with project AI | The AI Agents module already provides a chatbot framework. Building a custom one duplicates effort and does not exercise Drupal skills. | Use AI Agents' built-in chatbot integration. The module provides the agent, the framework provides the UI. |
+| **Full sprint/scrum workflow (velocity, burndown, story points)** | Enterprise PM expectations | Over-engineering for a contrib module whose primary purpose is validating skill auto-triggering. Adds entity complexity without exercising new skill domains. | Simple status workflow (Open/In Progress/Done) covers the Group access + entity lifecycle patterns. |
+| **Multi-group project sharing** | Projects spanning multiple groups | Group module deliberately scopes content to a single group. Cross-group sharing requires Subgroup module and complex permission layering. | Projects belong to exactly one group. Users who need cross-group visibility join multiple groups. |
+| **Import/export from Jira/Asana/etc.** | Migration path from existing tools | Integration code with third-party APIs does not exercise Drupal skills. It is REST client code, not Drupal module patterns. | Manual task creation and AI-assisted bulk creation cover the use case. |
+| **Mobile-responsive kanban with drag-and-drop** | Modern UX expectation | JavaScript-heavy feature that doesn't exercise any Drupal PHP skill. Frontend complexity adds risk without eval value. | Server-rendered task lists with form-based status changes. If drag-and-drop is desired, use SortableJS as a library attachment (exercises drupal-theming at most). |
+| **Skill content changes based on v3.0 findings** | Feedback loop temptation | Skills are LOCKED from v2.0. v3.0 proves auto-triggering and integration, not skill content. Changing content invalidates v2.0 benchmarks. | Document findings for a potential v4.0 skill iteration milestone. |
+
+---
 
 ## Feature Dependencies
 
 ```
-eval-executor subagent ──> model: sonnet frontmatter (controls executor model)
-eval-executor subagent ──> ddev environment (needs running Drupal to execute against)
+[Plugin Packaging]
+    plugin.json manifest
+        |
+    skills/ directory (already exists)
+        |
+    CLAUDE.md root instructions
+        |
+    description optimization ──> auto-trigger eval
 
-eval-grader subagent ──> grader.md instructions (knows grading protocol)
-eval-grader subagent ──> grading.json schema (produces correct format)
+[Module: Core Entities]
+    drupal-module-scaffold (module skeleton)
+        |
+        +-- Project entity ──requires──> drupal-entities-fields
+        |       |
+        |       +-- GroupRelation plugin ──requires──> drupal-plugins-blocks (plugin DI)
+        |       |                         ──requires──> drupal-access-security (access results)
+        |       |
+        +-- Task entity ──requires──> drupal-entities-fields
+                |
+                +-- GroupRelation plugin (same pattern as Project)
+                |
+                +-- Task status field (base field with allowed_values)
 
-aggregate_benchmark.py ──> grading.json files (reads from workspace tree)
-aggregate_benchmark.py ──> eval_metadata.json (reads eval IDs)
+[Module: UI Layer]
+    Routes/Controllers ──requires──> Core Entities
+        |                ──uses──> drupal-routing-controllers
+        |
+    Views integration ──requires──> Core Entities
+        |              ──uses──> drupal-views-dev
+        |
+    Config forms ──uses──> drupal-forms-api, drupal-config-storage
+        |
+    Templates/theming ──requires──> Routes (need pages to theme)
+                      ──uses──> drupal-theming
+        |
+    Cache metadata ──requires──> All render output
+                   ──uses──> drupal-caching
 
-generate_review.py ──> benchmark.json (displays benchmark tab)
-generate_review.py ──> workspace directory tree (displays outputs tab)
+[Module: AI Integration]
+    AI provider config ──requires──> Config forms
+        |               ──uses──> drupal-config-storage
+        |
+    ProjectAssistant agent plugin ──requires──> Core Entities (needs tasks/projects to query)
+        |                         ──requires──> AI module dependency
+        |                         ──uses──> drupal-plugins-blocks (plugin pattern)
+        |
+    Custom agent tools ──requires──> ProjectAssistant agent
+        |
+    Task summarization service ──requires──> AI provider config
+                               ──uses──> drupal-routing-controllers (service DI)
 
-eval-browser subagent ──> agent-browser MCP (navigates Drupal UI)
-eval-browser subagent ──> drush uli (generates login URLs)
-eval-browser subagent ──> ddev environment (needs running Drupal)
+[Module: Background Processing]
+    Cron notifications ──requires──> Core Entities
+                       ──uses──> drupal-batch-queue-cron
+        |
+    Batch AI operations ──requires──> AI Integration + Core Entities
+                        ──uses──> drupal-batch-queue-cron
 
-batch orchestrator ──> eval-executor subagent (spawns per skill)
-batch orchestrator ──> eval-grader subagent (grades after runs)
-batch orchestrator ──> aggregate_benchmark.py (aggregates per skill)
-batch orchestrator ──> ddev setup/teardown scripts (manages environments)
+[Module: Quality]
+    Testing suite ──requires──> All module features
+                  ──uses──> drupal-testing
+        |
+    Analytics schema ──uses──> drupal-database-api
+                     ──enhances──> Views integration
 
-tier classification ──> all 13 benchmark.json files (needs complete data)
+[Eval: Auto-Trigger Validation]
+    Plugin installed ──requires──> Plugin Packaging complete
+        |
+    Without-plugin baseline per phase ──requires──> ddev environment
+        |
+    With-plugin module build per phase ──requires──> Plugin installed + ddev environment
+        |
+    Phase-level skill coverage tracking ──requires──> All phases complete
 ```
 
-## MVP Recommendation
+### Dependency Notes
 
-### Phase 1: Subagent Infrastructure (foundation -- everything depends on this)
+- **Plugin Packaging must come first:** The entire v3.0 eval methodology depends on skills being installed as a plugin that auto-triggers. Without this, the module-building phases cannot validate auto-triggering.
+- **Core Entities before UI:** Routes, Views, and templates all depend on the entity types being defined. Entity creation is the foundational phase.
+- **AI Integration requires Core Entities:** The AI agent needs tasks and projects to query. AI features layer on top of the data model.
+- **Testing is last:** Tests validate all other features. Cannot write tests for features that do not exist yet.
+- **Each module phase isolates skill domains:** This is intentional -- each phase should exercise 1-3 skills, allowing per-phase auto-trigger evaluation.
 
-1. **eval-executor.md agent file** -- `model: sonnet` frontmatter, standardized prompt template with skill path injection for with-skill runs and omission for without-skill runs. This is the #1 blocker.
-2. **eval-grader.md agent file** -- Reads grader.md instructions, produces compliant grading.json. Can run on Opus for quality.
-3. **Workspace directory conventions** -- Document and enforce the exact tree structure that aggregate_benchmark.py expects.
+---
 
-### Phase 2: Single-Skill Pipeline (prove the loop works end-to-end)
+## MVP Definition
 
-4. **Run 1 skill through full pipeline** -- Setup ddev, spawn executor pairs, capture timing, grade, aggregate, generate viewer. Validate all schemas match.
-5. **Programmatic assertion scripts** -- Write reusable assertion checkers (file-exists, grep-pattern, curl-endpoint, drush-check).
+### Launch With (Phase 1-3: Plugin + Core Module)
 
-### Phase 3: Batch Execution (the ROI multiplier)
+- [ ] **Plugin packaging** -- `.claude-plugin/plugin.json`, CLAUDE.md, verify skills auto-trigger from natural Drupal prompts
+- [ ] **Module scaffold** -- .info.yml with Group and AI module dependencies, PSR-4 structure, .module file
+- [ ] **Project entity** -- Content entity with base fields, form handler, list builder, access handler
+- [ ] **Task entity** -- Content entity with status, priority, assignee, due date, project reference
+- [ ] **GroupRelation plugins** -- Both entities registered as group content types
+- [ ] **Group-scoped permissions** -- CRUD permissions for projects and tasks within groups
+- [ ] **Basic routes** -- Entity CRUD routes via route providers + project task listing page
+- [ ] **Config forms** -- Module settings with config schema
 
-6. **Batch orchestration** -- Script or orchestrator prompt that loops through all 13 skills: setup, run, grade, aggregate, teardown, next.
-7. **Tier classification and final analysis** -- After all 13 complete, classify tiers and produce summary report.
+### Add After Validation (Phase 4-6: UI + AI)
 
-### Phase 4: Browser-Based Evals (stretch -- for visual/interactive skills)
+- [ ] **Views integration** -- Task list views, project dashboards, group-scoped displays
+- [ ] **Cache metadata** -- Proper tags/contexts on all render output, group membership cache context
+- [ ] **AI provider configuration** -- Settings form for selecting AI provider
+- [ ] **ProjectAssistant AI Agent plugin** -- Agent with tools for task CRUD and project status queries
+- [ ] **Task summarization service** -- AI-powered project health analysis
+- [ ] **Templates and theming** -- Custom Twig templates for task cards and project views
+- [ ] **Cron notifications** -- Overdue task detection and notification queue
 
-8. **eval-browser subagent** -- agent-browser integration for theming, access-security, forms-api evals where assertions require UI verification.
+### Future Consideration (Phase 7+: Polish)
 
-**Defer:** Description/trigger optimization (separate milestone), SKILL.md content changes (only if eval data demands it).
+- [ ] **Automated test suite** -- Kernel and functional tests for all features
+- [ ] **Analytics schema** -- Task history tracking via custom database table
+- [ ] **Batch AI operations** -- Natural language batch commands via AI agent
+- [ ] **AI-powered task creation** -- Natural language to structured task entity
+- [ ] **Project health dashboard block** -- Block plugin with AI analysis and cache metadata
 
-## Key Dependencies on Skill-Creator Tooling
+---
 
-| Skill-Creator Asset | Location | How We Use It | Modification Needed |
-|---------------------|----------|---------------|---------------------|
-| `grader.md` | `~/.claude/plugins/.../agents/grader.md` | Read by eval-grader subagent for grading protocol | None -- use as-is |
-| `schemas.md` | `~/.claude/plugins/.../references/schemas.md` | Reference for grading.json, benchmark.json, timing.json formats | None -- use as-is |
-| `aggregate_benchmark.py` | `~/.claude/plugins/.../scripts/aggregate_benchmark.py` | Run after grading to produce benchmark.json + benchmark.md | None -- supports workspace layout natively |
-| `generate_review.py` | `~/.claude/plugins/.../eval-viewer/generate_review.py` | Generate HTML viewer with `--static` flag for review | None -- use `--static` for headless |
-| `analyzer.md` | `~/.claude/plugins/.../agents/analyzer.md` | Analyst pass patterns (non-discriminating assertions, variance) | None -- reference patterns |
+## Feature Prioritization Matrix
 
-## Complexity Notes
+| Feature | User Value | Implementation Cost | Eval Value (skill coverage) | Priority |
+|---------|------------|--------------------|-----------------------------|----------|
+| Plugin packaging | HIGH | LOW | HIGH (enables all auto-trigger eval) | P1 |
+| Module scaffold | HIGH | LOW | HIGH (drupal-module-scaffold) | P1 |
+| Project + Task entities | HIGH | HIGH | HIGH (drupal-entities-fields) | P1 |
+| GroupRelation plugins | HIGH | HIGH | HIGH (drupal-plugins-blocks, drupal-access-security) | P1 |
+| Group-scoped permissions | HIGH | MEDIUM | HIGH (drupal-access-security) | P1 |
+| Basic routes | HIGH | MEDIUM | MEDIUM (drupal-routing-controllers) | P1 |
+| Config forms + schema | MEDIUM | LOW | MEDIUM (drupal-forms-api, drupal-config-storage) | P2 |
+| Views integration | MEDIUM | MEDIUM | MEDIUM (drupal-views-dev) | P2 |
+| Cache metadata | MEDIUM | MEDIUM | HIGH (drupal-caching) | P2 |
+| AI Agent plugin | HIGH | HIGH | HIGH (novel integration) | P2 |
+| Task summarization | MEDIUM | MEDIUM | MEDIUM (service DI) | P2 |
+| Templates/theming | MEDIUM | MEDIUM | MEDIUM (drupal-theming) | P2 |
+| Cron notifications | LOW | MEDIUM | MEDIUM (drupal-batch-queue-cron) | P3 |
+| Testing suite | HIGH | HIGH | HIGH (drupal-testing) | P3 |
+| Analytics schema | LOW | MEDIUM | MEDIUM (drupal-database-api) | P3 |
+| Batch AI operations | LOW | HIGH | MEDIUM (drupal-batch-queue-cron) | P3 |
 
-| Feature | Estimated Effort | Risk | Notes |
-|---------|-----------------|------|-------|
-| eval-executor subagent | 1 hour | Low | Simple agent file. Main work is prompt template. |
-| eval-grader subagent | 1 hour | Low | Wrapper around existing grader.md. |
-| Single-skill pipeline validation | 2-3 hours | Med | Integration testing -- schemas must match exactly or viewer shows empty. |
-| Batch orchestrator | 3-4 hours | Med | 13 skills x (setup + 2 runs + grade + aggregate + teardown). Error recovery is the hard part. |
-| eval-browser (agent-browser) | 4-6 hours | High | New dependency. Browser automation against Drupal is flaky. Login state, AJAX waits, viewport issues. |
-| Programmatic assertion scripts | 2-3 hours | Low | Many assertions can reuse patterns from existing e2e-assert.sh. |
-| Tier classification | 1 hour | Low | Simple analysis once all benchmark.json files exist. |
+**Priority key:**
+- P1: Must have -- core module structure and eval infrastructure
+- P2: Should have -- completes skill coverage and AI integration
+- P3: Nice to have -- exercises remaining skills, adds polish
+
+---
+
+## Skill Coverage Map
+
+The following shows which features exercise which existing skills, ensuring maximum eval coverage:
+
+| Skill | Exercised By | Phase Suggestion |
+|-------|-------------|-----------------|
+| drupal-module-scaffold | Module skeleton, .info.yml, dependencies | Phase 1 (early) |
+| drupal-entities-fields | Project entity, Task entity, base fields, form/list/access handlers | Phase 2 (core) |
+| drupal-routing-controllers | Entity routes, custom dashboard routes, service DI | Phase 2-3 |
+| drupal-plugins-blocks | GroupRelation plugins, AI Agent plugin, dashboard block | Phase 2, 5 |
+| drupal-access-security | Group permissions, access handlers, AccessResult caching | Phase 2-3 |
+| drupal-forms-api | Config forms, entity forms (if custom beyond default) | Phase 3 |
+| drupal-config-storage | Module settings, config schemas, config/install YAMLs | Phase 3 |
+| drupal-views-dev | Task list views, project dashboards, hook_views_data() | Phase 4 |
+| drupal-caching | Cache tags on entities, group membership cache context, block cache | Phase 4 |
+| drupal-theming | Task card templates, project board layout, .libraries.yml | Phase 4 |
+| drupal-batch-queue-cron | Notification cron, AI batch operations, queue workers | Phase 5-6 |
+| drupal-testing | Kernel tests (entity CRUD, access), functional tests (forms, views) | Phase 6-7 |
+| drupal-database-api | Analytics table schema, hook_update_N() | Phase 6 |
+| drupal-coding-standards | Cross-cutting baseline for all generated code | All phases |
+
+**Coverage:** 14/14 skills (100%) are exercised by the planned feature set.
+
+---
+
+## Competitor Feature Analysis
+
+| Feature | Drupal PM | Burndown | OpenLucius | Our Approach |
+|---------|-----------|----------|------------|--------------|
+| Task entity | Custom entity types | Custom entities | Node-based | Custom content entity with Group integration |
+| Group scoping | No group integration | No group integration | OpenSocial groups | Native Group 3.x GroupRelation plugins |
+| AI integration | None | None | None | AI Agents framework + custom agent + tool calling |
+| Kanban board | PM App submodule | Built-in | Built-in | Views-based list with status columns (no drag-and-drop) |
+| Permissions | Custom PM permissions | Role-based | OpenSocial permissions | Group-scoped PBAC via flexible_permissions |
+| Sprint tracking | Limited | Full (burndown charts) | No | Not in scope (anti-feature) |
+| API access | No dedicated API | No | REST | AI Agent tools provide structured API access |
+
+**Our differentiation:** No existing Drupal project management module integrates with the Group module's access control system AND the AI Agents framework. This combination is unique and provides the eval surface area needed for v3.0.
+
+---
 
 ## Sources
 
-- Skill-creator SKILL.md (`~/.claude/plugins/.../skill-creator/SKILL.md`) -- eval workflow methodology, Steps 1-5
-- Skill-creator grader.md (`~/.claude/plugins/.../agents/grader.md`) -- grading protocol, output schema
-- Skill-creator schemas.md (`~/.claude/plugins/.../references/schemas.md`) -- JSON schemas for all eval artifacts
-- Skill-creator aggregate_benchmark.py (`~/.claude/plugins/.../scripts/aggregate_benchmark.py`) -- aggregation logic, directory layout support
-- Project MEMORY.md -- phase 6/7 eval results, iteration 1 lessons, execution rules
-- PROJECT.md -- v2.0 milestone definition, target features, constraints
+- [Group module - drupal.org](https://www.drupal.org/project/group) -- version 3.x, entity architecture
+- [Group v2/v3 guides](https://www.drupal.org/docs/extending-drupal/contributed-modules/contributed-module-documentation/group/group-v2v3-guides) -- GroupRelationship API changes
+- [AI Agents module - drupal.org](https://www.drupal.org/project/ai_agents) -- framework, built-in agents, custom agent creation
+- [AI module - drupal.org](https://www.drupal.org/project/ai) -- provider abstraction, ChatInput/ChatMessage API
+- [AI integration in contrib modules](https://www.drupal.org/docs/extending-drupal/contributed-modules/contributed-module-documentation/ai/ai-how-to-use-it-or-integrate-it-in-contrib-modules) -- provider-agnostic API pattern
+- [AI Agents developer docs](https://project.pages.drupalcode.org/ai_agents) -- AiAgentInterface, plugin structure
+- [Drupal's AI Roadmap for 2026](https://www.drupal.org/blog/drupals-ai-roadmap-for-2026) -- background agents, context management
+- [Claude Code plugin docs](https://code.claude.com/docs/en/plugins) -- plugin.json structure, plugin directory layout
+- [Claude Code skills docs](https://code.claude.com/docs/en/skills) -- SKILL.md anatomy, model invocation, frontmatter fields
+- [Skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) -- description writing, progressive disclosure, anti-patterns
+- [Drupal PM module](https://www.drupal.org/project/pm) -- existing PM landscape
+- [Burndown module](https://www.drupal.org/project/burndown) -- agile PM alternative
+- [Group permissions explanation](https://www.drupal.org/docs/contributed-modules/group/the-permission-layers-explained) -- PBAC via flexible_permissions
+
+---
+*Feature research for: v3.0 Group AI Project Management*
+*Researched: 2026-03-07*
