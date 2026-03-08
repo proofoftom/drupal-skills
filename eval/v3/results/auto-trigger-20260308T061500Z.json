@@ -1,0 +1,87 @@
+{
+  "timestamp": "20260308T061500Z",
+  "plugin_dir": "/home/proofoftom/Code/drupal-skills",
+  "mode": "headless",
+  "total_prompts": 12,
+  "evaluated": 12,
+  "passed": 12,
+  "failed": 0,
+  "skipped": 0,
+  "rate_percent": 100,
+  "threshold_percent": 80,
+  "result": "pass",
+  "prompts": [
+    {
+      "index": 1,
+      "expected_skill": "drupal-module-scaffold",
+      "status": "pass",
+      "detail": "Pattern matched in output"
+    },
+    {
+      "index": 2,
+      "expected_skill": "drupal-entities-fields",
+      "status": "pass",
+      "detail": "Pattern matched in output"
+    },
+    {
+      "index": 3,
+      "expected_skill": "drupal-routing-controllers",
+      "status": "pass",
+      "detail": "Pattern matched in output"
+    },
+    {
+      "index": 4,
+      "expected_skill": "drupal-forms-api,drupal-config-storage",
+      "status": "pass",
+      "detail": "Pattern matched in output"
+    },
+    {
+      "index": 5,
+      "expected_skill": "drupal-plugins-blocks,drupal-caching",
+      "status": "pass",
+      "detail": "Pattern matched in output"
+    },
+    {
+      "index": 6,
+      "expected_skill": "drupal-caching",
+      "status": "pass",
+      "detail": "Pattern matched in output"
+    },
+    {
+      "index": 7,
+      "expected_skill": "drupal-access-security",
+      "status": "pass",
+      "detail": "Pattern matched in output"
+    },
+    {
+      "index": 8,
+      "expected_skill": "drupal-theming",
+      "status": "pass",
+      "detail": "Pattern matched in output"
+    },
+    {
+      "index": 9,
+      "expected_skill": "drupal-views-dev",
+      "status": "pass",
+      "detail": "Pattern matched in output"
+    },
+    {
+      "index": 10,
+      "expected_skill": "drupal-testing",
+      "status": "pass",
+      "detail": "Pattern matched in output"
+    },
+    {
+      "index": 11,
+      "expected_skill": "drupal-batch-queue-cron",
+      "status": "pass",
+      "detail": "Pattern matched in output"
+    },
+    {
+      "index": 12,
+      "expected_skill": "drupal-database-api",
+      "status": "pass",
+      "detail": "Pattern matched in output"
+    }
+  ]
+}

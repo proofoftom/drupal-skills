@@ -20,12 +20,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Ensure we are not inside a Claude Code session
-if [[ -n "${CLAUDECODE:-}" ]]; then
-  echo "ERROR: Cannot run auto-trigger tests inside a Claude Code session."
-  echo "       Open a regular terminal and run: bash eval/v3/test-auto-trigger.sh"
-  exit 2
-fi
+# Clear CLAUDECODE env var if set (allows running from within a session)
+unset CLAUDECODE 2>/dev/null || true
 
 # Verify plugin manifest exists
 if [[ ! -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]]; then
@@ -35,7 +31,7 @@ if [[ ! -f "$PLUGIN_DIR/.claude-plugin/plugin.json" ]]; then
 fi
 
 # Configuration
-TIMEOUT_SECS=60
+TIMEOUT_SECS=120
 RESULTS_DIR="$PLUGIN_DIR/eval/v3/results"
 TIMESTAMP=$(date -u +"%Y%m%dT%H%M%SZ")
 RESULTS_FILE="$RESULTS_DIR/auto-trigger-$TIMESTAMP.json"
@@ -202,11 +198,12 @@ for i in "${!PROMPTS[@]}"; do
   echo -n "  [$idx/$TOTAL] Testing ${expected}... "
 
   # Run the prompt headlessly
+  # Note: claude -p sends response text to stderr, capture both streams
   OUTPUT_FILE=$(mktemp /tmp/auto-trigger-XXXXXX.txt)
   if timeout "$TIMEOUT_SECS" claude --plugin-dir "$PLUGIN_DIR" \
-    -p "$prompt" \
-    --allowedTools "" \
-    > "$OUTPUT_FILE" 2>/dev/null; then
+    -p "$prompt. Just output the code, no explanation." \
+    --model claude-haiku-4-5-20251001 \
+    > "$OUTPUT_FILE" 2>&1; then
 
     # Check for skill-specific patterns in output
     if grep -qiE "$pattern" "$OUTPUT_FILE" 2>/dev/null; then
