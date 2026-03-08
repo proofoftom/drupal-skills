@@ -21,16 +21,35 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** Phase 14 - Module Foundation (next)
+**Current focus:** Phase 14 - Module Foundation (eval-driven, see workflow note below)
 
 ## Current Position
 
 Phase: 13 of 17 (Plugin Packaging) -- COMPLETE
 Plan: 2 of 2 in current phase (all done)
-Status: Phase 13 complete, ready for Phase 14
-Last activity: 2026-03-08 -- Completed 13-02 (auto-trigger validation, 100% activation rate)
+Status: Phase 13 complete, Phase 14 ready for eval pipeline execution
+Last activity: 2026-03-08 -- Reverted contaminated GSD executor run of Phase 14 (HEAD at dbe9ff6)
 
 Progress: [██░░░░░░░░] 20% (v3.0)
+
+## WORKFLOW CHANGE: Eval-Driven Phases (Phase 14+)
+
+**DO NOT use /gsd:plan-phase or /gsd:execute-phase for module building.**
+Phase 14+ uses the eval pipeline, not GSD executors. GSD executor agents have full context + all skills = not a valid A/B comparison. The module code must come from controlled headless `claude -p` runs.
+
+**Correct workflow for Phase 14:**
+1. Write evals.json with task prompt + expectations (target non-obvious skill patterns)
+2. Run parallel headless `claude -p` from orchestrator Bash tool (unset CLAUDECODE first):
+   - WITHOUT plugin: `claude -p --model claude-haiku-4-5-20251001` (no --plugin-dir)
+   - WITH plugin: `claude -p --model claude-haiku-4-5-20251001 --plugin-dir ./`
+3. Grade both outputs with eval-grader agent (sonnet)
+4. Generate benchmark.json, use skill-creator eval-viewer for review
+5. Promote with-plugin output to `modules/group_ai_pm/`
+6. Iterate on skills if delta insufficient
+
+**Skills tested in Phase 14:** scaffold, entities-fields, routing-controllers, forms-api, config-storage
+**Reference:** MEMORY.md has full phase-to-skill mapping and pipeline details
+**Reference:** /skill-creator protocol for eval viewer, grading schemas, benchmark format
 
 ## Accumulated Context
 
@@ -62,5 +81,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-08
-Stopped at: Completed 13-02-PLAN.md (Phase 13 complete)
+Stopped at: Phase 14 ready — eval pipeline workflow defined, contaminated executor run reverted
+Resume action: Write Phase 14 evals.json, then run parallel headless with/without, grade, benchmark
 Resume file: None
