@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "hook_schema() in .install file defines the table with a 'serial' type auto-increment primary key (NOT 'int' for the PK -- serial handles auto-increment cross-database, int requires manual ID management)",
+      "passed": true,
+      "evidence": "view_analytics.install lines 15-20: 'id' field defined with 'type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE; and line 46 sets 'primary key' => ['id']"
+    },
+    {
+      "text": "Insert operations use the dynamic query builder: ->insert('table')->fields([...]) (NOT raw SQL strings via ->query('INSERT...'), NOT deprecated db_insert() function)",
+      "passed": true,
+      "evidence": "view_analytics.module lines 28-35: \\Drupal::database()->insert('view_analytics')->fields([...])->execute(); No raw ->query('INSERT...') or db_insert() found anywhere"
+    },
+    {
+      "text": "Select queries use dynamic query builder: ->select('table', 'alias')->fields()->condition() (NOT raw SQL strings via ->query('SELECT...') -- dynamic queries are alterable by other modules via hook_query_alter)",
+      "passed": true,
+      "evidence": "ViewAnalyticsController.php lines 52-57: $this->database->select('view_analytics', 'va') with ->addExpression(), ->addField(), ->groupBy(), ->orderBy(), ->range(). No raw ->query('SELECT...') found."
+    },
+    {
+      "text": "Aggregation uses ->addExpression('COUNT(nid)', 'view_count') or equivalent on a dynamic select query (NOT raw SQL COUNT() in a ->query() string -- dynamic queries integrate with Drupal's query alter system)",
+      "passed": true,
+      "evidence": "ViewAnalyticsController.php line 53: $query->addExpression('COUNT(*)', 'view_count'); on a dynamic select query built with ->select()"
+    },
+    {
+      "text": "At least one select query includes ->addTag() enabling hook_query_TAG_alter() for other modules (without tags, queries cannot be altered by access control or other modules)",
+      "passed": false,
+      "evidence": "Searched all module files for addTag and ->tag( patterns -- no matches found. The select query in ViewAnalyticsController.php lines 52-57 has no ->addTag() call."
+    },
+    {
+      "text": "Does NOT concatenate PHP variables into SQL strings -- uses :placeholders in static queries or condition() methods in dynamic queries for all variable input (SQL injection prevention)",
+      "passed": true,
+      "evidence": "No PHP variable concatenation into SQL strings found anywhere in the module. All queries use the dynamic builder API. No string interpolation of variables into query strings detected."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en view_analytics returns exit code 0",
+      "passed": true,
+      "evidence": "Command: cd /tmp/d10-database-without && ddev drush en view_analytics -y; Output: '[notice] Already installed: view_analytics'; EXIT: 0"
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to /admin/reports/view-analytics -- verify the analytics report page loads without errors and displays the report structure (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report: passed=true, evidence='HTTP 200. Report table with Node Title, Node ID, View Count columns. No errors.'"
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": true,
+      "evidence": "phpcs result provided: 0 errors, 0 warnings. PASSES."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.89
+  }
+}

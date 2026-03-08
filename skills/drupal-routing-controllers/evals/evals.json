@@ -12,11 +12,10 @@
         "The custom service class does NOT extend ControllerBase -- services are standalone classes with constructor injection via .services.yml arguments (not the create() factory pattern which is for controllers)",
         "Controller does NOT use static \\Drupal::service() or \\Drupal::entityTypeManager() calls -- injects all dependencies via create() + constructor (static calls bypass DI, making code untestable)",
         "Routes use `_permission` for access control (not `_access: 'TRUE'` which bypasses all access checking including for anonymous users)",
-        "The module enables successfully: ddev drush en user_activity -y returns exit code 0"
-      ],
-      "browser_checks": [
-        "Log in as admin via drush uli, navigate to /user/1/activity — verify the page renders with a dynamic title containing the admin user's display name and shows activity summary content (not a 404 or fatal error, confirming route registration and entity auto-upcasting work)",
-        "Navigate to /api/user/1/activity — verify the response contains valid JSON with activity data fields (not an HTML error page or 500 error)"
+        "The module enables successfully: ddev drush en user_activity -y returns exit code 0",
+        "Log in as admin via drush uli, navigate to /user/1/activity -- verify the page renders with a dynamic title containing the admin user's display name and shows activity summary content (via eval-browser)",
+        "Navigate to /api/user/1/activity -- verify the response contains valid JSON with activity data fields (via eval-browser)",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
       ]
     }
   ]

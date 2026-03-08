@@ -1,0 +1,20 @@
+{
+  "skill": "drupal-theming",
+  "date": "2026-03-07",
+  "with_skill": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0,
+    "failed_expectations": []
+  },
+  "without_skill": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0,
+    "failed_expectations": []
+  },
+  "delta": 0.0,
+  "notes": "0% delta. Haiku knows theming patterns well: hook_theme with variables, hyphenated templates, #theme render arrays, #attached libraries. Both variants produced clean, correct code."
+}

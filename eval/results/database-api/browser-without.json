@@ -1,0 +1,14 @@
+{
+  "checks": [
+    {
+      "expectation": "Log in as admin via drush uli, navigate to /admin/reports/view-analytics -- verify the analytics report page loads without errors and displays the report structure (via eval-browser)",
+      "passed": true,
+      "evidence": "Page rendered with title 'View Analytics | Drush Site-Install', HTTP 200. Report table structure present with columns: Node Title, Node ID, View Count. Page loaded without errors and display table with proper report structure."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "total": 1
+  }
+}

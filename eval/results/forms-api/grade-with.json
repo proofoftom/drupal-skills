@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Form class extends ConfigFormBase (not FormBase) -- ConfigFormBase provides getEditableConfigNames(), config helpers, and automatic submit button/status message via parent calls",
+      "passed": true,
+      "evidence": "/tmp/d10-forms-with/web/modules/custom/search_settings/src/Form/SearchSettingsForm.php line 5: 'use Drupal\\Core\\Form\\ConfigFormBase;' and line 11: 'class SearchSettingsForm extends ConfigFormBase'"
+    },
+    {
+      "text": "buildForm() calls parent::buildForm($form, $form_state) and returns its result -- parent adds the submit button automatically (NOT manually adding a '#type' => 'submit' element which duplicates the button)",
+      "passed": true,
+      "evidence": "SearchSettingsForm.php line 62: 'return parent::buildForm($form, $form_state);'. Grep for '#type.*submit' returned no matches across all module files."
+    },
+    {
+      "text": "submitForm() calls parent::submitForm($form, $form_state) for the automatic 'The configuration options have been saved.' status message (NOT calling messenger()->addMessage() manually for save confirmation)",
+      "passed": true,
+      "evidence": "SearchSettingsForm.php line 75: 'parent::submitForm($form, $form_state);'. Grep for 'messenger()' and 'addMessage(' returned no matches across all module files."
+    },
+    {
+      "text": "submitForm() uses $this->config('search_settings.settings') to get editable config (NOT \\Drupal::configFactory()->getEditable() static call -- ConfigFormBase provides $this->config() which returns editable config within submitForm)",
+      "passed": true,
+      "evidence": "SearchSettingsForm.php lines 69-73: '$this->config(\"search_settings.settings\")->set(...)->save();'. Grep for 'configFactory()->getEditable' and '\\\\Drupal::configFactory' returned no matches."
+    },
+    {
+      "text": "Config schema file exists and uses appropriate types: 'integer' for result_limit and cache_ttl, 'float' for similarity_threshold (NOT 'string' for all numeric fields)",
+      "passed": true,
+      "evidence": "config/schema/search_settings.schema.yml lines 6-13: similarity_threshold type: float, result_limit type: integer, cache_ttl type: integer"
+    },
+    {
+      "text": "Route uses _form key pointing to the form class (NOT _controller -- using _controller for a form bypasses CSRF protection, form token validation, and the full form lifecycle)",
+      "passed": true,
+      "evidence": "search_settings.routing.yml line 4: '_form: \"\\Drupal\\search_settings\\Form\\SearchSettingsForm\"'. No _controller key present."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en search_settings returns exit code 0",
+      "passed": true,
+      "evidence": "Command 'cd /tmp/d10-forms-with && ddev drush en search_settings -y' output: '[notice] Already installed: search_settings', EXIT: 0"
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to /admin/config/search/search-settings -- verify the form renders with fields for similarity_threshold (showing 0.7), result_limit (showing 5), and cache_ttl (showing 300) with correct default values (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report: passed: true. Evidence: 'Authenticated successfully. All three spinbutton fields confirmed: similarity_threshold=0.7, result_limit=5, cache_ttl=300. HTTP 200.'"
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": true,
+      "evidence": "phpcs produced no output -- 0 errors, 0 warnings. PASSES."
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0
+  }
+}

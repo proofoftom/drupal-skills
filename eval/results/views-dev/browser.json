@@ -1,0 +1,19 @@
+{
+  "checks": [
+    {
+      "expectation": "Log in as admin via drush uli, navigate to /admin/structure/views/add -- verify the resource_links table appears as an available base table option",
+      "passed": true,
+      "evidence": "Successfully navigated to /admin/structure/views/add after logging in as admin. The 'Show:' dropdown displays 'Resource Links' as one of the available base table options (option ref=e31), confirming the resource_links table is available for creating views."
+    },
+    {
+      "expectation": "Navigate to /admin/structure/views -- verify the Views listing page loads without 'Broken handler' errors related to the resource_directory module",
+      "passed": true,
+      "evidence": "Successfully navigated to /admin/structure/views. The page loaded with all standard views displayed (Comments, Content, Content blocks, Files, Frontpage, People, Recent comments, Recent content, Taxonomy term, Watchdog, Who's new, Who's online block, Archive, Glossary). No 'Broken handler' errors or any errors related to the resource_directory module were present in the page content or HTML."
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2
+  }
+}

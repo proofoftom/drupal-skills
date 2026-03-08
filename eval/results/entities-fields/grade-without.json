@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Entity class baseFieldDefinitions() calls parent::baseFieldDefinitions($entity_type) and assigns/merges the result into $fields (MUST call parent or id/uuid/langcode base fields are lost, causing entity creation to silently fail with missing primary key)",
+      "passed": true,
+      "evidence": "/tmp/d10-entities-without/web/modules/custom/knowledge_resource/src/Entity/KnowledgeResource.php line 65: '$fields = parent::baseFieldDefinitions($entity_type);' — result assigned to $fields before adding custom fields"
+    },
+    {
+      "text": "Base fields that should appear in forms use setDisplayOptions('form', [...]) with widget type (without this call, fields are invisible in entity add/edit forms even though they exist in the database)",
+      "passed": true,
+      "evidence": "KnowledgeResource.php lines 71-74 (title: string_textfield), 86-89 (description: string_textarea), 101-104 (url: uri), 117-125 (related_topic: entity_reference_autocomplete), 142-150 (author: entity_reference_autocomplete), 171-174 (resource_type: options_select) — all display fields have setDisplayOptions('form', [...]) with widget type specified"
+    },
+    {
+      "text": "Base fields that should appear in entity view use setDisplayOptions('view', [...]) with formatter type (without this, entity view mode renders nothing for these fields)",
+      "passed": true,
+      "evidence": "KnowledgeResource.php lines 75-80 (title: string), 90-95 (description: string), 105-111 (url: uri_link), 126-134 (related_topic: entity_reference_label), 151-157 (author: entity_reference_label), 175-181 (resource_type: list_default) — all visible fields have setDisplayOptions('view', [...]) with formatter type"
+    },
+    {
+      "text": "Entity annotation/attribute includes route_provider handler pointing to AdminHtmlRouteProvider or DefaultHtmlRouteProvider (auto-generates CRUD routes from links array instead of hand-writing each entity route in .routing.yml)",
+      "passed": true,
+      "evidence": "KnowledgeResource.php lines 33-35: '\"route_provider\" = { \"html\" = \"Drupal\\Core\\Entity\\Routing\\AdminHtmlRouteProvider\", }' — AdminHtmlRouteProvider is declared in the annotation handlers"
+    },
+    {
+      "text": "This is a content entity per the prompt -- does NOT include config_export key in the annotation/attribute (config_export is for ConfigEntityType only, including it on a content entity causes errors)",
+      "passed": true,
+      "evidence": "KnowledgeResource.php lines 15-54 (full @ContentEntityType annotation) — no 'config_export' key present anywhere in the annotation. Class extends ContentEntityBase, not ConfigEntityBase."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en knowledge_resource returns exit code 0",
+      "passed": true,
+      "evidence": "Command: 'cd /tmp/d10-entities-without && ddev drush en knowledge_resource -y' returned '[notice] Already installed: knowledge_resource' with exit code 0"
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to the KnowledgeResource entity add form -- verify the form renders with fields for related_topic, author, resource_type (dropdown with article/research_paper/tool/documentation options), and created (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report check 1: passed=true, evidence='Form at /knowledge_resource/add. Fields: Related Topic, Author, Resource Type dropdown, Date. HTTP 200.'"
+    },
+    {
+      "text": "Navigate to the KnowledgeResource entity list page -- verify the list builder page loads without errors (via eval-browser)",
+      "passed": true,
+      "evidence": "eval-browser report check 2: passed=true, evidence='List at /admin/content/knowledge_resource. HTTP 200, no errors.'"
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": true,
+      "evidence": "phpcs result provided: 0 errors, 2 warnings (unused use statements). Warnings are not errors. PASSES."
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0
+  }
+}

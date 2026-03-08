@@ -11,10 +11,8 @@
         "Dependencies listed in 'drupal:node' format with project prefix (NOT bare 'node' without the drupal: prefix -- project:module format is required for dependency resolution)",
         ".module file only created if hooks are actually implemented inside it (NOT an empty .module file containing no function definitions -- many modern Drupal modules have no .module file at all)",
         ".info.yml has 'type: module' explicitly set (required in D10+, was optional in D8 -- omitting causes the module to not appear in the module list)",
-        "The module enables successfully: ddev drush en event_analytics returns exit code 0"
-      ],
-      "browser_checks": [
-        "Log in as admin via drush uli, navigate to /admin/modules — verify event_analytics appears in the module list under the 'Events' package group and is shown as enabled"
+        "The module enables successfully: ddev drush en event_analytics returns exit code 0",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
       ]
     }
   ]

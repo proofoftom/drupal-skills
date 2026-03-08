@@ -2,5 +2,8 @@
 Sipos D.*.md
 os-knowledge-garden/
 
+# Local dev environments
+.ddev/
+
 # Node
 node_modules/

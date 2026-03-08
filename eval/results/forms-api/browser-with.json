@@ -1,0 +1,14 @@
+{
+  "checks": [
+    {
+      "expectation": "Log in as admin via drush uli, navigate to /admin/config/search/search-settings -- verify the form renders with fields for similarity_threshold (showing 0.7), result_limit (showing 5), and cache_ttl (showing 300) with correct default values (via eval-browser)",
+      "passed": true,
+      "evidence": "Authenticated successfully via drush uli. Navigated to /admin/config/search/search-settings. Verified form renders with all three required fields as spinbuttons: similarity_threshold with value 0.7, result_limit with value 5, cache_ttl with value 300. Page title: 'Search Settings | Drush Site-Install', HTTP 200. All expected default values confirmed via JavaScript eval."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "total": 1
+  }
+}

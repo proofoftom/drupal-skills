@@ -1,0 +1,16 @@
+{
+  "skill": "drupal-batch-queue-cron",
+  "variant": "with",
+  "expectations": [
+    {"id": 1, "text": "hook_cron() only discovers work and adds to queue via createItem()", "met": true, "evidence": "hook_cron queries nodes and calls createItem()"},
+    {"id": 2, "text": "Queue name matches QueueWorker plugin ID", "met": true, "evidence": "Both use 'content_indexing'"},
+    {"id": 3, "text": "QueueWorker has cron time setting", "met": true, "evidence": "cron: ['time' => 10] in #[QueueWorker] attribute"},
+    {"id": 4, "text": "processItem() has try/catch distinguishing retryable vs permanent", "met": false, "evidence": "No try/catch at all. Only throws bare exception for missing nid."},
+    {"id": 5, "text": "QueueWorker in correct PSR-4 path src/Plugin/QueueWorker/", "met": true, "evidence": "src/Plugin/QueueWorker/ContentIndexer.php"},
+    {"id": 6, "text": "No \\Drupal::queue() in processItem()", "met": true, "evidence": "No queue access in processItem()"},
+    {"id": 7, "text": "Module enables successfully", "met": true, "evidence": "Exit code 0"},
+    {"id": 8, "text": "phpcs passes without errors", "met": false, "evidence": "4 errors: missing class doc comment, member variable doc comment, 2 function doc comments"}
+  ],
+  "score": "6/8",
+  "notes": "Failed on try/catch error handling and phpcs (missing docblocks). Correct queue pattern otherwise."
+}

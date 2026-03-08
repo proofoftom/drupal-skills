@@ -1,0 +1,44 @@
+{
+  "skill": "drupal-module-scaffold",
+  "variant": "with",
+  "expectations": [
+    {
+      "id": 1,
+      "text": "event_analytics.info.yml contains core_version_requirement with BOTH ^10 AND ^11: '^10 || ^11'",
+      "met": true,
+      "evidence": "event_analytics.info.yml: 'core_version_requirement: ^10 || ^11' — exact correct format present"
+    },
+    {
+      "id": 2,
+      "text": "Dependencies listed in 'drupal:node' format with project prefix",
+      "met": true,
+      "evidence": "event_analytics.info.yml: 'dependencies: - drupal:node' — correct project:module format used"
+    },
+    {
+      "id": 3,
+      "text": ".module file only created if hooks are actually implemented inside it",
+      "met": true,
+      "evidence": "No event_analytics.module file exists — correct behavior, module implements no hooks"
+    },
+    {
+      "id": 4,
+      "text": ".info.yml has 'type: module' explicitly set",
+      "met": true,
+      "evidence": "event_analytics.info.yml: 'type: module' — explicitly present"
+    },
+    {
+      "id": 5,
+      "text": "The module enables successfully: ddev drush en event_analytics returns exit code 0",
+      "met": true,
+      "evidence": "ddev drush en event_analytics -y returned exit code 0, module enabled"
+    },
+    {
+      "id": 6,
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "met": true,
+      "evidence": "phpcs: 0 errors, 2 warnings (TODO format only — warnings are not errors)"
+    }
+  ],
+  "score": "6/6",
+  "notes": "Perfect score. Correct core_version_requirement (^10 || ^11), project-prefixed dependency (drupal:node), no spurious .module file, explicit type declaration, successful enable, clean phpcs (zero errors)."
+}

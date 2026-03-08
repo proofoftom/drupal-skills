@@ -12,10 +12,9 @@
         "Schema uses 'label' type for translatable human-readable text like announcement_text (NOT 'string' -- string type is never translated, label type enables config translation for multilingual sites)",
         "Schema uses correct types: 'boolean' for display_enabled, 'integer' for max_display_count (NOT 'string' for everything -- wrong types cause silent type-casting bugs during config import)",
         "Does NOT use \\Drupal::state() or State API for settings that need to be exported between environments (State is environment-specific and NOT included in config export)",
-        "The module enables successfully: ddev drush en site_announcements returns exit code 0"
-      ],
-      "browser_checks": [
-        "Log in as admin via drush uli, navigate to /admin/config/system/announcements — verify the settings form loads with fields for announcement_text (showing 'Welcome'), display_enabled (checked), and max_display_count (showing 3) with their correct default values from config/install"
+        "The module enables successfully: ddev drush en site_announcements returns exit code 0",
+        "Log in as admin via drush uli, navigate to /admin/config/system/announcements -- verify the settings form loads with fields for announcement_text (showing 'Welcome'), display_enabled (checked), and max_display_count (showing 3) with their correct default values from config/install (via eval-browser)",
+        "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors"
       ]
     }
   ]

@@ -1,0 +1,44 @@
+{
+  "skill": "drupal-module-scaffold",
+  "variant": "without",
+  "expectations": [
+    {
+      "id": 1,
+      "text": "event_analytics.info.yml contains core_version_requirement with BOTH ^10 AND ^11: '^10 || ^11'",
+      "met": true,
+      "evidence": "event_analytics.info.yml: 'core_version_requirement: ^10 || ^11' — correct format"
+    },
+    {
+      "id": 2,
+      "text": "Dependencies listed in 'drupal:node' format with project prefix",
+      "met": false,
+      "evidence": "event_analytics.info.yml: '- node' — bare module name without required 'drupal:' prefix"
+    },
+    {
+      "id": 3,
+      "text": ".module file only created if hooks are actually implemented inside it",
+      "met": false,
+      "evidence": "event_analytics.module exists with only a docblock comment — zero function definitions, empty placeholder"
+    },
+    {
+      "id": 4,
+      "text": ".info.yml has 'type: module' explicitly set",
+      "met": true,
+      "evidence": "event_analytics.info.yml: 'type: module' — explicitly set"
+    },
+    {
+      "id": 5,
+      "text": "The module enables successfully: ddev drush en event_analytics returns exit code 0",
+      "met": true,
+      "evidence": "Module enabled successfully with exit code 0"
+    },
+    {
+      "id": 6,
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "met": true,
+      "evidence": "phpcs: 0 errors, 0 warnings — clean pass"
+    }
+  ],
+  "score": "4/6",
+  "notes": "Two failures: bare 'node' dependency (missing drupal: prefix) and empty .module file with no hook implementations. Both are characteristic without-skill patterns."
+}

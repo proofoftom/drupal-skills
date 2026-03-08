@@ -1,0 +1,17 @@
+{
+  "skill": "drupal-testing",
+  "variant": "with",
+  "expectations": [
+    {"id": 1, "text": "Test extends KernelTestBase", "met": true, "evidence": "extends KernelTestBase"},
+    {"id": 2, "text": "protected static $modules includes 'calculator'", "met": true, "evidence": "$modules = ['calculator']"},
+    {"id": 3, "text": "setUp() calls parent::setUp() as first line", "met": true, "evidence": "Line 30: parent::setUp(), line 31: container->get()"},
+    {"id": 4, "text": "Loads service via $this->container->get()", "met": true, "evidence": "$this->container->get('calculator.calculator') in setUp()"},
+    {"id": 5, "text": "@group annotation present", "met": true, "evidence": "@group calculator"},
+    {"id": 6, "text": "Test in tests/src/Kernel/ with correct namespace", "met": true, "evidence": "Drupal\\Tests\\calculator\\Kernel"},
+    {"id": 7, "text": "Module enables successfully", "met": true, "evidence": "Exit code 0"},
+    {"id": 8, "text": "phpunit passes (via ddev exec)", "met": true, "evidence": "OK (3 tests, 10 assertions)"},
+    {"id": 9, "text": "phpcs passes without errors", "met": true, "evidence": "0 errors, 0 warnings"}
+  ],
+  "score": "9/9",
+  "notes": "Perfect score. Correct KernelTestBase patterns throughout: parent::setUp() first, $this->container->get(), $modules array, @group annotation."
+}
