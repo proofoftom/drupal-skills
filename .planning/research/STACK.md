@@ -1,217 +1,579 @@
-# Stack Research
+# Technology Stack: v4.0 UX Overhaul Additions
 
-**Domain:** Group-based project management module with AI/AI Agents integration + Claude Code plugin packaging
-**Researched:** 2026-03-07
-**Confidence:** MEDIUM — Drupal module versions verified via drupal.org; Claude Code plugin system verified via official docs; AI Agents custom agent patterns partially verified
+**Project:** Drupal Skills / group_ai_pm module
+**Researched:** 2026-03-08
+**Focus:** NEW stack additions for Vue.js Kanban, AJAX interactions, keyboard shortcuts, REST endpoints
+**Overall confidence:** MEDIUM-HIGH -- Vue 3 and SortableJS are well-established; Drupal integration patterns verified via official docs; build pipeline approach is opinionated but standard
 
-## Recommended Stack
+## Context: What Already Exists
 
-### Core Technologies
+The v3.0 module (`modules/group_ai_pm/`) already has:
+- Custom content entities: Project (6 fields), Task (10 fields incl. status with `todo|in_progress|review|done`)
+- Entity CRUD with access control, routing at `/admin/content/`
+- Twig templates (`group-ai-pm-task-card.html.twig`, `group-ai-pm-project-summary.html.twig`)
+- CSS libraries (`task_cards`, `project_summaries`)
+- DashboardController returning render arrays
+- Group 3.3.x integration, optional AI sub-module
+- Dependencies: `drupal:datetime`, `drupal:options`, `drupal:text`, `drupal:views`, `group:group`
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| Drupal Core | ^10.4 \|\| ^11 | Base CMS framework | Common denominator of all contrib module requirements. 10.4+ needed because AI module 1.2.x requires ^10.4. PHP 8.1+ (D10) or 8.3+ (D11). |
-| Group | 3.3.5 | Group entity framework -- projects, teams, workspaces | The standard for arbitrary entity grouping in Drupal. v3.x uses `GroupRelationship` entity (renamed from `GroupContent`), supports both content and config entities in groups. Fresh installs should always use 3.x over 2.x. |
-| AI (Artificial Intelligence) | 1.2.11 (stable) | Unified AI abstraction layer | Provider-agnostic AI integration. All AI Agents functionality depends on this. Includes AI Core, AI Automators, AI Assistants API, AI CKEditor, AI Logging. Requires `drupal/key` for credential storage. |
-| AI Agents | 1.2.3 (stable) | Agent framework with tool calling | Provides the agent + tool calling infrastructure for AI-powered project management. Ships with Field Type, Content Type, Taxonomy, Views, Module, and Webform agents. Custom agents created via admin UI or code (AIFunctionCall plugins). |
-| AI Provider Anthropic | 1.2.1 | Claude model integration | Connects AI module to Anthropic Claude models. Required for Claude as the LLM backend for Drupal AI agents. Requires API key via Key module. |
+This document covers ONLY new additions needed for v4.0.
 
-### Supporting Libraries
+---
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| Key | ^1.18 | Secure API key storage | Always -- required by AI module for storing provider API keys (Anthropic, OpenAI, etc.) |
-| AI Agents Explorer | (ships with ai_agents) | Agent testing UI | During development -- provides admin interface for testing agent configurations at /admin/config/ai/agents |
-| AI Agents Extra | (ships with ai_agents) | Additional agent tools | When built-in tools are insufficient -- extends the tool set available to agents |
-| AI Agents Form Integration | (ships with ai_agents) | Form-aware agent tools | When agents need to interact with Drupal forms |
-| Inline Entity Form | ^3.0 | Editing related entities inline | If project management UI needs inline task creation within groups |
-| Token | ^1.13 | Token replacement for templates | If AI prompts need dynamic token replacement from Drupal entities |
+## Recommended Stack Additions
 
-### Development Tools
+### Frontend Framework: Vue 3 (Production Global Build)
 
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| DDEV | Local Drupal development environment | Already used in eval pipeline. Target: `--project-type=drupal --php-version=8.3` |
-| Drush | CLI for Drupal operations | Module enable/disable, config export, entity queries, cache rebuild |
-| PHPUnit | Drupal testing | Kernel and Functional tests for custom module code |
-| phpcs + drupal/coder | Coding standards | Already set up via coding-standards skill |
-| Claude Code | AI-assisted development | The tool we're building the plugin for |
+| Attribute | Value |
+|-----------|-------|
+| **Package** | `vue` |
+| **Version** | `3.5.x` (latest stable) |
+| **Build** | `vue.global.prod.js` (~34 KB gzipped) |
+| **Delivery** | Compiled into module's `js/dist/` via Vite build, declared in `libraries.yml` |
+| **Confidence** | HIGH |
 
-### Claude Code Plugin Structure
+**Why Vue 3:**
+- The Kanban board is a genuinely interactive, stateful component (drag-drop across columns, optimistic status updates, filtered views). This is exactly the use case where a reactive framework provides real value over vanilla JS or Drupal AJAX.
+- Vue 3's Composition API maps cleanly to the Kanban's concerns: a `useKanban()` composable for board state, a `useTasks()` composable for API calls, a `useKeyboardShortcuts()` composable for hotkeys.
+- Drupal has an official proposal (issue #2913628) to use Vue.js for admin UIs. Vue is the community-preferred choice for embedded Drupal components.
+- Vue 3's global production build can be loaded as a Drupal library without requiring the user to run npm. The Vite-built Kanban app externalizes Vue, so the runtime is loaded once and shared.
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| Plugin manifest | `.claude-plugin/plugin.json` | Plugin identity, version, metadata |
-| Skills | `skills/<skill-name>/SKILL.md` | 14 Drupal skills packaged as plugin skills |
-| Supporting files | `skills/<skill-name>/references/` | Reference docs per skill (auto-discovered by Claude when referenced in SKILL.md) |
+**Why NOT petite-vue:** Despite being only 6 KB, petite-vue is no longer actively maintained (last release at Vue 3.2.27), lacks components like Transition (needed for animations), and cannot support the drag-drop library ecosystem. The 34 KB cost of full Vue 3 is acceptable for an admin-only page.
 
-**Plugin manifest format** (verified from official docs):
-```json
-{
-  "name": "drupal-skills",
-  "description": "13 Drupal domain skills + coding-standards for Claude Code. Covers module scaffolding, routing, entities, forms, caching, testing, theming, and more for Drupal 10/11 module development.",
-  "version": "1.0.0",
-  "author": {
-    "name": "proofoftom"
+**Why NOT React/Svelte/Alpine:** Vue has the strongest Drupal ecosystem integration (drupal/vuejs module, Decoupled Blocks contrib, community precedent). Alpine.js lacks drag-drop ecosystem. React would work but adds JSX complexity with no Drupal community backing. Svelte is excellent but has zero Drupal contrib integration.
+
+### Drag-and-Drop: SortableJS + vue-draggable-plus
+
+| Attribute | Value |
+|-----------|-------|
+| **Core library** | `sortablejs` v1.15.x (~12 KB min+gz) |
+| **Vue wrapper** | `vue-draggable-plus` v0.6.x (~3 KB min+gz on top of SortableJS) |
+| **Confidence** | HIGH |
+
+**Why vue-draggable-plus:**
+- Purpose-built Vue 3 wrapper for SortableJS with Composition API support (`useDraggable()` hook).
+- Supports component, directive, AND function usage -- component for simple cases, `useDraggable()` for the Kanban where we need fine-grained control.
+- Actively maintained (v0.6.1, published ~2 months ago), 3,300+ GitHub stars, 38K weekly npm downloads.
+- Cross-column drag (move tasks between status columns) is a first-class feature via SortableJS's `group` option.
+- Touch device support via SortableJS's built-in touch handling.
+
+**Why NOT raw SortableJS:** SortableJS alone would require manual Vue 3 reactivity wiring. When a task is dragged between columns, we need Vue's reactivity to update the data model and trigger the PATCH request. vue-draggable-plus handles this bidirectional sync.
+
+**Why NOT vuedraggable (vue.draggable.next):** The original vuedraggable for Vue 3 (`vuedraggable@next`) is outdated and no longer updated to match Vue 3 patterns. vue-draggable-plus was created specifically to replace it.
+
+**Why NOT @dnd-kit:** React-only library. Not applicable.
+
+### Keyboard Shortcuts: tinykeys
+
+| Attribute | Value |
+|-----------|-------|
+| **Package** | `tinykeys` v3.0.0 |
+| **Size** | ~650 bytes min+gz |
+| **Confidence** | HIGH |
+
+**Why tinykeys:**
+- Tiny (650 B) -- negligible bundle impact. This is a keyboard binding library, not a framework.
+- Framework-agnostic vanilla JS. Wrap in a Vue composable (`useKeyboardShortcuts()`) for clean integration.
+- Supports modifier keys with `$mod` for cross-platform (Cmd on Mac, Ctrl on Windows/Linux).
+- Supports key sequences ("g i" for "go to inbox" style shortcuts like Linear uses).
+- No dependencies. Just `tinykeys(window, { "Shift+N": handler })`.
+- 2K+ GitHub stars, maintained by Jamie Builds (known for babel/parcel contributions).
+
+**Why NOT mousetrap:** Heavier (~4.5 KB), jQuery-era API design. Still works but tinykeys is smaller and more modern.
+
+**Why NOT Vue-specific keyboard libraries:** vue3-shortkey, @simolation/vue-hotkey etc. are Vue wrappers around heavier libraries. tinykeys at 650 B wrapped in a 20-line composable is lighter and gives us full control.
+
+### API Layer: Custom REST Controllers with JsonResponse
+
+| Attribute | Value |
+|-----------|-------|
+| **Approach** | Custom Drupal controllers returning `CacheableJsonResponse` |
+| **Routes** | Defined in `group_ai_pm.routing.yml` |
+| **No new module dependencies** | Uses existing Drupal core Symfony components |
+| **Confidence** | MEDIUM-HIGH |
+
+**Why custom controllers over JSON:API:**
+
+JSON:API (Drupal core) is the standard recommendation for entity CRUD, BUT for this specific use case custom controllers are better because:
+
+1. **Kanban-specific payloads.** The Kanban needs tasks grouped by status column with project context, assignee display names, and priority badges -- a shaped response, not raw entity fields. JSON:API returns flat entity data requiring client-side reshaping.
+
+2. **Batch status updates.** Dragging a task between columns needs a single endpoint that: updates the task status, reorders tasks within the target column, and returns the updated column state. JSON:API requires multiple PATCH requests for this.
+
+3. **No additional module enable.** JSON:API module must be enabled and configured for write operations. Custom controllers use existing routing infrastructure already in the module.
+
+4. **CSRF protection already established.** The module already uses `_csrf_token: 'TRUE'` on the project complete route. Same pattern extends to task status PATCH endpoints.
+
+5. **Access control integration.** Custom controllers call existing `TaskAccessControlHandler` directly. JSON:API's access layer is entity-level but doesn't know about Kanban-specific business logic (e.g., "can this user reorder tasks in this project?").
+
+**Specific endpoints needed:**
+
+```
+GET  /api/group-ai-pm/project/{project}/kanban    # Tasks grouped by status column
+PATCH /api/group-ai-pm/task/{task}/status          # Update task status (drag-drop)
+PATCH /api/group-ai-pm/task/{task}                 # Inline edit (title, assignee, etc.)
+POST /api/group-ai-pm/project/{project}/task       # Quick-add task from Kanban
+GET  /api/group-ai-pm/project/{project}/tasks      # Filtered/sorted task list
+```
+
+All return `CacheableJsonResponse` with proper cache tags (`task:{id}`, `task_list`, `project:{id}`) so Drupal's internal page cache and Dynamic Page Cache work correctly.
+
+**When to use JSON:API instead:** If the module were a general-purpose headless backend, JSON:API would be the right choice. For a tightly integrated admin UI with specific data shapes, custom controllers win.
+
+### Drupal AJAX: Core AJAX API (for non-Vue interactions)
+
+| Attribute | Value |
+|-----------|-------|
+| **Approach** | `use-ajax` CSS class + AjaxResponse commands |
+| **No new dependencies** | Uses `drupal:core/drupal.ajax` library |
+| **Confidence** | HIGH |
+
+**Why Drupal AJAX for simpler interactions:**
+
+Not everything needs Vue. The PROJECT.md explicitly says "Drupal AJAX for simpler interactions: status toggles, inline editing." The right boundary:
+
+| Interaction | Approach | Why |
+|-------------|----------|-----|
+| Kanban board | Vue 3 | Complex state: drag-drop, multi-column, optimistic updates |
+| Task status toggle (list view) | Drupal AJAX | Single DOM update, no complex state |
+| Inline title edit (list view) | Drupal AJAX | Single field, `ReplaceCommand` sufficient |
+| Project complete action | Drupal AJAX | Already exists with CSRF token, just needs AJAX upgrade |
+| Dashboard stats refresh | Drupal AJAX | Simple content replacement |
+| Quick-add task modal | Vue 3 | Part of Kanban context, needs board state awareness |
+
+**Implementation pattern:**
+
+```php
+// Controller returns AjaxResponse
+$response = new AjaxResponse();
+$response->addCommand(new ReplaceCommand('#task-' . $task->id(), $updated_markup));
+$response->addCommand(new MessageCommand('Task status updated.'));
+return $response;
+```
+
+```twig
+{# Link with use-ajax class #}
+<a href="{{ path('group_ai_pm.task.toggle_status', {'task': task.id}) }}"
+   class="use-ajax"
+   data-ajax-wrapper="task-{{ task.id }}-status">
+  {{ task.status }}
+</a>
+```
+
+### Build Tool: Vite (Development Only)
+
+| Attribute | Value |
+|-----------|-------|
+| **Package** | `vite` v6.x |
+| **Vue plugin** | `@vitejs/plugin-vue` v5.x |
+| **Used by** | Developers contributing to the module's frontend |
+| **NOT required by** | End users installing the module (compiled JS shipped) |
+| **Confidence** | HIGH |
+
+**Why Vite:**
+- Official build tool for Vue 3 (created by same author, Evan You).
+- Library mode outputs a single IIFE file that Drupal can load as a library.
+- Dev server with HMR for rapid development (proxied through ddev).
+- Vite 6.x is current stable as of early 2026.
+
+**Build output strategy:**
+
+```
+modules/group_ai_pm/
+  js/
+    src/                          # Vue source (NOT shipped to production)
+      KanbanApp.vue
+      components/
+        KanbanColumn.vue
+        TaskCard.vue
+        TaskQuickAdd.vue
+      composables/
+        useKanban.js
+        useTasks.js
+        useKeyboardShortcuts.js
+      api/
+        client.js                 # fetch() wrapper with CSRF token handling
+    dist/                         # Vite build output (shipped)
+      kanban.js                   # IIFE bundle, externalizes Vue
+      kanban.css                  # Extracted CSS
+  node_modules/                   # .gitignored
+  package.json
+  vite.config.js
+```
+
+**Vite config approach:**
+
+```javascript
+// vite.config.js
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({
+  plugins: [vue()],
+  build: {
+    lib: {
+      entry: 'js/src/main.js',
+      name: 'GroupAiPmKanban',
+      fileName: 'kanban',
+      formats: ['iife'],
+    },
+    outDir: 'js/dist',
+    rollupOptions: {
+      external: ['vue'],
+      output: {
+        globals: {
+          vue: 'Vue',
+        },
+      },
+    },
   },
-  "repository": "https://github.com/proofoftom/drupal-skills",
-  "license": "MIT",
-  "keywords": ["drupal", "drupal-10", "drupal-11", "module-development", "php"]
+});
+```
+
+**Why IIFE format:** Drupal loads JS via `<script>` tags from `libraries.yml`. IIFE (Immediately Invoked Function Expression) is the correct format for non-module script loading. ES modules would require `type="module"` which Drupal's asset pipeline does not natively support.
+
+### CSS Approach: Scoped Module CSS (No Framework)
+
+| Attribute | Value |
+|-----------|-------|
+| **Approach** | BEM-namespaced CSS extracted from Vue SFCs + standalone CSS files |
+| **Prefix** | `gapm-` (group-ai-pm) for all custom classes |
+| **Confidence** | HIGH |
+
+**Why no CSS framework (Tailwind, Bootstrap, etc.):**
+
+1. **Admin context.** The module runs inside Drupal's admin theme (Claro or Gin). Adding a CSS framework would conflict with admin theme styles and bloat the page.
+2. **Scoped styles.** Vue SFCs with `<style scoped>` plus BEM naming (`gapm-kanban__column`, `gapm-task-card--priority-high`) prevents style leakage.
+3. **Bundle size.** Even Tailwind's purged output adds 10-30 KB. For an admin page with ~20 unique component styles, hand-written CSS is smaller and more maintainable.
+4. **Claro compatibility.** Drupal's Claro admin theme uses CSS custom properties for colors, spacing, fonts. Our CSS should USE these variables (`var(--color-primaryActive)`, `var(--space-m)`) rather than fight them.
+
+**CSS custom properties from Claro to leverage:**
+
+```css
+/* Use Claro's design tokens, don't reinvent them */
+.gapm-kanban__column {
+  background: var(--color-gray-050);
+  border-radius: var(--border-radius);
+  padding: var(--space-m);
+}
+.gapm-task-card {
+  background: var(--color-white);
+  box-shadow: var(--shadow-card, 0 1px 3px rgba(0,0,0,0.12));
+  border: 1px solid var(--color-gray-200);
 }
 ```
 
-**Skill invocation after plugin install:** `/drupal-skills:drupal-caching`, `/drupal-skills:drupal-routing-controllers`, etc.
+**Animations:** CSS transitions for card movement (`transition: transform 0.2s ease`). SortableJS handles drag ghost styling. Vue's `<Transition>` and `<TransitionGroup>` for list animations.
 
-**Auto-triggering:** Skills with good `description` fields in SKILL.md frontmatter will auto-trigger when Claude detects relevant context. This is the key v3.0 eval metric -- skills must trigger from natural prompts without explicit `/skill-name` invocation. Claude loads skill descriptions into context (2% of context window budget), then loads full skill content when it decides a skill is relevant.
+---
 
-## Installation
+## Drupal Module Dependencies (Changes)
 
-```bash
-# Drupal project setup (via DDEV)
-ddev config --project-type=drupal --php-version=8.3
-ddev start
-ddev composer create drupal/recommended-project
+### New Core Module Dependencies
 
-# Core contrib modules for the Group PM module
-ddev composer require 'drupal/group:^3.3'
-ddev composer require 'drupal/ai:^1.2'
-ddev composer require 'drupal/ai_agents:^1.2'
-ddev composer require 'drupal/ai_provider_anthropic:^1.2'
-ddev composer require 'drupal/key:^1.18'
+| Module | Why Needed | Already Enabled? |
+|--------|-----------|-----------------|
+| `drupal:serialization` | Required for `CacheableJsonResponse` and JSON handling in custom controllers | Likely yes (dependency of views, etc.) -- verify |
 
-# Development dependencies
-ddev composer require --dev drupal/coder squizlabs/php_codesniffer
+**No other new core module dependencies.** The REST and JSON:API modules are NOT needed because we use custom controllers.
 
-# Enable modules
-ddev drush en group ai ai_agents ai_provider_anthropic key -y
+### No New Contrib Dependencies
 
-# Claude Code plugin (local testing during development)
-claude --plugin-dir /home/proofoftom/Code/drupal-skills
+The entire v4.0 frontend is self-contained within the module. No new composer packages.
+
+---
+
+## Drupal Libraries (libraries.yml additions)
+
+```yaml
+# New libraries for v4.0
+vue:
+  version: 3.5.x
+  header: true
+  js:
+    js/vendor/vue.global.prod.js: { minified: true, weight: -20 }
+
+kanban:
+  version: 1.x
+  js:
+    js/dist/kanban.js: { minified: true }
+  css:
+    component:
+      js/dist/kanban.css: {}
+  dependencies:
+    - group_ai_pm/vue
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
+keyboard_shortcuts:
+  version: 1.x
+  js:
+    js/dist/shortcuts.js: { minified: true }
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+
+ajax_enhancements:
+  version: 1.x
+  js:
+    js/ajax-enhancements.js: {}
+  css:
+    component:
+      css/ajax-enhancements.css: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/once
+
+# Existing libraries (preserved)
+task_cards:
+  version: 1.x
+  css:
+    component:
+      css/task-cards.css: {}
+
+project_summaries:
+  version: 1.x
+  css:
+    component:
+      css/project-summaries.css: {}
 ```
+
+**Key detail:** Vue is declared as a separate library so it loads once even if multiple components use it. The `header: true` ensures Vue loads before the Kanban app.
+
+---
+
+## NPM Package Dependencies
+
+### package.json (development)
+
+```json
+{
+  "name": "group-ai-pm-frontend",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.0",
+    "vue-draggable-plus": "^0.6.0",
+    "sortablejs": "^1.15.0",
+    "tinykeys": "^3.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "vite": "^6.0.0"
+  }
+}
+```
+
+### Total Bundle Size Estimate
+
+| Component | Size (min+gz) | Notes |
+|-----------|---------------|-------|
+| Vue 3 runtime | ~34 KB | Global production build |
+| SortableJS | ~12 KB | Core drag-drop engine |
+| vue-draggable-plus | ~3 KB | Thin wrapper |
+| tinykeys | ~0.65 KB | Keyboard bindings |
+| Kanban app code | ~8-15 KB | Our Vue components + composables |
+| CSS | ~3-5 KB | Scoped component styles |
+| **Total** | **~61-70 KB** | Loaded only on Kanban/dashboard pages |
+
+**Context:** This is an admin-only page. Drupal's admin theme (Claro) already loads ~200 KB of CSS and ~150 KB of JS. Adding ~65 KB for a fully interactive Kanban board is proportional. For comparison, a single CKEditor instance loads ~300 KB.
+
+---
 
 ## Alternatives Considered
 
-| Recommended | Alternative | When to Use Alternative |
-|-------------|-------------|-------------------------|
-| Group 3.3.x | Organic Groups (og) | Never for new projects -- OG is legacy, Group is the modern standard |
-| Group 3.3.x | Group 2.3.x | Only if migrating from Group 1.x (2.x has migration path from 1.x, 3.x from 2.x via 3.3.1+) |
-| AI module 1.2.x | AI module 1.3.0-rc2 | Only if you need Drupal ^10.5 \|\| ^11.2 features and are willing to use RC |
-| AI Agents 1.2.x | AI Agents 1.3.0-beta2 | Only if you need bleeding-edge agent features and accept beta instability |
-| AI Provider Anthropic | AI Provider OpenAI | If project requires GPT models instead of Claude. Both work through AI module abstraction layer. |
-| Custom entities for tasks | Content types (nodes) for tasks | If simplicity matters more than clean entity design. Nodes work but custom entities are more appropriate for non-content data like tasks/milestones. |
-| Claude Code plugin | `~/.claude/skills/` install via install.sh | For personal use only. Plugin is for distribution; `install.sh --symlink` remains for local dev convenience. |
+| Category | Recommended | Alternative | Why Not |
+|----------|-------------|-------------|---------|
+| Frontend framework | Vue 3 | petite-vue | No longer maintained, lacks Transition/component features needed for Kanban |
+| Frontend framework | Vue 3 | Alpine.js | No drag-drop ecosystem, not suited for complex stateful UIs |
+| Frontend framework | Vue 3 | React | No Drupal community integration, JSX adds complexity |
+| Frontend framework | Vue 3 | Vanilla JS | Drag-drop state management across columns would be fragile without reactivity |
+| Drag-drop | vue-draggable-plus | vuedraggable@next | Outdated, not maintained for Vue 3 |
+| Drag-drop | vue-draggable-plus | sortablejs-vue3 | Thinner wrapper but less Vue 3 integration (no composable API) |
+| Drag-drop | vue-draggable-plus | raw SortableJS | Would need manual Vue reactivity wiring |
+| API layer | Custom controllers | JSON:API module | Over-exposes entities, requires multiple requests for Kanban data shape, adds module dependency |
+| API layer | Custom controllers | REST module | Over-engineered for internal admin AJAX; custom controllers are simpler |
+| API layer | Custom controllers | GraphQL | Massive over-engineering for a single-module admin UI |
+| Keyboard shortcuts | tinykeys | mousetrap | 7x larger, jQuery-era design |
+| Keyboard shortcuts | tinykeys | @simolation/vue-hotkey | Wraps heavier library; tinykeys + composable is lighter |
+| Build tool | Vite | Webpack | Slower, more config, not Vue 3's official tool |
+| Build tool | Vite | No build step (CDN Vue) | Would require shipping unminified source, no SFC support, no tree-shaking |
+| CSS | Scoped BEM + Claro variables | Tailwind CSS | Conflicts with admin theme, adds purge complexity, 10-30 KB overhead |
+| CSS | Scoped BEM + Claro variables | Bootstrap | Massive conflict with Claro, wrong for admin context |
+| Simple AJAX | Drupal core AJAX API | Vue for everything | Over-engineering: status toggles and inline edits don't need a framework |
 
-## What NOT to Use
+---
 
-| Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| Drupal PM module | No stable D10/D11 release, last dev update Nov 2024, no active maintainer | Build custom entities on Group module |
-| Group 1.x (8.x-1.x) | Security fixes only, deprecated GroupContent API | Group 3.3.x with GroupRelationship API |
-| AI module 1.1.x | Older stable branch, missing features in 1.2.x, requires only ^10.2 but lacks newer APIs | AI 1.2.11 (stable) |
-| Direct Anthropic SDK calls | Bypasses AI module abstraction, tightly couples to single provider | AI module provider plugin system |
-| `.claude/commands/` directory | Legacy format, merged into skills but skills preferred for new work | `skills/<name>/SKILL.md` format |
-| Hardcoded API keys in settings.php | Security risk, breaks deployment portability | Key module with file-based or environment provider |
-| AI module 1.3.x | RC/beta quality, not covered by security advisory team yet | AI 1.2.11 (stable, security-covered) |
-| Separate marketplace repo | Over-engineering for initial release | Submit directly to anthropics/claude-plugins-official after validation |
+## What NOT to Add (Over-Engineering Risks)
 
-## Stack Patterns by Variant
+| Avoid | Why | Impact if Added |
+|-------|-----|----------------|
+| **Pinia/Vuex state management** | Kanban state is local to one page; a `ref()` and composable suffice. No cross-page state. | +5 KB bundle, unnecessary abstraction layer |
+| **Vue Router** | This is not an SPA. Each Drupal page is a full page load. Vue mounts on specific DOM elements. | Fights Drupal's routing, breaks admin theme navigation |
+| **TypeScript** | Eval pipeline uses Haiku for code generation. TS adds compilation complexity with no eval benefit. | Build complexity, Haiku may generate invalid TS |
+| **CSS-in-JS** | Drupal's asset pipeline expects `.css` files in `libraries.yml`. CSS-in-JS would bypass cache management. | Breaks Drupal cache aggregation, runtime overhead |
+| **WebSocket/real-time** | Single-user admin editing. Polling or simple refetch-on-focus is sufficient for freshness. | Server infrastructure complexity, no user need |
+| **Axios/fetch library** | Native `fetch()` with a 30-line wrapper handles CSRF tokens and JSON parsing. No need for a library. | Unnecessary dependency |
+| **i18n framework (vue-i18n)** | Strings come from Drupal's translation system via `drupalSettings`. Vue just renders them. | Dual translation systems, maintenance burden |
+| **Testing framework (Vitest/Jest)** | Frontend tested via browser eval (agent-browser) not unit tests. Eval methodology is the test. | Dev dependency complexity with no eval pipeline integration |
 
-**If building the Group PM module as a standalone contrib:**
-- Use Group 3.3.x as the base, define custom group types (Project, Sprint)
-- Define custom content entities (Task, Milestone) with GroupRelation plugins in `src/Plugin/Group/Relation/`
-- AI Agents integration via custom AIFunctionCall plugins that operate within group scope
-- Keep AI module as a soft dependency (module works without it, enhanced with it)
-- Export default config in `config/install/` and `config/optional/` (optional for AI-dependent config)
+---
 
-**If packaging skills as a Claude Code plugin:**
-- Add `.claude-plugin/plugin.json` manifest at repo root
-- Keep `skills/` directory at repo root (already correct location for both plugin and install.sh)
-- Skills auto-discovered from `skills/<name>/SKILL.md` when plugin enabled
-- Plugin namespace: all skills become `/drupal-skills:<skill-name>`
-- `references/` and `evals/` subdirectories remain -- Claude reads references when SKILL.md links them; evals/ ignored by plugin system
-- Install command: `/plugin install drupal-skills@<marketplace>` or `claude --plugin-dir ./`
+## Integration Points with Existing Module
 
-**If evaluating skill auto-triggering (v3.0 eval):**
-- Install plugin via `claude --plugin-dir /path/to/drupal-skills` for local testing
-- Use natural language prompts (no `/drupal-skills:skill-name` invocation)
-- Compare: plugin-installed vs no-plugin baseline
-- Key metric: does Claude auto-load the right skill from its description field?
-- Budget awareness: skill descriptions consume 2% of context window. With 14 skills, each description should be concise.
+### Drupal -> Vue Communication
 
-## Version Compatibility
+```javascript
+// Controller passes data via drupalSettings
+$build['#attached']['drupalSettings']['groupAiPm'] = [
+  'projectId' => $project->id(),
+  'csrfToken' => \Drupal::csrfToken()->get('rest'),
+  'apiBase' => '/api/group-ai-pm',
+  'statuses' => ['todo', 'in_progress', 'review', 'done'],
+  'statusLabels' => ['To Do', 'In Progress', 'Review', 'Done'],
+  'currentUserId' => \Drupal::currentUser()->id(),
+  'permissions' => [
+    'editTasks' => $account->hasPermission('edit any task'),
+    'createTasks' => $account->hasPermission('create task'),
+  ],
+];
+```
 
-| Package | Compatible With | Notes |
-|---------|-----------------|-------|
-| drupal/group:^3.3 | drupal/core:^10.3 \|\| ^11 | Requires PHP 8.1+ (D10) or 8.3+ (D11) |
-| drupal/ai:^1.2 | drupal/core:^10.4 \|\| ^11 | Requires drupal/key. **Bottleneck**: highest core minimum (10.4 vs 10.3 for others) |
-| drupal/ai_agents:^1.2 | drupal/core:^10.3 \|\| ^11 | Requires drupal/ai (version constraint inferred from ecosystem) |
-| drupal/ai_provider_anthropic:^1.2 | drupal/core:^10.3 \|\| ^11 | Requires drupal/ai. API key via Key module. |
-| Claude Code plugin system | Claude Code >= 1.0.33 | Plugin support including `/plugin` command. Skills require SKILL.md with YAML frontmatter. |
+```javascript
+// Vue app reads from drupalSettings
+const settings = window.drupalSettings.groupAiPm;
+```
 
-**Effective minimum Drupal core:** 10.4 (bottleneck is AI module 1.2.x requiring ^10.4).
+### Vue -> Drupal Communication
 
-**Recommended target:** Drupal 11 with PHP 8.3 -- all modules support it, best forward compatibility, simplest dependency resolution.
+```javascript
+// API client with CSRF token
+async function apiCall(method, path, data = null) {
+  const response = await fetch(settings.apiBase + path, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Drupal-Ajax-Token': settings.csrfToken,
+    },
+    body: data ? JSON.stringify(data) : undefined,
+  });
+  return response.json();
+}
+```
 
-## Key Integration Points
+### Mount Point Pattern
 
-### Group <-> AI Agents Integration
+Vue mounts on a specific DOM element rendered by Twig, NOT on the entire page:
 
-The Group module provides the entity framework (projects, tasks as group relationships). AI Agents provides the automation layer. Integration happens through:
+```twig
+{# kanban-board.html.twig #}
+<div id="gapm-kanban-app" data-project-id="{{ project_id }}">
+  {# Vue mounts here. Fallback content for no-JS: #}
+  <noscript>{{ 'Enable JavaScript for the Kanban board.'|t }}</noscript>
+</div>
+{{ attach_library('group_ai_pm/kanban') }}
+```
 
-1. **Custom AIFunctionCall plugins** -- Drupal plugins that can query/modify Group entities (create tasks, assign users to groups, update task status)
-2. **Custom AI Agents** -- Agents configured via admin UI or code that combine multiple tools for project management workflows
-3. **Tool property restrictions** -- Limiting agent tools to specific group types or entity bundles via the AI Agents config UI
-4. **Group-scoped agent access** -- Agents operating within a specific group's permission context
+### Cache Invalidation Chain
 
-### Group Module Architecture (v3.x)
+```
+Task entity save -> Cache tag 'task:{id}' invalidated
+                 -> Cache tag 'task_list' invalidated
+                 -> Custom JSON endpoints return fresh data
+                 -> Vue refetches on next board load
+                 -> Drupal AJAX responses include fresh markup
+```
 
-Key entities and concepts for the custom module:
-- `Group` entity -- the container (Project, Sprint, Team)
-- `GroupType` config entity -- bundle definition (like a content type for groups)
-- `GroupRelationship` entity -- the join entity linking content/users to a group (renamed from GroupContent in v3)
-- `GroupRelationType` config entity -- bundle definition for relationships
-- `GroupRelation` plugins -- define what can be added to a group (`src/Plugin/Group/Relation/`)
-- `RelationHandler` services -- handler classes in `src/Plugin/Group/RelationHandler/`
-- `Group::addRelationship()` -- API method (renamed from addContent() in v3), returns the created entity
-- Group permissions -- per-group-type permission layer on top of Drupal core permissions
+---
 
-### AI Module Architecture
+## Installation & Build
 
-- **AI Core** -- abstraction layer, operation types (chat, embeddings, image gen, speech-to-text, etc.)
-- **Providers** -- plugin system for LLM backends (Anthropic, OpenAI, Ollama, Huggingface, etc.)
-- **Key module** -- secure credential storage for API keys
-- **AI Agents** -- agent framework with tool calling, loops (max_loops config), and sub-agent delegation
-- **AIFunctionCall plugins** -- custom tool definitions for agents (the extension point for our module)
-- **Default prompts** -- agents ship with default prompts that can be overridden via config UI; once overridden, file-based prompts are not used
+### For Module Users (No Build Required)
 
-### Claude Code Plugin Architecture
+The module ships with pre-compiled JS in `js/dist/` and vendored Vue in `js/vendor/`. No npm install needed.
 
-- **Plugin manifest** -- `.claude-plugin/plugin.json` at repo root (the only file in `.claude-plugin/`)
-- **Skills directory** -- `skills/<name>/SKILL.md` with YAML frontmatter (description triggers auto-loading)
-- **Supporting files** -- `skills/<name>/references/` (existing structure, Claude reads when SKILL.md references them)
-- **Namespace** -- all skills prefixed with plugin name: `/drupal-skills:skill-name`
-- **Auto-triggering** -- description always in context; full skill loads when Claude determines it's relevant
-- **Distribution** -- via marketplace (GitHub repo with `.claude-plugin/marketplace.json`) or direct `--plugin-dir` flag
-- **Installation scopes** -- user (personal), project (team via VCS), local (gitignored)
+```bash
+# Standard Drupal module install
+drush en group_ai_pm -y
+drush cr
+```
+
+### For Module Developers (Build Required)
+
+```bash
+# One-time setup
+cd modules/group_ai_pm
+npm install
+
+# Development (with HMR via ddev)
+npm run dev
+
+# Production build (before committing)
+npm run build
+# Outputs to js/dist/kanban.js and js/dist/kanban.css
+
+# Copy Vue production build to vendor
+cp node_modules/vue/dist/vue.global.prod.js js/vendor/
+```
+
+### .gitignore Additions
+
+```
+modules/group_ai_pm/node_modules/
+modules/group_ai_pm/js/src/    # Source excluded from distribution (optional -- could include)
+```
+
+**Decision: Ship source or not?** Ship source files (`js/src/`) for transparency and contributor convenience. The `node_modules/` is always gitignored. Compiled `js/dist/` is committed.
+
+---
+
+## Version Compatibility Matrix
+
+| Package | Version | Compatible With | Notes |
+|---------|---------|-----------------|-------|
+| vue | ^3.5.0 | All modern browsers, IE not supported | Admin-only, IE support irrelevant |
+| sortablejs | ^1.15.0 | Chrome 74+, Firefox 78+, Safari 12+, Edge 79+ | Touch support built-in |
+| vue-draggable-plus | ^0.6.0 | Vue ^3.3.0, SortableJS ^1.14.0 | Requires Composition API |
+| tinykeys | ^3.0.0 | All modern browsers | No dependencies |
+| vite | ^6.0.0 | Node 18+ | Dev only |
+| @vitejs/plugin-vue | ^5.0.0 | Vite ^6.0.0, Vue ^3.5.0 | Dev only |
+| Drupal core | ^10 \|\| ^11 | PHP 8.1+ (D10) / 8.3+ (D11) | Existing constraint |
+| Node.js | ^18 \|\| ^20 | Required for Vite build | Dev only, not runtime |
+
+---
 
 ## Sources
 
-- [Group module project page](https://www.drupal.org/project/group) -- version 3.3.5, verified 2026-03-07 (HIGH confidence)
-- [Group 3.3.5 release notes](https://www.drupal.org/project/group/releases/3.3.5) -- requirements verified (HIGH confidence)
-- [Group v3 API changes: addRelationship()](https://www.drupal.org/node/3292844) -- API rename confirmed (MEDIUM confidence)
-- [Group documentation](https://www.drupal.org/docs/extending-drupal/contributed-modules/contributed-module-documentation/group) -- architecture concepts (MEDIUM confidence)
-- [AI module project page](https://www.drupal.org/project/ai) -- version 1.2.11, verified 2026-03-07 (HIGH confidence)
-- [AI module documentation](https://project.pages.drupalcode.org/ai/1.2.x/) -- sub-modules and architecture (MEDIUM confidence)
-- [AI Agents project page](https://www.drupal.org/project/ai_agents) -- version 1.2.3, verified 2026-03-07 (HIGH confidence)
-- [AI Agents documentation](https://ai-agents-project-eb5f6489e826e45857a7585a7d05c3e39463e30c9c8d5.pages.drupalcode.org/) -- built-in agents and config (MEDIUM confidence)
-- [QED42 AI Agents practical guide](https://www.qed42.com/insights/exploring-drupals-ai-agents-a-practical-guide-for-site-builders) -- agent structure and tool calling (MEDIUM confidence)
-- [AI Provider Anthropic](https://www.drupal.org/project/ai_provider_anthropic) -- version 1.2.1, verified 2026-03-07 (HIGH confidence)
-- [Claude Code Skills documentation](https://code.claude.com/docs/en/skills) -- skill anatomy, auto-triggering, frontmatter reference (HIGH confidence)
-- [Claude Code Plugins documentation](https://code.claude.com/docs/en/plugins) -- plugin structure, manifest, quickstart (HIGH confidence)
-- [Claude Code Plugins reference](https://code.claude.com/docs/en/plugins-reference) -- full plugin.json schema, directory structure, CLI commands (HIGH confidence)
-- [Official Anthropic plugin marketplace](https://github.com/anthropics/claude-plugins-official) -- marketplace structure and submission (HIGH confidence)
-- [Drupal PHP requirements](https://www.drupal.org/docs/getting-started/system-requirements/php-requirements) -- D10 needs PHP 8.1+, D11 needs PHP 8.3+ (HIGH confidence)
+- [Vue.js Official Quick Start](https://vuejs.org/guide/quick-start.html) (HIGH) -- Vue 3 global build options, CDN vs bundled
+- [Vue.js Production Deployment](https://vuejs.org/guide/best-practices/production-deployment.html) (HIGH) -- Build size optimization
+- [vue-draggable-plus GitHub](https://github.com/Alfred-Skyblue/vue-draggable-plus) (HIGH) -- Active maintenance, Vue 3 Composition API support
+- [vue-draggable-plus npm](https://www.npmjs.com/package/vue-draggable-plus) (HIGH) -- v0.6.1, 38K weekly downloads
+- [vue-draggable-plus API docs](https://vue-draggable-plus.pages.dev/en/api/) (HIGH) -- useDraggable composable, component API
+- [SortableJS GitHub](https://github.com/SortableJS/Sortable) (HIGH) -- v1.15.7, framework-agnostic drag-drop
+- [tinykeys GitHub](https://github.com/jamiebuilds/tinykeys) (HIGH) -- v3.0.0, 650 B min+gz
+- [Drupal.org: Adding assets via libraries.yml](https://www.drupal.org/docs/develop/creating-modules/adding-assets-css-js-to-a-drupal-module-via-librariesyml) (HIGH) -- Official asset pipeline docs
+- [Drupal.org: JSON:API vs REST module](https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module/jsonapi-vs-cores-rest-module) (HIGH) -- Official comparison, "choose REST for non-entity data"
+- [Drupal.org: JSON:API module](https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module) (HIGH) -- Zero-config entity exposure, filtering, sorting
+- [Drupal.org: Custom REST Resources](https://www.drupal.org/docs/develop/drupal-apis/restful-web-services-api/custom-rest-resources) (HIGH) -- RestResource plugin pattern
+- [Drupal.org: AJAX API Basic Concepts](https://www.drupal.org/docs/drupal-apis/ajax-api/basic-concepts) (HIGH) -- use-ajax class, AjaxResponse commands
+- [Drupal.org: Core AJAX Commands](https://www.drupal.org/docs/develop/drupal-apis/ajax-api/core-ajax-callback-commands) (HIGH) -- ReplaceCommand, InvokeCommand, MessageCommand
+- [Drupal.org: JavaScript API overview](https://www.drupal.org/docs/drupal-apis/javascript-api/javascript-api-overview) (HIGH) -- Drupal.behaviors, drupalSettings, once()
+- [Drupal.org: Vue.js Library module](https://www.drupal.org/project/vuejs) (MEDIUM) -- Drupal Vue integration contrib
+- [Drupal.org: Proposal for Vue.js in admin UIs](https://www.drupal.org/project/ideas/issues/2913628) (MEDIUM) -- Community precedent
+- [Vite Library Mode docs](https://vite.dev/guide/build) (HIGH) -- build.lib config, IIFE output
+- [Vite Build Options](https://vite.dev/config/build-options) (HIGH) -- rollupOptions, external, globals
+- [Five Jars: Vue.js + Drupal integration](https://fivejars.com/blog/how-integrate-vuejs-applications-drupal) (MEDIUM) -- Practical integration patterns
+- [FrontendTools: JS Bundle Size Guide 2025](https://www.frontendtools.tech/blog/reduce-javascript-bundle-size-2025) (MEDIUM) -- Vue 3 ~34KB gzipped baseline
+- [Lullabot: Understanding JavaScript behaviors](https://www.lullabot.com/articles/understanding-javascript-behaviors-in-drupal) (MEDIUM) -- Drupal.behaviors deep dive
+- [CodimTh: Custom controller JSON response](https://www.codimth.com/blog/web/drupal/custom-controller-json-response-drupal-8) (MEDIUM) -- JsonResponse in custom controllers
+- [petite-vue GitHub](https://github.com/vuejs/petite-vue) (MEDIUM) -- No longer actively maintained, "done" status
 
 ---
-*Stack research for: Drupal Skills v3.0 -- Group AI Project Management*
-*Researched: 2026-03-07*
+*Stack research for: Drupal Skills v4.0 -- Vue.js Kanban UX Overhaul*
+*Researched: 2026-03-08*

@@ -1,222 +1,242 @@
 # Project Research Summary
 
-**Project:** Drupal Skills v3.0 -- Group AI Project Management
-**Domain:** Claude Code plugin packaging + Drupal contrib module development + AI integration eval
-**Researched:** 2026-03-07
-**Confidence:** MEDIUM
+**Project:** Drupal Skills v4.0 -- Vue.js Kanban UX Overhaul
+**Domain:** Frontend UX overhaul for an existing Drupal 10 project management module
+**Researched:** 2026-03-08
+**Confidence:** MEDIUM-HIGH
 
 ## Executive Summary
 
-v3.0 is a three-workstream milestone that converges plugin packaging, real-world module development, and auto-trigger evaluation into a single deliverable. The project packages the existing 14 Drupal skills as a Claude Code plugin, then proves the plugin's value by building a real Drupal contrib module (Group-based project management with AI Agents integration) where each development phase exercises specific skill domains. The module combines Group 3.x (entity grouping and access control), Drupal AI 1.2.x (provider abstraction), and AI Agents 1.2.x (tool calling framework) -- three mature but evolving contrib modules with no existing integration in the ecosystem.
+v4.0 transforms the existing `group_ai_pm` module from a functional admin CRUD interface into an interactive, keyboard-driven project management tool modeled after Linear's UX. The core technical challenge is embedding a Vue 3 application within Drupal's admin theme (Claro) as an "interactive island" -- Vue owns the Kanban board, Drupal owns everything else (authentication, routing, entity forms, admin chrome). This embedded approach is the correct pattern: a fully decoupled SPA would fight Drupal's admin infrastructure at every turn, while vanilla JS or HTMX cannot deliver the drag-and-drop reactivity and optimistic UI updates that define the Kanban experience.
 
-The recommended approach is to package the plugin first (low effort, high leverage -- unlocks all subsequent eval phases), then build the module incrementally with each phase targeting 1-3 skill domains. The existing repo structure already matches Claude Code's plugin layout, so plugin packaging requires only adding `.claude-plugin/plugin.json` and optionally a root CLAUDE.md. The module itself should live in `modules/group_ai_pm/` to maintain separation between the plugin (the skills) and the deliverable (the module built using those skills). The critical path is: plugin packaging -> entity types -> Group integration -> AI integration. UI, theming, caching, testing, and batch processing can be parallelized once Group integration is complete.
+The recommended stack is deliberately minimal: Vue 3 (Composition API, ~34 KB gzipped), SortableJS via vue-draggable-plus for drag-and-drop (~15 KB), tinykeys for keyboard shortcuts (~650 B), and Vite for compilation. Custom REST controllers (not JSON:API, not REST module resource plugins) serve Kanban-shaped JSON responses. Drupal's native AJAX framework handles simpler interactions on list pages. Total frontend payload targets under 70 KB gzipped, loaded only on the board route. No new contrib dependencies, no CSS frameworks, no state management libraries beyond Vue's built-in `ref()` and composables. The existing entity schema (Project, Task with 4-value status and priority fields) requires zero modifications -- the Kanban columns map 1:1 to the existing `todo/in_progress/review/done` status values.
 
-The two highest risks are: (1) skill auto-triggering failing silently, producing 0% eval delta not because skills lack value but because they never activate -- mitigated by validating auto-trigger rates before running any phase eval; and (2) Group 3.x API terminology confusion, where Claude's training data contains more Group 2.x examples than 3.x, leading to code that uses deprecated `GroupContent`/`addContent()` calls instead of `GroupRelationship`/`addRelationship()` -- mitigated by including Group 3.x API terminology in skill references or a new dedicated skill. The AI module ecosystem is also pre-1.0 conceptually despite version numbers; all AI integration code should sit behind a service abstraction to limit blast radius when APIs change.
+The primary risks are integration-layer bugs, not architectural flaws. CSRF token handling is the most critical: Drupal has two distinct CSRF mechanisms (`_csrf_token` for link-based actions vs `_csrf_request_header_token` for JavaScript header-based calls), and using the wrong one silently 403s every mutation. The second risk is Drupal.behaviors double-mounting -- Vue apps inside Drupal pages MUST use `once()` guards or AJAX operations create duplicate app instances. The third risk, specific to the eval pipeline, is Haiku's "declaration-usage gap": it builds REST infrastructure and Vue components but fails to wire them together (drupalSettings, CSRF tokens, library dependencies). Skills must document the complete connected data flow, not individual pieces.
 
 ## Key Findings
 
 ### Recommended Stack
 
-The stack combines three Drupal contrib ecosystems plus the Claude Code plugin system. All modules target Drupal 10.4+ (bottleneck is AI module 1.2.x requiring ^10.4) with Drupal 11 + PHP 8.3 as the recommended target. See [STACK.md](STACK.md) for full details.
+The stack adds Vue 3, SortableJS/vue-draggable-plus, tinykeys, and Vite to the existing module. No new Drupal contrib dependencies. The only new core module dependency is `drupal:serialization` (likely already enabled). Vue was chosen over Alpine.js (insufficient for multi-column DnD state), React (no Drupal ecosystem), HTMX (cannot do optimistic UI), and petite-vue (unmaintained, lacks Transition). Custom controllers with `CacheableJsonResponse` were chosen over JSON:API (requires multiple requests for Kanban data shapes) and REST module resource plugins (see Gaps section for rationale). See [STACK.md](STACK.md) for full details.
 
 **Core technologies:**
-- **Drupal Core ^10.4 || ^11:** Base framework. 10.4 is the minimum due to AI module dependency.
-- **Group 3.3.x:** Entity grouping framework providing projects, teams, and group-scoped permissions. v3.x uses `GroupRelationship` (renamed from `GroupContent`). The standard for arbitrary entity grouping in Drupal.
-- **AI (Artificial Intelligence) 1.2.11:** Provider-agnostic AI abstraction layer. All AI Agents functionality depends on this. Requires Key module for credential storage.
-- **AI Agents 1.2.3:** Agent + tool calling framework. Custom agents via config entities, custom tools via AiFunctionCall plugins. Ships with built-in agents for content types, taxonomies, views.
-- **Claude Code Plugin System:** `.claude-plugin/plugin.json` manifest + `skills/` directory. Skills auto-trigger from descriptions (2% context window budget). Plugin namespace: `/drupal-skills:skill-name`.
+- **Vue 3** (^3.5.0, global production build): Reactive framework for the Kanban board -- the only component complex enough to warrant a framework
+- **vue-draggable-plus** (^0.6.0) + **SortableJS** (^1.15.0): Cross-column drag-and-drop with Vue 3 Composition API support
+- **tinykeys** (^3.0.0): 650-byte keyboard shortcut binding, wrapped in a Vue composable
+- **Vite** (^6.0.0): Compiles Vue SFCs to IIFE format for Drupal's library system. Dev dependency only.
+- **Drupal AJAX API** (core): Status toggles and inline edits on list pages -- no Vue needed for simple interactions
+- **Custom REST controllers**: Kanban-shaped JSON responses with `CacheableJsonResponse` and proper cache tags
 
-**Critical version note:** Pin exact versions (`drupal/ai: "1.2.11"`, `drupal/ai_agents: "1.2.3"`) rather than ranges. The AI ecosystem is evolving rapidly and point releases may introduce breaking changes.
+**Explicitly avoided:** Pinia/Vuex (overkill for single-page state), Vue Router (fights Drupal routing), TypeScript (Haiku generates invalid TS), CSS frameworks (conflict with Claro), WebSockets (single-user admin context), Axios (native fetch + 30-line wrapper suffices).
 
 ### Expected Features
 
-Three feature domains converge. See [FEATURES.md](FEATURES.md) for full prioritization matrix and dependency graph.
+The feature landscape splits cleanly into 11 table stakes, 16 differentiators, and 11 anti-features. The existing entity schema supports all features without modification. See [FEATURES.md](FEATURES.md) for full prioritization matrix and dependency graph.
 
 **Must have (table stakes):**
-- Plugin manifest (`.claude-plugin/plugin.json`) and skill description optimization for auto-triggering
-- Module scaffold with Group and AI module dependencies
-- Project and Task custom content entities with Group relation plugins
-- Group-scoped permissions (CRUD per group type)
-- Basic CRUD routes via entity route providers
-- Config forms with schema
-- AI provider configuration and custom AI Agent tools (AiFunctionCall plugins)
+- Kanban board view per project with 4 status columns
+- Drag-and-drop between columns (the defining Kanban interaction)
+- Task cards with title, priority badge, assignee, due date
+- REST/JSON endpoints for Vue (GET tasks by project, PATCH status)
+- Task quick-create from board (inline title input)
+- Board route with "Board" local task tab on project entity
+- Loading, empty, and error states
+- Keyboard alternative to drag-and-drop (WCAG 2.2 SC 2.5.7 requirement)
 
-**Should have (differentiators):**
-- Views integration for task lists and project dashboards
-- Cache metadata with group membership cache contexts
-- ProjectAssistant AI Agent plugin with task CRUD tools
-- Task summarization service using provider-agnostic API
-- Twig templates for task cards and project views
-- Cron-based overdue task notifications
+**Should have (differentiators -- what separates this from existing Drupal PM modules):**
+- Keyboard shortcuts (S=status, P=priority, C=create, arrow navigation) -- no Drupal PM module has this
+- Command palette (Ctrl+K) with fuzzy search -- Linear's "most beloved feature"
+- Task detail slide-over panel with inline editing
+- Optimistic UI with error rollback (makes DnD feel instant)
+- Filter bar (assignee, priority) with URL persistence
+- Context menu on right-click
+- AJAX status toggles on entity list pages (pure Drupal, no Vue)
+- Enhanced dashboard with project summary cards
 
-**Defer to v4+:**
-- Automated test suite (kernel + functional)
-- Analytics database schema (task history tracking)
-- Batch AI operations from natural language
-- AI-powered task creation from free text
-- Gantt charts, real-time collaboration, sprint/scrum workflows, drag-and-drop kanban
-
-**Skill coverage:** 14/14 skills (100%) are exercised by the planned feature set, with explicit phase-to-skill mapping.
+**Defer (anti-features -- explicitly NOT building):**
+- Swimlanes (filter bar achieves the same insight at 10x less complexity)
+- WebSocket real-time updates (poll every 30-60s instead; single-user admin context)
+- Gantt chart / timeline view (massive frontend complexity, not a Kanban feature)
+- Custom workflow states (4 fixed statuses match universal Kanban model)
+- Sprint/cycle management (separate sub-module scope)
+- Manual card reordering within columns (sort deterministically: priority > due date > created)
+- Rich text editor in cards (link to Drupal entity form for description editing)
 
 ### Architecture Approach
 
-The repo IS the plugin -- no restructuring needed beyond adding `.claude-plugin/plugin.json`. The module lives in `modules/group_ai_pm/` as a self-contained Drupal module. Each development phase doubles as an auto-trigger eval: build without-plugin baseline first, then build the real module with the plugin installed. See [ARCHITECTURE.md](ARCHITECTURE.md) for full component boundaries, data flow diagrams, and build order.
+The architecture is an embedded Vue island within Drupal's admin theme, not a decoupled SPA. Vue mounts on a single `<div id="kanban-app">` rendered by a Drupal controller. Initial board state is server-rendered via `drupalSettings` to eliminate an extra API round-trip. The Vite build outputs IIFE format with Drupal globals (`Drupal`, `once`, `drupalSettings`) treated as externals. Compiled `js/dist/` is committed to the repo so the module works without Node.js. The Drupal.behaviors bridge with `once()` ensures Vue mounts exactly once despite Drupal's re-attachment lifecycle. See [ARCHITECTURE.md](ARCHITECTURE.md) for full component boundaries, data flow diagrams, and build order.
 
 **Major components:**
-1. **Plugin manifest + CLAUDE.md** -- Plugin identity and cross-cutting instructions for all skills
-2. **Project entity + Task entity** -- Custom content entities with base fields, form/list/access handlers
-3. **GroupRelation plugins** -- `GroupProject` and `GroupTask` classes linking entities to Group 3.x
-4. **AiFunctionCall tool plugins** -- CRUD tools for AI Agents (CreateProject, CreateTask, UpdateTaskStatus, QueryProjects)
-5. **Project Manager agent config** -- Config entity defining the AI agent with system prompt and tool set
-6. **Views + Block plugins** -- Group-scoped dashboards and project status blocks
-7. **Service layer** -- ProjectManager and TaskWorkflowManager services abstracting business logic and AI provider calls
+1. **REST API Layer** (custom controllers) -- Serves tasks grouped by status column, handles PATCH for DnD and inline edits, all with `CacheableJsonResponse` and cache tags
+2. **Vue Kanban App** (KanbanBoard > KanbanColumn > TaskCard) -- Reactive board with drag-and-drop via vue-draggable-plus, optimistic updates, keyboard navigation
+3. **Drupal Page Shell** (KanbanController + Twig template) -- Renders mount point, passes initial state via `drupalSettings`, attaches Vue library
+4. **Vite Build Pipeline** -- Compiles Vue SFCs to IIFE, externalizes Drupal globals, outputs stable filenames for `libraries.yml`
+5. **Drupal AJAX Layer** (independent of Vue) -- Status toggles on list pages via `#ajax` form elements and `AjaxResponse` commands
+6. **Composables** (useKanban, useKeyboardShortcuts) -- State management and keyboard navigation as reusable Vue composition functions
 
 ### Critical Pitfalls
 
-See [PITFALLS.md](PITFALLS.md) for the full 11-pitfall analysis with recovery strategies.
+See [PITFALLS.md](PITFALLS.md) for the full 15-pitfall analysis with recovery strategies.
 
-1. **Auto-triggering fails silently** -- Skills install but never activate from natural prompts; eval shows 0% delta because skills are ignored, not because they lack value. Avoid by validating auto-trigger rates (target >80%) BEFORE running any phase eval. Use imperative directive descriptions.
-2. **Eval conflates activation failure with content failure** -- Cannot distinguish "skill didn't help" from "skill didn't activate." Avoid by designing a three-tier eval (no-plugin, plugin-auto-trigger, plugin-explicit) per phase.
-3. **Group 3.x API terminology mismatch** -- Claude generates Group 2.x code (`GroupContent`, `addContent()`) that fails at runtime on Group 3.x. Avoid by including a terminology mapping reference and grepping for 2.x terms in all generated code.
-4. **Plugin directory structure silently ignored** -- Wrong skill locations produce zero errors and zero loaded skills. Avoid by testing with `claude --debug` and verifying all 14 skills appear in `/context`.
-5. **Drupal AI API instability** -- AI module is evolving rapidly despite stable version numbers. Avoid by wrapping all AI calls in a service abstraction layer and making AI integration an optional enhancement, not a hard dependency for core PM features.
+1. **CSRF token mechanism confusion** -- Drupal has TWO CSRF systems. REST routes called by JavaScript MUST use `_csrf_request_header_token: 'TRUE'` (header-based), NOT `_csrf_token: 'TRUE'` (query-string, for server-rendered links). Using the wrong one silently 403s every mutation. Fetch token from `/session/token` once on mount, cache it, include as `X-CSRF-Token` header.
+
+2. **Vue double-mounting from Drupal.behaviors** -- Drupal calls `attachBehaviors()` on page load AND after every AJAX response/BigPipe delivery. Vue `createApp()` has no double-mount protection. MUST use `once('kanban-app', ...)` guard. Implement `detach` handler for cleanup. Declare `core/once` as library dependency.
+
+3. **JSON error responses require `_format: json` route requirement** -- Without it, Drupal returns HTML error pages that Vue cannot parse. Add `_format: json` as a route requirement on ALL API routes so Drupal's JSON exception subscriber handles errors.
+
+4. **Committed build output is mandatory** -- Drupal modules must work without Node.js. Compiled `js/dist/` MUST be committed. `node_modules/` is gitignored but `dist/` is not.
+
+5. **Haiku declaration-usage gap** (eval-specific) -- Haiku generates REST controllers and Vue components but does not wire them together: omits `drupalSettings` attachment, skips CSRF token fetch, forgets `core/drupalSettings` library dependency. Skills must document the COMPLETE connected flow as a single pattern, not separate pieces. Eval assertions must test wiring, not just file existence.
 
 ## Implications for Roadmap
 
-Based on dependency analysis, skill coverage mapping, and pitfall prevention, the following phase structure is recommended. The critical path is Phases 1-2-4-5; other phases can be reordered within dependency constraints.
+Based on the combined research, the natural phase structure follows the architecture's dependency chain. The critical path is: REST API -> Vite Pipeline -> Page Shell -> Vue Board -> Interactions -> Polish. Some work can parallelize (Vite pipeline alongside REST, Dashboard/AJAX alongside Vue interactions).
 
-### Phase 1: Plugin Packaging
-**Rationale:** Every subsequent phase depends on skills being installed as a plugin that auto-triggers. This is the prerequisite for the entire v3.0 eval methodology. Low effort (repo structure already correct), high leverage.
-**Delivers:** Installable Claude Code plugin with all 14 skills, plugin.json manifest, optional CLAUDE.md, install.sh migration path for existing users
-**Addresses:** Plugin packaging features (P1), install.sh dual-install prevention
-**Avoids:** Pitfall #4 (silent skill loading failure), Pitfall #6 (install.sh migration)
-**Skills exercised:** None directly -- this is infrastructure
+### Phase 1: REST API + Vue Infrastructure + Basic Board
 
-### Phase 2: Module Scaffold + Entity Types
-**Rationale:** Core entity types are the foundation for everything else. Routes, forms, views, AI tools, and tests all depend on Project and Task entities existing. Must come before any UI or integration work.
-**Delivers:** `modules/group_ai_pm/` with .info.yml, Project entity, Task entity, base fields, form/list/access handlers
-**Addresses:** Module scaffold, entity creation, config schema (P1 features)
-**Avoids:** Pitfall #3 (Group API terminology -- entities defined with correct 3.x terms from day one)
-**Skills exercised:** drupal-module-scaffold, drupal-entities-fields, drupal-config-storage
+**Rationale:** Everything depends on working endpoints and a functional Vue-in-Drupal mount. This phase validates the entire technical approach end-to-end. If DnD works on a real Drupal page, every subsequent phase is layering on top.
 
-### Phase 3: Routing + Forms
-**Rationale:** With entities defined, the module needs CRUD routes and config forms to be functional. This is a natural next step before Group integration adds the access control layer.
-**Delivers:** Entity CRUD routes via route providers, custom dashboard controller, entity form classes, settings form with config schema
-**Addresses:** Basic routes, config forms (P1 features)
-**Skills exercised:** drupal-routing-controllers, drupal-forms-api
+**Delivers:** Working Kanban board with drag-and-drop task status changes on a Drupal admin page.
 
-### Phase 4: Group Integration
-**Rationale:** This is the highest-complexity and highest-risk phase. Group relation plugins, group-scoped permissions, and group-aware access control are the module's core value proposition. Must come before AI integration (agents need group context).
-**Delivers:** GroupProject and GroupTask relation plugins, GroupRelationshipType configs, group-scoped CRUD permissions, group membership roles
-**Addresses:** GroupRelation plugins, group-scoped permissions (P1 features)
-**Avoids:** Pitfall #3 (Group 3.x API), Pitfall #7 (Group access overrides), Pitfall #9 (REST group context)
-**Skills exercised:** drupal-plugins-blocks, drupal-entities-fields, drupal-access-security
+**Addresses (from FEATURES.md):** Kanban board view, drag-and-drop between columns, task cards with metadata, REST endpoints, board route with local task tab, loading/empty states, priority visual indicators, column headers, responsive layout.
 
-### Phase 5: AI Agents Integration
-**Rationale:** Depends on entities (Phase 2) and group context (Phase 4). AI tools need to create/query entities within groups. This is the novel integration that no existing Drupal module provides.
-**Delivers:** AiFunctionCall tool plugins (CRUD operations), Project Manager agent config entity, AI provider configuration, task summarization service
-**Addresses:** AI Agent plugin, custom tools, AI provider config (P2 features)
-**Avoids:** Pitfall #5 (AI API instability -- service abstraction layer)
-**Skills exercised:** drupal-plugins-blocks, drupal-routing-controllers
+**Avoids (from PITFALLS.md):** CSRF mechanism confusion (#1, #5) -- correct from first endpoint. Double-mounting (#2) -- `once()` pattern established. JSON error responses (#3, #15) -- `_format: json` on all routes. Bundle not committed (#4) -- Vite pipeline with committed dist/. drupalSettings wiring (#7) -- library dependency + controller attachment. Local task tab (#8) -- parameter matching. Claro conflicts (#10) -- namespaced CSS from day one. Access checks (#13) -- entity-level access on all endpoints.
 
-### Phase 6: Views + Blocks
-**Rationale:** With entities, group context, and AI tools in place, the module needs user-facing displays. Views integration and block plugins provide dashboard capabilities.
-**Delivers:** Task list views, project dashboard views, group-scoped Views filters, status/task list/AI assistant block plugins
-**Addresses:** Views integration, dashboard blocks (P2 features)
-**Skills exercised:** drupal-views-dev, drupal-plugins-blocks
+**Stack elements:** Custom controllers with `CacheableJsonResponse`, Vue 3, vue-draggable-plus, SortableJS, Vite, tinykeys (stub only).
 
-### Phase 7: Theming + Caching
-**Rationale:** Theming requires routes and blocks to exist (something to theme). Caching is tightly coupled to render output. Combining them ensures cache metadata is applied to all themed output from the start.
-**Delivers:** Twig templates for task cards and project views, .libraries.yml, cache tags on entities, group membership cache contexts, block caching
-**Addresses:** Templates/theming, cache metadata (P2 features)
-**Skills exercised:** drupal-theming, drupal-caching
+**Includes:**
+- Custom REST controllers: GET kanban by project, PATCH task status
+- Vite build pipeline with IIFE output and committed dist/
+- KanbanController page shell with drupalSettings
+- Vue app: KanbanBoard, KanbanColumn, TaskCard components
+- Drupal.behaviors bridge with once() guard
+- Board route and "Board" local task tab
+- CSRF token fetch wrapper (api/drupal.js)
+- BEM-namespaced CSS with Claro variable integration
 
-### Phase 8: Background Processing
-**Rationale:** Cron and queue features are independent of the UI layer but need entities and optionally AI integration.
-**Delivers:** Cron hook for overdue task detection, queue worker for notifications, optional AI batch operations
-**Addresses:** Cron notifications, batch AI operations (P3 features)
-**Skills exercised:** drupal-batch-queue-cron
+### Phase 2: Interactions + Detail Panel
 
-### Phase 9: Testing + Database
-**Rationale:** Testing comes last because it validates all other features. Database schema for analytics is a P3 feature that can be combined here.
-**Delivers:** Kernel tests (entity CRUD, Group relations, access), functional tests (forms, views, AI tools), task history tracking table
-**Addresses:** Testing suite, analytics schema (P3 features)
-**Skills exercised:** drupal-testing, drupal-database-api
+**Rationale:** Phase 1 proves the board works. Phase 2 makes it a real working surface. Optimistic UI, inline editing, and keyboard shortcuts are what elevate this above "fancy status dropdown" into "Linear-quality tool."
 
-### Phase 10: Polish + Integration Eval
-**Rationale:** Final phase validates the full module works end-to-end and produces the v3.0 delta report.
-**Delivers:** phpcs compliance pass, full module install test, end-to-end workflow verification, final per-phase delta report
-**Addresses:** Cross-cutting quality, coding-standards (all phases)
-**Skills exercised:** drupal-coding-standards (cross-cutting)
+**Delivers:** Full task management from the board without needing entity edit forms. Keyboard-driven workflow.
+
+**Addresses (from FEATURES.md):** Task detail slide-over panel, inline title editing, optimistic UI with rollback, keyboard shortcuts (S/P/A/C + arrows), quick-create from column header, filter bar with URL state, context menu, due date visual warnings, assignee avatars, task count badges.
+
+**Avoids (from PITFALLS.md):** Optimistic rollback (#9) -- full rollback pattern with error toast. Keyboard conflicts (#12) -- input-focus guards, test in Claro with toolbar. Vue/AJAX boundary (#14) -- clear separation defined.
+
+**Stack elements:** tinykeys composable, vue-draggable-plus animation config.
+
+**Includes:**
+- POST endpoint for task quick-create
+- PATCH endpoint for inline edits (title, priority, assignee)
+- TaskDetailPanel.vue (slide-over with inline editing)
+- useKeyboardShortcuts.js composable
+- Optimistic update pattern with rollback in useKanban.js
+- FilterBar.vue with URL query param sync
+- ContextMenu.vue
+- Board display options (localStorage card density)
+
+### Phase 3: Command Palette + Dashboard + Polish
+
+**Rationale:** The board is fully functional after Phase 2. Phase 3 adds the "peak UX" command palette, overhauls the dashboard entry point, adds AJAX enhancements to list pages (independent of Vue), and polishes animations and accessibility.
+
+**Delivers:** Command palette for power users, enhanced dashboard for overview, AJAX list view improvements, animation refinement, accessibility hardening.
+
+**Addresses (from FEATURES.md):** Command palette (Ctrl+K), dashboard overhaul with project cards, AJAX status toggles on list pages, board display options, full keyboard navigation (ARIA), shortcut help overlay, smooth drag animations.
+
+**Avoids (from PITFALLS.md):** Vue/AJAX conflict (#14) -- AJAX list enhancements are pure Drupal, no Vue. Bundle size (#6) -- lazy-load command palette via dynamic import.
+
+**Includes:**
+- CommandPalette.vue with fuzzy search and action dispatch
+- Enhanced DashboardController with project summary cards
+- AJAX status toggles on TaskListBuilder (pure Drupal #ajax)
+- GET /api/group-ai-pm/projects/summary endpoint
+- Animation polish (drag ghost, card transitions)
+- ARIA attributes, screen reader announcements
+- Shortcut help overlay (? key)
+- Bundle size optimization (code splitting, lazy loading)
+
+### Phase 4: Testing + Final Eval
+
+**Rationale:** Functional code must be verified. Kernel tests for REST endpoints, functional tests for page rendering, and eval assertions validate that skills produce correct wiring.
+
+**Delivers:** Test coverage, eval results validating skill effectiveness for Vue/REST patterns.
+
+**Includes:**
+- Kernel tests: REST response shapes, access control, CSRF validation
+- Functional tests: Board page renders, local task tab appears, drupalSettings populated
+- Eval evals.json: Static assertions for wiring (library deps, drupalSettings, CSRF token fetch)
+- Eval runtime assertions: drush-based endpoint verification
+- phpcs compliance verification
 
 ### Phase Ordering Rationale
 
-- **Plugin first (Phase 1):** All eval methodology depends on plugin being functional. Validate auto-triggering before investing in module development.
-- **Entities before UI (Phases 2-3 before 6-7):** Routes, Views, templates, and AI tools all depend on entity types being defined.
-- **Group integration before AI (Phase 4 before 5):** AI agents need group context to scope their operations. Group permissions determine what the agent can do.
-- **Theming + caching together (Phase 7):** Cache metadata must be applied at the point of rendering. Doing them separately risks missing cache tags on themed output.
-- **Testing last (Phase 9):** Cannot write tests for features that do not exist yet. Testing validates the entire module.
+- **Phase 1 must come first** because the REST API and Vue infrastructure are prerequisites for everything. Both the architecture dependency chain and feature dependency graph confirm this -- the Kanban board is the foundation, not a feature that can be deferred.
+- **Phase 2 before Phase 3** because keyboard shortcuts, inline editing, and optimistic UI are what make the board genuinely usable. The command palette depends on the keyboard system from Phase 2.
+- **Phase 3 is the polish layer** because the dashboard overhaul, AJAX list enhancements, and command palette add value on top of a working board but are not prerequisites for each other. AJAX list work is independent of Vue entirely.
+- **Phase 4 last** because tests validate completed functionality. However, REST endpoint tests can start as early as Phase 1 completion.
+- **Parallelization opportunities:** Within Phase 1, REST API development and Vite pipeline setup are independent. Within Phase 3, dashboard overhaul and AJAX list enhancements are independent of each other and of the command palette.
 
 ### Research Flags
 
-Phases likely needing `/gsd:research-phase` during planning:
-- **Phase 1 (Plugin Packaging):** Auto-trigger behavior needs empirical validation. Research whether `--plugin-dir` works with `-p` mode for eval compatibility.
-- **Phase 4 (Group Integration):** Group 3.x relation plugin API is complex and under-documented. Need to research GroupRelationBase, handler services, and permission calculation at implementation time.
-- **Phase 5 (AI Agents Integration):** AiFunctionCall plugin API is documented as "WIP." Need to research actual tool plugin implementation from AI Agents source code, not just docs.
+Phases likely needing deeper research during planning:
+- **Phase 1 (REST + Vue Infrastructure):** The STACK.md and ARCHITECTURE.md disagree on the API approach: STACK recommends custom controllers with `CacheableJsonResponse`, ARCHITECTURE recommends REST module `@RestResource` plugins. This must be resolved before implementation. Custom controllers are simpler and avoid `rest`/`serialization` module dependencies. See Gaps section for recommendation.
+- **Phase 2 (Keyboard + Detail Panel):** Focus management across Vue components and Drupal admin toolbar needs testing. No single authoritative reference for this pattern.
 
 Phases with standard patterns (skip research-phase):
-- **Phase 2 (Entities):** Well-documented Drupal entity API. Existing drupal-entities-fields skill covers this thoroughly.
-- **Phase 3 (Routing + Forms):** Standard Drupal patterns. Existing skills cover this.
-- **Phase 6 (Views + Blocks):** Standard Views integration and Block plugins. Existing skills cover this.
-- **Phase 7 (Theming + Caching):** Standard Drupal patterns. These are among the highest-performing skills from v2.0.
-- **Phase 8 (Batch/Queue):** Standard cron + queue worker patterns. Existing skill covers this.
+- **Phase 3 (Dashboard + AJAX):** Drupal AJAX is extremely well-documented. Dashboard enhancement is standard controller/template work.
+- **Phase 4 (Testing):** Kernel and Functional test patterns are established from v3.0 eval pipeline.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All module versions verified on drupal.org. Claude Code plugin format verified from official docs. Version compatibility matrix confirmed. |
-| Features | MEDIUM | Feature set is well-defined but prioritization depends on eval methodology decisions not yet validated. 100% skill coverage is achievable but integration patterns between Group + AI are novel. |
-| Architecture | MEDIUM | Plugin packaging is straightforward (repo already matches). Module architecture follows standard Drupal patterns. Group 3.x + AI Agents integration is uncharted territory -- no existing module combines these. |
-| Pitfalls | HIGH | Pitfalls grounded in v2.0 empirical data (headless vs agent delta), official docs (plugin structure), and verified API changes (Group 3.x renames). Recovery strategies are concrete. |
+| Stack | HIGH | Vue 3, SortableJS, tinykeys are mature. Vite for Drupal is newer but well-referenced. All sources official docs or high-confidence community. |
+| Features | MEDIUM-HIGH | Feature list well-grounded in Linear patterns and existing Drupal PM modules. Anti-feature decisions are sound. Complexity estimates need validation during implementation. |
+| Architecture | MEDIUM | Embedded Vue island pattern is proven but Drupal-specific integration (behaviors bridge, IIFE build) has less community consensus than standard SPA patterns. Disagreement between STACK and ARCHITECTURE on REST approach. |
+| Pitfalls | HIGH | CSRF and behaviors pitfalls verified against official Drupal docs and issue queues. Haiku declaration-usage gap validated empirically in v3.0 evals. |
 
-**Overall confidence:** MEDIUM -- The individual components (plugin system, Group module, AI module) are well-understood, but their integration is novel. The eval methodology shift from v2.0 (forced skill activation) to v3.0 (organic auto-triggering) introduces new variables that need empirical validation.
+**Overall confidence:** MEDIUM-HIGH
 
 ### Gaps to Address
 
-- **Auto-trigger empirical data:** No data yet on how reliably skills auto-trigger from a plugin install with natural prompts. Current descriptions may need tuning. Must validate in Phase 1 before proceeding.
-- **`--plugin-dir` + `-p` compatibility:** Unknown whether headless mode supports plugin loading. This determines whether the v3.0 eval can use the validated v2.0 headless pipeline or needs a fundamentally different approach.
-- **Group 3.x relation plugin implementation details:** The handler service pattern (replacing annotation methods) is documented in change records but lacks tutorial-quality examples. Phase 4 will need source code research against `modules/contrib/group/src/`.
-- **AiFunctionCall plugin contract:** AI Agents docs are marked WIP. The `execute()` and `getArguments()` method signatures need validation against actual AI Agents source code, not just the QED42 tutorial.
-- **Missing Group-specific skill:** None of the 14 existing skills cover Group module patterns. Phases touching Group API (4, 7, 8) may show 0% delta because no skill provides Group-specific knowledge. Consider creating a `drupal-group-integration` skill or adding Group API references to existing skills.
-- **Three-tier eval design validation:** The proposed three-tier eval (baseline, auto-trigger, explicit) triples eval time per phase. Need to determine if this is feasible or if a simpler two-tier design suffices.
+- **REST approach disagreement:** STACK.md recommends custom controllers; ARCHITECTURE.md recommends REST module `@RestResource` plugins. Custom controllers avoid adding `drupal:rest` and `drupal:serialization` as module dependencies, use `CacheableJsonResponse` directly, and are simpler for internal admin endpoints. RestResource plugins provide config-driven enablement but add dependency weight. **Recommendation: Go with custom controllers per STACK.md.** The routes are internal to the module, not meant for external consumption, so the config-driven REST module approach adds complexity without benefit.
+
+- **Vue externalization vs bundling:** STACK.md recommends externalizing Vue as a separate Drupal library (`js/vendor/vue.global.prod.js`). ARCHITECTURE.md's Vite config suggests treating Vue as an external global too, but does not address how it gets on the page. **Recommendation: Externalize Vue as STACK.md suggests** -- declare a `vue` library in libraries.yml with the global production build, reference it as a dependency of the `kanban` library. This adds ~34 KB as a cacheable asset and follows the correct Drupal pattern for shared JS libraries.
+
+- **Weight field on Task entity:** ARCHITECTURE.md adds a `weight` base field to Task entity for within-column ordering. FEATURES.md explicitly lists "manual card reordering" as an anti-feature, recommending deterministic sort (priority > due date > created). **Recommendation: Do NOT add a weight field.** Sort deterministically per FEATURES.md. This avoids a schema change and the fractional indexing complexity that accompanies manual ordering.
+
+- **Eval assertion strategy for Vue/REST patterns:** Haiku's declaration-usage gap is the biggest eval risk. Standard file-existence assertions will pass while the app is broken. Assertions must verify: (1) `core/drupalSettings` in library dependencies, (2) `#attached.drupalSettings` in controller render array, (3) CSRF token fetch in JavaScript, (4) `_csrf_request_header_token` in route requirements. This is a design task for each phase's eval round.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- [Group module project page](https://www.drupal.org/project/group) -- v3.3.5, entity architecture, compatibility
-- [AI module project page](https://www.drupal.org/project/ai) -- v1.2.11, provider abstraction, sub-modules
-- [AI Agents project page](https://www.drupal.org/project/ai_agents) -- v1.2.3, agent framework, built-in agents
-- [Claude Code Plugins docs](https://code.claude.com/docs/en/plugins) -- Plugin structure, manifest, quickstart
-- [Claude Code Plugins reference](https://code.claude.com/docs/en/plugins-reference) -- Full plugin.json schema, directory structure
-- [Claude Code Skills docs](https://code.claude.com/docs/en/skills) -- Auto-triggering, description matching, frontmatter
-- [Anthropic skills repo](https://github.com/anthropics/skills) -- skill-creator anatomy reference
-- [Group 3.x API changes](https://www.drupal.org/node/3292844) -- addContent -> addRelationship rename
-- v2.0 empirical eval data (MEMORY.md) -- headless pipeline validated, tier classifications
+- [Drupal CSRF Access Checking](https://www.drupal.org/docs/8/api/routing-system/access-checking-on-routes/csrf-access-checking) -- CSRF token mechanism distinction
+- [Drupal Asset Libraries](https://www.drupal.org/docs/develop/creating-modules/adding-assets-css-js-to-a-drupal-module-via-librariesyml) -- libraries.yml, drupalSettings
+- [Drupal JavaScript API Overview](https://www.drupal.org/docs/drupal-apis/javascript-api/javascript-api-overview) -- Drupal.behaviors, once(), attach lifecycle
+- [Drupal AJAX API](https://www.drupal.org/docs/drupal-apis/ajax-api) -- #ajax, AjaxResponse, core commands
+- [Drupal Local Tasks](https://www.drupal.org/docs/drupal-apis/menu-api/providing-module-defined-local-tasks) -- base_route, parameter matching
+- [Vue.js Production Deployment](https://vuejs.org/guide/best-practices/production-deployment.html) -- Build optimization, global build
+- [vue-draggable-plus](https://github.com/Alfred-Skyblue/vue-draggable-plus) -- Vue 3 DnD, Composition API
+- [SortableJS](https://github.com/SortableJS/Sortable) -- Cross-column drag, animation, touch support
+- [tinykeys](https://github.com/jamiebuilds/tinykeys) -- Keyboard binding, 650 B
+- [Vite Library Mode](https://vite.dev/guide/build) -- IIFE output, external globals
+- [Linear Board Layout](https://linear.app/docs/board-layout) -- UX patterns, keyboard controls
+- v3.0 Eval Results (Phases 14-17) -- Haiku code generation patterns, empirical
 
 ### Secondary (MEDIUM confidence)
-- [QED42 AI Agents guide](https://www.qed42.com/insights/exploring-drupals-ai-agents-a-practical-guide-for-site-builders) -- AiFunctionCall plugin pattern
-- [AI Agents developer docs](https://project.pages.drupalcode.org/ai_agents) -- Agent architecture, tool calling
-- [AI module documentation](https://project.pages.drupalcode.org/ai/1.2.x/) -- Provider API, operation types
-- [Skill auto-trigger research](https://mikhail.io/2025/10/claude-code-skills/) -- How available_skills list is built
-- [Anthropic skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) -- Description writing guidelines
-- [Group permissions documentation](https://www.drupal.org/docs/contributed-modules/group/the-permission-layers-explained) -- PBAC via flexible_permissions
+- [Five Jars Vue + Drupal Integration](https://fivejars.com/blog/how-integrate-vuejs-applications-drupal) -- Mounting patterns
+- [PreviousNext Vite for Drupal](https://www.previousnext.com.au/blog/vite-and-storybook-frontend-tooling-drupal) -- Build config
+- [Lullabot Understanding Behaviors](https://www.lullabot.com/articles/understanding-javascript-behaviors-in-drupal) -- Behavior lifecycle deep dive
+- [Drupal Vue.js Library Module](https://www.drupal.org/project/vuejs) -- Community precedent
+- [Burndown Module](https://www.drupal.org/project/burndown) -- Drupal PM comparison baseline
+- [Kanban UX Best Practices](https://www.multiboard.dev/posts/best-practices-kanban-columns) -- Column design patterns
 
 ### Tertiary (LOW confidence)
-- [Skills activation community workarounds](https://dev.to/oluwawunmiadesewa/claude-code-skills-not-triggering-2-fixes-for-100-activation-3b57) -- UserPromptSubmit hook pattern, unverified activation rates
-- [Document AI module architecture issue](https://www.drupal.org/project/ai/issues/3566997) -- Architecture docs in progress, not yet available
+- [Drupal HTMX Proposal](https://www.drupal.org/project/drupal/issues/3404409) -- Context only, not implemented
+- [Vue.js in Drupal Admin Proposal](https://www.drupal.org/project/ideas/issues/2913628) -- Community direction signal
 
 ---
-*Research completed: 2026-03-07*
-*Supersedes v2.0 SUMMARY.md (2026-03-07)*
+*Research completed: 2026-03-08*
+*Supersedes v3.0 SUMMARY.md (2026-03-07)*
 *Ready for roadmap: yes*
