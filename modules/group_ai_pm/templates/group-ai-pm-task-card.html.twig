@@ -1,0 +1,53 @@
+{#
+/**
+ * @file
+ * Theme template for a task card.
+ *
+ * Variables:
+ * - title: The task title.
+ * - status: The task status.
+ * - priority: The task priority level.
+ * - assignee_name: The name of the assigned user.
+ * - due_date: The task due date.
+ * - url: The task URL.
+ */
+#}
+<div{{ attributes.addClass('task-card') }}>
+  {% if url %}
+    <h3 class="task-card__title">
+      <a href="{{ url }}">{{ title }}</a>
+    </h3>
+  {% else %}
+    <h3 class="task-card__title">{{ title }}</h3>
+  {% endif %}
+
+  <div class="task-card__meta">
+    {% if status %}
+      <span class="task-card__status task-card__status--{{ status|lower }}">
+        {{ status|capitalize }}
+      </span>
+    {% endif %}
+
+    {% if priority %}
+      <span class="task-card__priority task-card__priority--{{ priority|lower }}">
+        {{ priority|capitalize }}
+      </span>
+    {% endif %}
+  </div>
+
+  {% if assignee_name or due_date %}
+    <div class="task-card__details">
+      {% if assignee_name %}
+        <div class="task-card__assignee">
+          {{ 'Assigned to:'|t }} <strong>{{ assignee_name }}</strong>
+        </div>
+      {% endif %}
+
+      {% if due_date %}
+        <div class="task-card__due-date">
+          {{ 'Due:'|t }} <strong>{{ due_date }}</strong>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

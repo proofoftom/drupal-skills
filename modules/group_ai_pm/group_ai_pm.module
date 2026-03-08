@@ -1,0 +1,72 @@
+<?php
+
+/**
+ * @file
+ * Group AI Project Management module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function group_ai_pm_theme($existing, $type, $theme, $path) {
+  return [
+    'group_ai_pm_task_card' => [
+      'variables' => [
+        'title' => NULL,
+        'status' => NULL,
+        'priority' => NULL,
+        'assignee_name' => NULL,
+        'due_date' => NULL,
+        'url' => NULL,
+      ],
+    ],
+    'group_ai_pm_project_summary' => [
+      'variables' => [
+        'title' => NULL,
+        'status' => NULL,
+        'description' => NULL,
+        'task_count' => 0,
+        'url' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_cron().
+ */
+function group_ai_pm_cron() {
+  $lock = \Drupal::service('lock');
+
+  if (!$lock->acquire('group_ai_pm_overdue_check')) {
+    return;
+  }
+
+  try {
+    $database = \Drupal::database();
+
+    // Find all tasks with due dates in the past and status not 'done'.
+    $query = $database->select('group_ai_pm_task', 't');
+    $query->fields('t', ['id', 'title', 'due_date']);
+    $query->condition('t.due_date', date('Y-m-d'), '<');
+    $query->condition('t.status', 'done', '<>');
+    $results = $query->execute()->fetchAllAssoc('id');
+
+    if (!$results) {
+      return;
+    }
+
+    // Queue a notification for each overdue task.
+    $queue = \Drupal::queue('group_ai_pm_overdue_notifications');
+    foreach ($results as $task_id => $task) {
+      $item = new \stdClass();
+      $item->task_id = $task_id;
+      $item->title = $task->title;
+      $item->due_date = $task->due_date;
+      $queue->createItem($item);
+    }
+  }
+  finally {
+    $lock->release('group_ai_pm_overdue_check');
+  }
+}

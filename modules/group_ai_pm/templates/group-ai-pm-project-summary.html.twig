@@ -1,0 +1,42 @@
+{#
+/**
+ * @file
+ * Theme template for a project summary.
+ *
+ * Variables:
+ * - title: The project title.
+ * - status: The project status.
+ * - description: The project description.
+ * - task_count: The number of tasks in this project.
+ * - url: The project URL.
+ */
+#}
+<div{{ attributes.addClass('project-summary') }}>
+  {% if url %}
+    <h2 class="project-summary__title">
+      <a href="{{ url }}">{{ title }}</a>
+    </h2>
+  {% else %}
+    <h2 class="project-summary__title">{{ title }}</h2>
+  {% endif %}
+
+  {% if status %}
+    <div class="project-summary__status">
+      <span class="project-summary__status-badge project-summary__status-badge--{{ status|lower }}">
+        {{ status|capitalize }}
+      </span>
+    </div>
+  {% endif %}
+
+  {% if description %}
+    <div class="project-summary__description">
+      {{ description }}
+    </div>
+  {% endif %}
+
+  <div class="project-summary__footer">
+    <span class="project-summary__task-count">
+      {{ 'Tasks:'|t }} <strong>{{ task_count }}</strong>
+    </span>
+  </div>
+</div>

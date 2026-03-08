@@ -1,0 +1,8 @@
+name: Group AI Project Management - AI Tools
+description: 'AI agent integration for Group AI Project Management module.'
+type: module
+core_version_requirement: ^10 || ^11
+package: Custom
+dependencies:
+  - group_ai_pm:group_ai_pm
+  - drupal_ai:ai_agents

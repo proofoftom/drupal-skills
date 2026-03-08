@@ -4,11 +4,12 @@ namespace Drupal\group_ai_pm\Entity;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\user\EntityOwnerInterface;
 
 /**
  * Interface for Project entities.
  */
-interface ProjectInterface extends ContentEntityInterface, EntityChangedInterface {
+interface ProjectInterface extends ContentEntityInterface, EntityChangedInterface, EntityOwnerInterface {
 
   /**
    * Gets the project title.

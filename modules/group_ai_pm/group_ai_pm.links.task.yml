@@ -1,0 +1,35 @@
+entity.project.canonical:
+  route_name: entity.project.canonical
+  title: 'View'
+  base_route: entity.project.canonical
+  weight: -10
+
+entity.project.edit_form:
+  route_name: entity.project.edit_form
+  title: 'Edit'
+  base_route: entity.project.canonical
+  weight: 0
+
+entity.project.delete_form:
+  route_name: entity.project.delete_form
+  title: 'Delete'
+  base_route: entity.project.canonical
+  weight: 10
+
+entity.task.canonical:
+  route_name: entity.task.canonical
+  title: 'View'
+  base_route: entity.task.canonical
+  weight: -10
+
+entity.task.edit_form:
+  route_name: entity.task.edit_form
+  title: 'Edit'
+  base_route: entity.task.canonical
+  weight: 0
+
+entity.task.delete_form:
+  route_name: entity.task.delete_form
+  title: 'Delete'
+  base_route: entity.task.canonical
+  weight: 10

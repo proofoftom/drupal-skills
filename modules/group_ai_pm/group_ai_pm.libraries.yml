@@ -1,0 +1,11 @@
+task_cards:
+  version: 1.x
+  css:
+    component:
+      css/task-cards.css: {}
+
+project_summaries:
+  version: 1.x
+  css:
+    component:
+      css/project-summaries.css: {}

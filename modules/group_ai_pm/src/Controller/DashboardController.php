@@ -3,6 +3,7 @@
 namespace Drupal\group_ai_pm\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -19,13 +20,23 @@ class DashboardController extends ControllerBase {
   protected $entityTypeManager;
 
   /**
+   * The date formatter service.
+   *
+   * @var \Drupal\Core\Datetime\DateFormatterInterface
+   */
+  protected $dateFormatter;
+
+  /**
    * Constructs a DashboardController object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   *   The date formatter service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, DateFormatterInterface $date_formatter) {
     $this->entityTypeManager = $entity_type_manager;
+    $this->dateFormatter = $date_formatter;
   }
 
   /**
@@ -33,7 +44,8 @@ class DashboardController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('date.formatter')
     );
   }
 
@@ -80,7 +92,7 @@ class DashboardController extends ControllerBase {
           'title' => $project->getTitle(),
           'status' => $project->getStatus(),
           'owner' => $project->getOwner()->getDisplayName(),
-          'created' => \Drupal::service('date.formatter')->format($project->getCreatedTime(), 'short'),
+          'created' => $this->dateFormatter->format($project->getCreatedTime(), 'short'),
         ];
       }
 
