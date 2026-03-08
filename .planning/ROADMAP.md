@@ -60,7 +60,7 @@ Full details: milestones/v2.0-ROADMAP.md
 **Plans**: 2 plans
 
 Plans:
-- [ ] 13-01-PLAN.md -- Create plugin manifest, CLAUDE.md, deprecate install.sh
+- [x] 13-01-PLAN.md -- Create plugin manifest, CLAUDE.md, deprecate install.sh
 - [ ] 13-02-PLAN.md -- Auto-trigger validation and test infrastructure
 
 ### Phase 14: Module Foundation
@@ -120,7 +120,7 @@ Phases execute in numeric order: 13 -> 14 -> 15 -> 16 -> 17
 |-------|-----------|----------------|--------|-----------|
 | 1-7 | v1.0 | 26/28 | Shipped | 2026-03-07 |
 | 8-12 | v2.0 | 23/23 | Shipped | 2026-03-08 |
-| 13. Plugin Packaging | v3.0 | 0/2 | Planned | - |
+| 13. Plugin Packaging | v3.0 | 1/2 | In progress | - |
 | 14. Module Foundation | v3.0 | 0/TBD | Not started | - |
 | 15. Group & AI Integration | v3.0 | 0/TBD | Not started | - |
 | 16. Views, Theming & Processing | v3.0 | 0/TBD | Not started | - |

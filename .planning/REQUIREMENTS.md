@@ -9,10 +9,10 @@ Requirements for v3.0 milestone. Each maps to roadmap phases.
 
 ### Plugin Packaging
 
-- [ ] **PLUG-01**: Plugin manifest (.claude-plugin/plugin.json) registers all 14 skills with correct namespace
+- [x] **PLUG-01**: Plugin manifest (.claude-plugin/plugin.json) registers all 14 skills with correct namespace
 - [ ] **PLUG-02**: Skill descriptions optimized for auto-triggering from natural Drupal development prompts (>80% activation rate)
-- [ ] **PLUG-03**: Minimal CLAUDE.md at plugin root with only non-obvious, project-specific rules (developer-written, not LLM-generated)
-- [ ] **PLUG-04**: install.sh deprecated with migration path documented for plugin-based installation
+- [x] **PLUG-03**: Minimal CLAUDE.md at plugin root with only non-obvious, project-specific rules (developer-written, not LLM-generated)
+- [x] **PLUG-04**: install.sh deprecated with migration path documented for plugin-based installation
 
 ### Module Scaffold
 
@@ -122,10 +122,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLUG-01 | Phase 13 | Pending |
+| PLUG-01 | Phase 13 | Complete |
 | PLUG-02 | Phase 13 | Pending |
-| PLUG-03 | Phase 13 | Pending |
-| PLUG-04 | Phase 13 | Pending |
+| PLUG-03 | Phase 13 | Complete |
+| PLUG-04 | Phase 13 | Complete |
 | EVAL-01 | Phase 13 | Pending |
 | SCAF-01 | Phase 14 | Pending |
 | SCAF-02 | Phase 14 | Pending |
