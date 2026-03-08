@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Eval & Optimization Loop
 status: unknown
-stopped_at: Completed 12-01-PLAN.md
-last_updated: "2026-03-08T01:40:26.080Z"
-last_activity: "2026-03-08 -- Session 21: Plan 12-01 complete (coding-standards skill, SKILL.md patches, eval prompt fix)."
+stopped_at: Completed 12-03-PLAN.md
+last_updated: "2026-03-08T02:15:44.968Z"
+last_activity: 2026-03-08 -- Plans 01-03 complete. 3 negative-delta skills flipped positive. 4 neutral confirmed. Plan 04 remaining.
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 23
-  completed_plans: 10
-  percent: 61
+  completed_plans: 13
+  percent: 57
 ---
 
 # Project State
@@ -26,27 +26,27 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 ## Current Position
 
 Phase: 12 of 12 -- Analysis & Optimization
-Plans 01 and 02 complete. Plans 03, 04 remaining.
-Last activity: 2026-03-08 -- Session 21: Plan 12-01 complete (coding-standards skill, SKILL.md patches, eval prompt fix).
+Plans 01, 02, and 03 complete. Plan 04 remaining.
+Last activity: 2026-03-08 -- Plans 01-03 complete. 3 negative-delta skills flipped positive. 4 neutral confirmed. Plan 04 remaining.
 
-Progress: [██████░░░░] 61%
+Progress: [██████░░░░] 57%
 
-### Phase 11 Final Results (13/13)
-| Tier | Skill | WITH | WITHOUT | Delta |
-|------|-------|------|---------|-------|
-| HIGH | caching | 8/8 | 5/8 | +37.5% |
-| HIGH | scaffold | 6/6 | 4/6 | +33.3% |
-| HIGH | testing | 9/9 | 7/9 | +22.2% |
-| MOD | config-storage | 8/8 | 7/8 | +12.5% |
-| MOD | plugins-blocks | 8/8 | 7/8 | +12.5% |
-| MOD | access-security | 9/10 | 8/10 | +10.0% |
-| NEUT | forms-api | 9/9 | 9/9 | 0% |
-| NEUT | database-api | 8/9 | 8/9 | 0% |
-| NEUT | theming | 9/9 | 9/9 | 0% |
-| NEUT | entities-fields | 9/9 | 9/9 | 0% |
-| NEG | routing-controllers | 7/9 | 8/9 | -11.1% |
-| NEG | views-dev | 8/9 | 9/9 | -11.1% |
-| NEG | batch-queue-cron | 6/8 | 7/8 | -12.5% |
+### Current Results (13/13, v3 where re-run)
+| Tier | Skill | WITH | WITHOUT | Delta | Note |
+|------|-------|------|---------|-------|------|
+| HIGH | caching | 8/8 | 5/8 | +37.5% | v2 |
+| HIGH | routing-controllers | 9/9 | 6/9 | +33.3% | v3, was -11.1% |
+| HIGH | scaffold | 6/6 | 4/6 | +33.3% | v2 |
+| HIGH | testing | 9/9 | 7/9 | +22.2% | v2 |
+| MOD | config-storage | 8/8 | 7/8 | +12.5% | v2 |
+| MOD | batch-queue-cron | 8/8 | 7/8 | +12.5% | v3, was -12.5% |
+| MOD | plugins-blocks | 8/8 | 7/8 | +12.5% | v2 |
+| MOD | views-dev | 9/9 | 8/9 | +11.1% | v3, was -11.1% |
+| MOD | access-security | 9/10 | 8/10 | +10.0% | v2 |
+| NEUT | forms-api | 8/9 | 8/9 | 0% | v3, harder eval |
+| NEUT | database-api | 7/9 | 7/9 | 0% | v3, prompt fix |
+| NEUT | theming | 9/9 | 9/9 | 0% | v3, harder eval |
+| NEUT | entities-fields | 7/9 | 7/9 | 0% | v3, harder eval |
 
 ## Accumulated Context
 
@@ -88,6 +88,10 @@ Progress: [██████░░░░] 61%
 - [Phase 12]: 12-02: Bundle entity wiring (bundle_entity_type + bundle_of + entity_keys bundle) chosen as entities-fields differentiator
 - [Phase 12]: 12-01: Coding-standards skill kept to 150 lines -- focused on 4 phpcs failure patterns only
 - [Phase 12]: 12-01: CRITICAL NEVER callout placed before DI flow explanation for maximum Haiku visibility
+- [Phase 12]: 12-03: Browser step dropped from eval pipeline -- zero discriminatory value, graders use drush/curl
+- [Phase 12]: 12-03: Neutral-delta skills (forms-api, theming) confirmed as baseline Haiku knowledge -- no further iteration
+- [Phase 12]: 12-03: entities-fields bundle_of gap: neither variant produces it, SKILL.md needs explicit coverage
+- [Phase 12]: 12-03: Coding-standards baseline for both variants eliminates phpcs noise, isolates domain skill delta
 
 ### Carried from v1.0
 
@@ -106,6 +110,6 @@ Progress: [██████░░░░] 61%
 
 ## Session Continuity
 
-Last session: 2026-03-08T01:40:26.078Z
-Stopped at: Completed 12-01-PLAN.md
+Last session: 2026-03-08T02:15:44.966Z
+Stopped at: Completed 12-03-PLAN.md
 Resume file: None

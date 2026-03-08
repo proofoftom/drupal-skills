@@ -24,7 +24,7 @@
 ## Analysis
 
 - [ ] **ANLZ-01**: All 13 skills have graded benchmarks showing with-skill vs without-skill delta
-- [ ] **ANLZ-02**: Skills classified into tiers: High Delta (>15%), Moderate (5-15%), Low (<5%)
+- [x] **ANLZ-02**: Skills classified into tiers: High Delta (>15%), Moderate (5-15%), Low (<5%)
 - [x] **ANLZ-03**: Skills with weak deltas analyzed -- assertions tightened or skill content improved where feasible
 - [ ] **ANLZ-04**: Final report with stabilized results, tier classifications, and overall verdict
 
