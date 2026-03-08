@@ -27,7 +27,7 @@ Full details: milestones/v1.0-ROADMAP.md
 - [x] **Phase 8: Eval Infrastructure** - Create subagent definitions (eval-executor, eval-grader, eval-browser), fresh D10 setup script with auto-retry, validate subagent model control
 - [x] **Phase 9: Eval Prompt Rewrite** - Rewrite all 13 eval prompts for fresh Drupal 10 instances (replace os-kg references), adjust assertions if needed for new prompt context
 - [x] **Phase 10: Pipeline Validation** - Run 2-3 calibration skills (caching, scaffold) end-to-end through new pipeline, validate grading.json/benchmark.json schemas, confirm meaningful deltas (completed 2026-03-07)
-- [ ] **Phase 11: Batch Execution** - Run all 13 skills through eval pipeline in batches of 3-4 per session, produce graded benchmarks for every skill
+- [x] **Phase 11: Batch Execution** - Run all 13 skills through eval pipeline in batches of 3-4 per session, produce graded benchmarks for every skill
 - [ ] **Phase 12: Analysis & Optimization** - Classify skills into tiers, iterate on weak deltas (tighten assertions or improve skill content), produce final report with stabilized results
 
 ## Phase Details
@@ -79,13 +79,13 @@ Plans:
 **Goal**: All 13 skills have graded benchmarks from the new pipeline
 **Depends on**: Phase 10
 **Requirements**: PIPE-02, PIPE-03, ANLZ-01
-**Plans:** 1/13 plans executed
+**Plans:** 13/13 plans complete
 Plans:
-- [ ] 11-01-PLAN.md -- Workspace setup and Phase 10 calibration data copy
-- [ ] 11-02-PLAN.md -- Batch 1: access-security, routing-controllers, plugins-blocks, forms-api
-- [ ] 11-03-PLAN.md -- Batch 2: entities-fields, config-storage, database-api, batch-queue-cron
-- [ ] 11-04-PLAN.md -- Batch 3: testing, theming, views-dev
-- [ ] 11-05-PLAN.md -- Consolidation: validate all 13 benchmarks and produce results table
+- [x] 11-01-PLAN.md -- Workspace setup and Phase 10 calibration data copy
+- [x] 11-02-PLAN.md -- Batch 1: access-security, routing-controllers, plugins-blocks, forms-api
+- [x] 11-03-PLAN.md -- Batch 2: entities-fields, config-storage, database-api, batch-queue-cron
+- [x] 11-04-PLAN.md -- Batch 3: testing, theming, views-dev
+- [x] 11-05-PLAN.md -- Consolidation: validate all 13 benchmarks and produce results table
 **Success Criteria** (what must be TRUE):
   1. All 13 skills have benchmark.json with with-skill and without-skill pass rates
   2. Eval runs completed in batches of 3-4 skills per session
@@ -95,6 +95,12 @@ Plans:
 **Goal**: Final analysis with tier classifications, iteration on weak deltas, and overall verdict on skill value
 **Depends on**: Phase 11
 **Requirements**: ANLZ-02, ANLZ-03, ANLZ-04, CARRY-01, CARRY-02
+**Plans:** 4 plans
+Plans:
+- [ ] 12-01-PLAN.md -- Fix known failures (coding-standards skill, SKILL.md patches, eval prompt fix)
+- [ ] 12-02-PLAN.md -- Write harder evals for neutral-delta skills
+- [ ] 12-03-PLAN.md -- Re-run 7 affected skills through eval pipeline
+- [ ] 12-04-PLAN.md -- Compile final report and close milestone
 **Success Criteria** (what must be TRUE):
   1. All 13 skills classified into tiers: High (>15%), Moderate (5-15%), Low (<5%)
   2. Skills with weak deltas analyzed -- at least 1 iteration of assertion tightening or skill improvement attempted
@@ -112,5 +118,5 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 | 8. Eval Infrastructure | v2.0 | 2/2 | Complete | 2026-03-07 |
 | 9. Eval Prompt Rewrite | v2.0 | 2/2 | Complete | 2026-03-07 |
 | 10. Pipeline Validation | v2.0 | 2/2 | Complete | 2026-03-07 |
-| 11. Batch Execution | 1/13 | In Progress|  | - |
-| 12. Analysis & Optimization | v2.0 | 0/? | Not started | - |
+| 11. Batch Execution | v2.0 | 13/13 | Complete | 2026-03-07 |
+| 12. Analysis & Optimization | v2.0 | 0/4 | In Progress | - |
