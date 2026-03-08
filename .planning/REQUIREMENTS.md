@@ -122,13 +122,57 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated by roadmapper) | | |
+| PLUG-01 | Phase 13 | Pending |
+| PLUG-02 | Phase 13 | Pending |
+| PLUG-03 | Phase 13 | Pending |
+| PLUG-04 | Phase 13 | Pending |
+| EVAL-01 | Phase 13 | Pending |
+| SCAF-01 | Phase 14 | Pending |
+| SCAF-02 | Phase 14 | Pending |
+| SCAF-03 | Phase 14 | Pending |
+| ENTY-01 | Phase 14 | Pending |
+| ENTY-02 | Phase 14 | Pending |
+| ENTY-03 | Phase 14 | Pending |
+| ENTY-04 | Phase 14 | Pending |
+| ROUTE-01 | Phase 14 | Pending |
+| ROUTE-02 | Phase 14 | Pending |
+| ROUTE-03 | Phase 14 | Pending |
+| ROUTE-04 | Phase 14 | Pending |
+| EVAL-02 | Phase 14 | Pending |
+| GRP-01 | Phase 15 | Pending |
+| GRP-02 | Phase 15 | Pending |
+| GRP-03 | Phase 15 | Pending |
+| GRP-04 | Phase 15 | Pending |
+| GRP-05 | Phase 15 | Pending |
+| ENTY-05 | Phase 15 | Pending |
+| AI-01 | Phase 15 | Pending |
+| AI-02 | Phase 15 | Pending |
+| AI-03 | Phase 15 | Pending |
+| AI-04 | Phase 15 | Pending |
+| AI-05 | Phase 15 | Pending |
+| VIEW-01 | Phase 16 | Pending |
+| VIEW-02 | Phase 16 | Pending |
+| VIEW-03 | Phase 16 | Pending |
+| VIEW-04 | Phase 16 | Pending |
+| THEME-01 | Phase 16 | Pending |
+| THEME-02 | Phase 16 | Pending |
+| CACHE-01 | Phase 16 | Pending |
+| CACHE-02 | Phase 16 | Pending |
+| CACHE-03 | Phase 16 | Pending |
+| BG-01 | Phase 16 | Pending |
+| BG-02 | Phase 16 | Pending |
+| BG-03 | Phase 16 | Pending |
+| TEST-01 | Phase 17 | Pending |
+| TEST-02 | Phase 17 | Pending |
+| TEST-03 | Phase 17 | Pending |
+| EVAL-03 | Phase 17 | Pending |
+| EVAL-04 | Phase 17 | Pending |
 
 **Coverage:**
-- v3.0 requirements: 36 total
-- Mapped to phases: 0
-- Unmapped: 36
+- v3.0 requirements: 45 total
+- Mapped to phases: 45
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-07*
-*Last updated: 2026-03-07 after initial definition*
+*Last updated: 2026-03-08 after roadmap creation (traceability added)*
