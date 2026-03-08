@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Eval & Optimization Loop
 status: unknown
-stopped_at: Completed 12-02-PLAN.md
-last_updated: "2026-03-08T01:39:45.125Z"
-last_activity: "2026-03-08 -- Session 20: Plan 12-02 complete."
+stopped_at: Completed 12-01-PLAN.md
+last_updated: "2026-03-08T01:40:26.080Z"
+last_activity: "2026-03-08 -- Session 21: Plan 12-01 complete (coding-standards skill, SKILL.md patches, eval prompt fix)."
 progress:
   total_phases: 5
   completed_phases: 3
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-03-07)
 ## Current Position
 
 Phase: 12 of 12 -- Analysis & Optimization
-Plan 02 complete (harder evals for neutral-delta skills). Plans 01, 03, 04 remaining.
-Last activity: 2026-03-08 -- Session 20: Plan 12-02 complete.
+Plans 01 and 02 complete. Plans 03, 04 remaining.
+Last activity: 2026-03-08 -- Session 21: Plan 12-01 complete (coding-standards skill, SKILL.md patches, eval prompt fix).
 
 Progress: [██████░░░░] 61%
 
@@ -86,6 +86,8 @@ Progress: [██████░░░░] 61%
 - [Phase 12]: 12-02: ConfirmFormBase selected as forms-api eval differentiator (getCancelUrl Url object, getQuestion method)
 - [Phase 12]: 12-02: template_preprocess_HOOK naming and hook_theme_suggestions_HOOK chosen as theming differentiators
 - [Phase 12]: 12-02: Bundle entity wiring (bundle_entity_type + bundle_of + entity_keys bundle) chosen as entities-fields differentiator
+- [Phase 12]: 12-01: Coding-standards skill kept to 150 lines -- focused on 4 phpcs failure patterns only
+- [Phase 12]: 12-01: CRITICAL NEVER callout placed before DI flow explanation for maximum Haiku visibility
 
 ### Carried from v1.0
 
@@ -104,6 +106,6 @@ Progress: [██████░░░░] 61%
 
 ## Session Continuity
 
-Last session: 2026-03-08T01:39:45.123Z
-Stopped at: Completed 12-02-PLAN.md
+Last session: 2026-03-08T01:40:26.078Z
+Stopped at: Completed 12-01-PLAN.md
 Resume file: None
