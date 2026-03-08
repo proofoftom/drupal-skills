@@ -17,3 +17,14 @@ group_ai_pm.dashboard:
     _permission: 'access group_ai_pm dashboard'
   options:
     _admin_route: TRUE
+
+group_ai_pm.project.complete:
+  path: '/admin/content/project/{project}/complete'
+  defaults:
+    _controller: '\Drupal\group_ai_pm\Controller\ProjectActionController::completeProject'
+    _title: 'Complete Project'
+  requirements:
+    _custom_access: '\Drupal\group_ai_pm\Controller\ProjectActionController::completeProjectAccess'
+    _csrf_token: 'TRUE'
+  options:
+    _admin_route: TRUE

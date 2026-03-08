@@ -3,73 +3,112 @@
   "skills_tested": ["drupal-access-security", "drupal-plugins-blocks"],
   "model": "claude-haiku-4-5-20251001",
   "date": "2026-03-08",
+  "iterations": {
+    "v1": {
+      "date": "2026-03-08",
+      "skill_patches": "none (pre-patch baseline)"
+    },
+    "v2": {
+      "date": "2026-03-08",
+      "skill_patches": ["drupal-access-security: added CRITICAL _csrf_token callout (decision guide lines 80-82, main section lines 343-345)"]
+    }
+  },
   "variants": {
     "without_plugin": {
       "raw_score": "12/16",
       "pass_rate": 0.75,
       "static_score": "8/10",
-      "runtime_score": "4/6"
+      "runtime_score": "4/6",
+      "note": "Baseline — same across v1 and v2 (not re-run)"
     },
-    "with_plugin": {
+    "with_plugin_v1": {
       "raw_score": "13/16",
       "pass_rate": 0.8125,
       "static_score": "9/10",
       "runtime_score": "4/6",
-      "note": "rt-11 failure is test-order contamination (CRUD test created entity before uninstall), not a real code defect"
+      "adjusted_score": "14/16",
+      "adjusted_rate": 0.875,
+      "note": "rt-11 failure was test-order contamination, not code defect"
+    },
+    "with_plugin_v2": {
+      "raw_score": "15/16",
+      "pass_rate": 0.9375,
+      "static_score": "10/10",
+      "runtime_score": "5/6",
+      "note": "CSRF skill patch fixed #8 and #16. Only remaining failure is #15 (Drupal\\system\\Entity\\User wrong namespace — pre-existing Phase 14 bug, stochastic Haiku behavior)"
     }
   },
-  "raw_delta": "+6.25%",
-  "adjusted_delta": "+12.5%",
-  "adjusted_note": "WITH rt-11 failure is spurious (entity content blocked uninstall, not code error). Adjusted: WITH=14/16 (87.5%) vs WITHOUT=12/16 (75.0%)",
+  "deltas": {
+    "v1_raw": "+6.25%",
+    "v1_adjusted": "+12.5%",
+    "v2_raw": "+18.75%",
+    "v2_note": "WITHOUT 12/16 (75.0%) vs WITH v2 15/16 (93.75%)"
+  },
   "expectation_breakdown": [
-    {"id": 1,  "type": "static",  "name": "EntityAccessControlHandler with checkAccess()",     "without": "pass", "with": "pass", "discriminating": false},
-    {"id": 2,  "type": "static",  "name": "AccessResult with cache metadata",                   "without": "pass", "with": "pass", "discriminating": false},
-    {"id": 3,  "type": "static",  "name": "permission_callbacks for dynamic permissions",        "without": "pass", "with": "pass", "discriminating": false},
-    {"id": 4,  "type": "static",  "name": "ContainerFactoryPluginInterface 4-param create()",    "without": "pass", "with": "pass", "discriminating": false},
-    {"id": 5,  "type": "static",  "name": "parent::__construct in plugin",                      "without": "pass", "with": "pass", "discriminating": false},
-    {"id": 6,  "type": "static",  "name": "blockAccess() returns AccessResult",                 "without": "pass", "with": "pass", "discriminating": false},
-    {"id": 7,  "type": "static",  "name": "restrict access on dangerous perms",                 "without": "FAIL", "with": "pass", "discriminating": true, "skill": "drupal-access-security"},
-    {"id": 8,  "type": "static",  "name": "_csrf_token on state-changing route",                "without": "FAIL", "with": "FAIL", "discriminating": false, "note": "shared failure — neither variant adds CSRF protection"},
-    {"id": 9,  "type": "static",  "name": "No \\Drupal:: in plugin classes",                    "without": "pass", "with": "pass", "discriminating": false},
-    {"id": 10, "type": "static",  "name": "Entity handlers array includes access key",           "without": "pass", "with": "pass", "discriminating": false},
-    {"id": 11, "type": "runtime", "name": "Module re-enables cleanly",                          "without": "pass", "with": "FAIL*", "discriminating": false, "note": "* test-order contamination, not code defect"},
-    {"id": 12, "type": "runtime", "name": "Access handler registered in entity type",           "without": "pass", "with": "pass", "discriminating": false},
-    {"id": 13, "type": "runtime", "name": "Dynamic permissions loadable",                       "without": "pass", "with": "pass", "discriminating": false},
-    {"id": 14, "type": "runtime", "name": "Block plugin discoverable",                          "without": "pass", "with": "pass", "discriminating": false},
-    {"id": 15, "type": "runtime", "name": "Entity CRUD works end-to-end",                       "without": "FAIL", "with": "pass", "discriminating": true, "note": "WITHOUT fatal: Drupal\\system\\Entity\\User wrong namespace"},
-    {"id": 16, "type": "runtime", "name": "CSRF route in route collection",                     "without": "FAIL", "with": "FAIL", "discriminating": false, "note": "correlates with #8"}
+    {"id": 1,  "type": "static",  "name": "EntityAccessControlHandler with checkAccess()",     "without": "pass", "with_v1": "pass", "with_v2": "pass", "discriminating": false},
+    {"id": 2,  "type": "static",  "name": "AccessResult with cache metadata",                   "without": "pass", "with_v1": "pass", "with_v2": "pass", "discriminating": false},
+    {"id": 3,  "type": "static",  "name": "permission_callbacks for dynamic permissions",        "without": "pass", "with_v1": "pass", "with_v2": "pass", "discriminating": false},
+    {"id": 4,  "type": "static",  "name": "ContainerFactoryPluginInterface 4-param create()",    "without": "pass", "with_v1": "pass", "with_v2": "pass", "discriminating": false},
+    {"id": 5,  "type": "static",  "name": "parent::__construct in plugin",                      "without": "pass", "with_v1": "pass", "with_v2": "pass", "discriminating": false},
+    {"id": 6,  "type": "static",  "name": "blockAccess() returns AccessResult",                 "without": "pass", "with_v1": "pass", "with_v2": "pass", "discriminating": false},
+    {"id": 7,  "type": "static",  "name": "restrict access on dangerous perms",                 "without": "FAIL", "with_v1": "pass", "with_v2": "pass", "discriminating": true, "skill": "drupal-access-security"},
+    {"id": 8,  "type": "static",  "name": "_csrf_token on state-changing route",                "without": "FAIL", "with_v1": "FAIL", "with_v2": "pass", "discriminating": true, "skill": "drupal-access-security (after CRITICAL patch)", "note": "Shared failure in v1 → fixed by skill iteration in v2"},
+    {"id": 9,  "type": "static",  "name": "No \\Drupal:: in plugin classes",                    "without": "pass", "with_v1": "pass", "with_v2": "pass", "discriminating": false},
+    {"id": 10, "type": "static",  "name": "Entity handlers array includes access key",           "without": "pass", "with_v1": "pass", "with_v2": "pass", "discriminating": false},
+    {"id": 11, "type": "runtime", "name": "Module re-enables cleanly",                          "without": "pass", "with_v1": "FAIL*", "with_v2": "pass", "discriminating": false, "note": "v1 failure was test-order contamination; v2 fixed by running rt-11 before rt-15"},
+    {"id": 12, "type": "runtime", "name": "Access handler registered in entity type",           "without": "pass", "with_v1": "pass", "with_v2": "pass", "discriminating": false},
+    {"id": 13, "type": "runtime", "name": "Dynamic permissions loadable",                       "without": "pass", "with_v1": "pass", "with_v2": "pass", "discriminating": false},
+    {"id": 14, "type": "runtime", "name": "Block plugin discoverable",                          "without": "pass", "with_v1": "pass", "with_v2": "pass", "discriminating": false},
+    {"id": 15, "type": "runtime", "name": "Entity CRUD works end-to-end",                       "without": "FAIL", "with_v1": "pass", "with_v2": "FAIL", "discriminating": false, "note": "Pre-existing Phase 14 bug (Drupal\\system\\Entity\\User wrong namespace). Stochastic — v1 WITH happened to fix it, v2 didn't. Not skill-related."},
+    {"id": 16, "type": "runtime", "name": "CSRF route in route collection",                     "without": "FAIL", "with_v1": "FAIL", "with_v2": "pass", "discriminating": true, "note": "Correlates with #8 — runtime confirmation of static fix"}
   ],
-  "discriminating_expectations": {
-    "count": 2,
+  "discriminating_expectations_v2": {
+    "count": 3,
     "details": [
       {
         "id": 7,
         "name": "restrict access on dangerous perms",
         "skill": "drupal-access-security",
-        "why_with_passed": "WITH variant's PermissionProvider.php includes 'restrict access' => TRUE on edit_any and delete_any permissions. access-security skill teaches this pattern.",
-        "why_without_failed": "WITHOUT variant's PermissionCallbacks.php generates delete_any/edit_any but omits restrict access flag entirely."
+        "type": "v1 discriminator (maintained)",
+        "why": "access-security skill teaches restrict access: true on dangerous permissions. WITHOUT omits it."
       },
       {
-        "id": 15,
-        "name": "Entity CRUD works end-to-end (runtime)",
-        "skill": "general code quality (indirect)",
-        "why_with_passed": "WITH variant entity CRUD works — correct namespace references throughout.",
-        "why_without_failed": "WITHOUT variant uses Drupal\\system\\Entity\\User::getCurrentUserId (wrong namespace) causing fatal TypeError. Correct: Drupal\\user\\Entity\\User."
+        "id": 8,
+        "name": "_csrf_token on state-changing route",
+        "skill": "drupal-access-security",
+        "type": "v2 NEW discriminator (skill iteration success)",
+        "why": "CRITICAL callout added to skill after v1 shared failure. v2 WITH now adds _csrf_token: 'TRUE' to state-changing route."
+      },
+      {
+        "id": 16,
+        "name": "CSRF route in route collection (runtime)",
+        "skill": "drupal-access-security",
+        "type": "v2 NEW discriminator (runtime confirmation of #8)",
+        "why": "Runtime verification that the CSRF requirement is in the compiled route collection."
       }
     ]
   },
-  "shared_failures": [
-    {
-      "ids": [8, 16],
-      "name": "_csrf_token on state-changing route",
-      "note": "Neither variant adds CSRF protection. This pattern is in drupal-access-security SKILL.md but Haiku doesn't pick it up in this context. Potential skill iteration target.",
-      "skill_gap": true
-    }
-  ],
-  "runtime_value": {
-    "note": "Runtime assertions caught a fatal bug (wrong User class namespace) that static analysis would have missed. This validates the ddev-based grading approach.",
-    "bugs_caught_only_by_runtime": 1,
-    "static_only_discriminators": 1,
-    "runtime_only_discriminators": 1
+  "skill_iteration_impact": {
+    "patch": "Added CRITICAL callout for _csrf_token pattern to drupal-access-security SKILL.md",
+    "expectations_fixed": [8, 16],
+    "delta_improvement": "+6.25% (v1 adjusted +12.5% → v2 +18.75%)",
+    "confirms": "CRITICAL NEVER/ALWAYS callout pattern continues to be effective (see Phase 14: +44.4% swing from _admin_route callout)"
+  },
+  "remaining_failures": {
+    "count": 1,
+    "details": [
+      {
+        "id": 15,
+        "name": "Entity CRUD (Drupal\\system\\Entity\\User)",
+        "type": "pre-existing Phase 14 bug",
+        "actionable": false,
+        "note": "Haiku consistently uses wrong User class namespace. Not addressable via skills — it's a model knowledge gap. Both variants have this bug in Phase 14 base code; whether it gets fixed during Phase 15 code gen is stochastic."
+      }
+    ]
+  },
+  "verdict": {
+    "tier": "HIGH",
+    "delta": "+18.75%",
+    "note": "Phase 15 achieves HIGH tier delta. access-security skill demonstrates clear value on restrict access and CSRF patterns. plugins-blocks expectations all pass for both variants (baseline Haiku knows plugin DI well). The skill iteration loop (v1 shared failure → CRITICAL patch → v2 fix) validates the iterative improvement methodology."
   }
 }

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Group AI Project Management
 status: in_progress
-stopped_at: Phase 15 eval designed — evals.json written, ready to execute pipeline
-last_updated: "2026-03-08T09:01:39.618Z"
-last_activity: 2026-03-08 -- Phase 15 eval design complete (10 expectations targeting access-security + plugins-blocks)
+stopped_at: Phase 15 COMPLETE — +18.75% delta (HIGH tier), module promoted
+last_updated: "2026-03-08"
+last_activity: 2026-03-08 -- Phase 15 v2 graded (WITH 93.75%), promoted to modules/ and template
 progress:
   total_phases: 5
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
-  percent: 40
+  completed_phases: 3
+  total_plans: 3
+  completed_plans: 3
+  percent: 60
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 
 ## Current Position
 
-Phase: 15 of 17 (Group & AI Integration) -- IN PROGRESS
+Phase: 15 of 17 (Group & AI Integration) -- COMPLETE
 Plan: eval pipeline (not GSD plans)
-Status: Evals designed, pipeline ready to execute
-Last activity: 2026-03-08 -- Phase 15 v1 graded (WITHOUT 75%, WITH 81.25%), access-security patched for CSRF
+Status: Phase 15 complete, Phase 16 next
+Last activity: 2026-03-08 -- Phase 15 v2 graded (WITHOUT 75%, WITH 93.75%), delta +18.75% (HIGH tier)
 
-Progress: [██░░░░░░░░] 40% (v3.0)
+Progress: [██████░░░░] 60% (v3.0)
 
 ## WORKFLOW CHANGE: Eval-Driven Phases (Phase 14+)
 
@@ -48,7 +48,8 @@ Phase 14+ uses the eval pipeline, not GSD executors. GSD executor agents have fu
 6. Iterate on skills if delta insufficient
 
 **Skills tested in Phase 14:** scaffold, entities-fields, routing-controllers, forms-api, config-storage
-**Skills tested in Phase 15:** access-security, plugins-blocks
+**Skills tested in Phase 15:** access-security, plugins-blocks -- COMPLETE (+18.75% delta)
+**Skills tested in Phase 16:** views-dev, theming, batch-queue-cron -- NEXT
 **Reference:** MEMORY.md has full phase-to-skill mapping and pipeline details
 **Reference:** /skill-creator protocol for eval viewer, grading schemas, benchmark format
 
@@ -82,6 +83,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-08
-Stopped at: Phase 15 v1 graded (+12.5% adjusted delta), skill patched (CSRF callout), ready for v2 re-run
-Resume action: Re-run WITH variant only against patched access-security skill, grade, promote
-Resume file: .planning/phases/15-group-ai-integration/.continue-here.md
+Stopped at: Phase 15 COMPLETE — v2 graded +18.75% delta, module promoted to both locations
+Resume action: Begin Phase 16 (views-dev, theming, batch-queue-cron)
+Resume file: none (phase boundary)

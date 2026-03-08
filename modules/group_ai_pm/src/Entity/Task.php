@@ -18,6 +18,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\group_ai_pm\TaskListBuilder",
+ *     "access" = "Drupal\group_ai_pm\TaskAccessControlHandler",
  *     "form" = {
  *       "default" = "Drupal\Core\Entity\ContentEntityForm",
  *       "add" = "Drupal\Core\Entity\ContentEntityForm",
