@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 Phase: 15 of 17 (Group & AI Integration) -- IN PROGRESS
 Plan: eval pipeline (not GSD plans)
 Status: Evals designed, pipeline ready to execute
-Last activity: 2026-03-08 -- Phase 15 evals.json written with 10 discriminating expectations
+Last activity: 2026-03-08 -- Phase 15 v1 graded (WITHOUT 75%, WITH 81.25%), access-security patched for CSRF
 
 Progress: [██░░░░░░░░] 40% (v3.0)
 
@@ -82,6 +82,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-08
-Stopped at: Phase 15 eval design complete — evals.json written, pipeline ready
-Resume action: Execute Phase 15 pipeline (set up temp dirs, run headless, grade, iterate)
+Stopped at: Phase 15 v1 graded (+12.5% adjusted delta), skill patched (CSRF callout), ready for v2 re-run
+Resume action: Re-run WITH variant only against patched access-security skill, grade, promote
 Resume file: .planning/phases/15-group-ai-integration/.continue-here.md
