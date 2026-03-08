@@ -95,7 +95,7 @@ Plans:
 **Goal**: Final analysis with tier classifications, iteration on weak deltas, and overall verdict on skill value
 **Depends on**: Phase 11
 **Requirements**: ANLZ-02, ANLZ-03, ANLZ-04, CARRY-01, CARRY-02
-**Plans:** 4 plans
+**Plans:** 2/4 plans executed
 Plans:
 - [ ] 12-01-PLAN.md -- Fix known failures (coding-standards skill, SKILL.md patches, eval prompt fix)
 - [ ] 12-02-PLAN.md -- Write harder evals for neutral-delta skills
@@ -119,4 +119,4 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 | 9. Eval Prompt Rewrite | v2.0 | 2/2 | Complete | 2026-03-07 |
 | 10. Pipeline Validation | v2.0 | 2/2 | Complete | 2026-03-07 |
 | 11. Batch Execution | v2.0 | 13/13 | Complete | 2026-03-07 |
-| 12. Analysis & Optimization | v2.0 | 0/4 | In Progress | - |
+| 12. Analysis & Optimization | 2/4 | In Progress|  | - |
