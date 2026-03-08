@@ -1,0 +1,70 @@
+{
+  "expectations": [
+    {
+      "text": "Project entity annotation/attribute includes a 'views_data' handler key pointing to a custom class that extends EntityViewsData (NOT writing hook_views_data() for the Project content entity — content entities should use the entity views_data handler in their annotation; hook_views_data() is only for non-entity custom database tables)",
+      "passed": true,
+      "evidence": "src/Entity/Project.php line 21: \"views_data\" = \"Drupal\\group_ai_pm\\ProjectViewsData\"; src/ProjectViewsData.php line 11: class ProjectViewsData extends EntityViewsData"
+    },
+    {
+      "text": "Custom ViewsField plugin (ProjectTaskCount or similar) overrides query() with an empty method body or explicitly sets $this->query without adding a field (virtual/computed fields that don't correspond to a database column MUST override query() to prevent Views from generating an 'Unknown column' SQL error by trying to SELECT a non-existent column)",
+      "passed": true,
+      "evidence": "src/Plugin/views/field/ProjectTaskCount.php lines 36-38: public function query() { // This field is computed, so we don't add any joins or conditions. } — empty body present"
+    },
+    {
+      "text": "hook_theme() in .module file declares theme variables with explicit default values in the 'variables' array for BOTH theme hooks — e.g., 'variables' => ['title' => NULL, 'status' => NULL, ...] (every variable a Twig template references MUST be declared with a default value in hook_theme(); omitting the default causes undefined variable warnings in Twig and silent rendering failures)",
+      "passed": true,
+      "evidence": "group_ai_pm.module lines 13-34: both 'group_ai_pm_task_card' and 'group_ai_pm_project_summary' have 'variables' arrays with explicit defaults (e.g. 'title' => '', 'status' => '', 'priority' => '', 'assignee_name' => NULL, 'due_date' => NULL for task card; 'title' => '', 'status' => '', 'description' => '', 'task_count' => 0 for project summary)"
+    },
+    {
+      "text": "Template files in templates/ directory use hyphen-separated names matching the hook names with underscores converted to hyphens: group-ai-pm-task-card.html.twig and group-ai-pm-project-summary.html.twig (Drupal's theme system converts hook name underscores to hyphens when resolving template files — a file named with underscores or wrong conversion is silently never found)",
+      "passed": false,
+      "evidence": "templates/ directory contains 'task-card.html.twig' and 'project-summary.html.twig' — these are missing the required 'group-ai-pm-' prefix. The hook names 'group_ai_pm_task_card' and 'group_ai_pm_project_summary' should resolve to 'group-ai-pm-task-card.html.twig' and 'group-ai-pm-project-summary.html.twig' respectively"
+    },
+    {
+      "text": "A group_ai_pm.libraries.yml file exists defining at least one library with a css entry, AND the library is attached somewhere via '#attached' => ['library' => ['group_ai_pm/LIBRARY_NAME']] in a render array or preprocess function (Drupal's Libraries API is mandatory for all CSS/JS — inline <style> tags bypass aggregation, Content Security Policy, and library dependency management)",
+      "passed": false,
+      "evidence": "group_ai_pm.libraries.yml exists with css entry (css/group_ai_pm.css). However, grep for '#attached' and 'attached' across all module files returned no matches — the library 'group_ai_pm_theme' is never attached anywhere via '#attached' in any render array or preprocess function"
+    },
+    {
+      "text": "QueueWorker plugin has a 'cron' key in its annotation or attribute specifying a time budget — e.g., cron = {\"time\" = 10} or cron: ['time' => 10] (the cron time budget tells Drupal's cron runner how many seconds to spend processing this queue per cron run — without it, queued items are never automatically processed by cron and require manual queue processing)",
+      "passed": true,
+      "evidence": "src/Plugin/QueueWorker/OverdueNotificationWorker.php lines 12-16: annotation includes cron = { \"time\" = 30 }"
+    },
+    {
+      "text": "QueueWorker processItem() method catches or handles SuspendQueueException separately from generic \\Exception (SuspendQueueException signals a systemic failure like an unavailable API where ALL remaining queue items should be skipped this run; generic \\Exception means one bad item to log and skip — catching only \\Exception without distinguishing SuspendQueueException causes the queue runner to silently treat systemic outages as individual item failures)",
+      "passed": false,
+      "evidence": "src/Plugin/QueueWorker/OverdueNotificationWorker.php processItem() only catches generic \\Exception (line 41: catch (\\Exception $e)). No SuspendQueueException handling found anywhere in the module"
+    },
+    {
+      "text": "hook_cron() implementation uses the Lock API with a try/finally pattern: \\Drupal::lock()->acquire() or injected lock service acquire() at the start, and lock->release() inside a finally block (unreleased locks persist for 30 seconds blocking all subsequent cron runs of this task — the try/finally pattern ensures the lock is released even if an exception occurs during processing)",
+      "passed": true,
+      "evidence": "group_ai_pm.module lines 41-77: $lock = \\Drupal::lock(); $lock->acquire($lock_name, 30) checked at line 45; try block starts line 49; finally block at line 75 calls $lock->release($lock_name)"
+    },
+    {
+      "text": "hook_cron() creates queue items via \\Drupal::queue() or the queue factory service for overdue tasks, and does NOT directly process or send notifications in hook_cron itself (hook_cron has no time budget — processing variable-size notification workloads directly in hook_cron blocks all other cron tasks and risks PHP timeout; the QueueWorker handles processing with its own time budget)",
+      "passed": true,
+      "evidence": "group_ai_pm.module lines 61-70: creates queue via \\Drupal::queue('group_ai_pm_overdue_notifications') and calls $queue->createItem($item) for each overdue task. No direct notification processing occurs in hook_cron"
+    },
+    {
+      "text": "Render arrays using the custom theme hooks include a '#theme' key set to 'group_ai_pm_task_card' or 'group_ai_pm_project_summary' (NOT returning raw HTML strings or assembling markup with string concatenation — render arrays with #theme go through Drupal's full render pipeline enabling caching, theme overriding, altering, and XSS protection)",
+      "passed": false,
+      "evidence": "grep for '#theme' across all module PHP files returned no matches. DashboardController.php uses '#markup' with inline HTML string and '#type' => 'table'. No render array with '#theme' => 'group_ai_pm_task_card' or 'group_ai_pm_project_summary' exists anywhere in the module"
+    },
+    {
+      "text": "ProjectStatusBlock build() method includes a '#cache' key with 'tags' containing the project entity list cache tag (group_ai_pm_project_list or equivalent) AND 'contexts' containing at least 'user.permissions' (without list cache tags, the block shows stale counts when projects are added/deleted; without the permissions context, the block is cached once and served identically to all users regardless of access)",
+      "passed": true,
+      "evidence": "src/Plugin/Block/ProjectStatusBlock.php lines 63-67: '#cache' => ['tags' => ['project_list'], 'contexts' => ['user.permissions']]. 'project_list' is the standard Drupal entity list cache tag for the 'project' entity type (equivalent to the expected pattern), and 'user.permissions' context is present"
+    },
+    {
+      "text": "ViewsField plugin file is located in src/Plugin/views/field/ directory with lowercase 'views' and 'field' in the path (NOT src/Plugin/Views/Field/ with capitals — Views uses a custom plugin discovery that expects lowercase directory names unlike standard Drupal plugin types)",
+      "passed": true,
+      "evidence": "File found at src/Plugin/views/field/ProjectTaskCount.php — both 'views' and 'field' directory names are lowercase as required"
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 4,
+    "total": 12,
+    "pass_rate": 0.67
+  }
+}

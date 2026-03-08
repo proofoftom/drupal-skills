@@ -1,0 +1,114 @@
+{
+  "phase": "17-testing-final-eval",
+  "variant": "with-plugin-v1",
+  "model": "claude-haiku-4-5-20251001",
+  "expectations_met": 12,
+  "expectations_total": 14,
+  "runtime_assertions_met": 4,
+  "runtime_assertions_total": 6,
+  "score_percent": 80.0,
+  "expectations": [
+    {
+      "id": 1,
+      "met": true,
+      "evidence": "All 5 test classes have '@group group_ai_pm' in the class-level PHPDoc: EntityCrudTest.php line 11, AccessControlTest.php line 12, CronQueueTest.php line 11, SettingsFormFunctionalTest.php line 10, DashboardFunctionalTest.php line 10"
+    },
+    {
+      "id": 2,
+      "met": true,
+      "evidence": "EntityCrudTest.php line 13: 'class EntityCrudTest extends KernelTestBase'; AccessControlTest.php line 14: 'class AccessControlTest extends KernelTestBase'. Both entity CRUD and access control tests correctly use KernelTestBase, not BrowserTestBase."
+    },
+    {
+      "id": 3,
+      "met": true,
+      "evidence": "All three kernel tests include 'system', 'user', and 'group_ai_pm' in protected static $modules. EntityCrudTest.php lines 20-28, AccessControlTest.php lines 21-29, CronQueueTest.php lines 20-28."
+    },
+    {
+      "id": 4,
+      "met": true,
+      "evidence": "All three kernel test setUp() methods call both $this->installEntitySchema('project') and $this->installEntitySchema('task'). EntityCrudTest.php lines 36-37, AccessControlTest.php lines 37-38, CronQueueTest.php lines 36-37."
+    },
+    {
+      "id": 5,
+      "met": true,
+      "evidence": "All three kernel test setUp() methods call $this->installEntitySchema('user'). EntityCrudTest.php line 35, AccessControlTest.php line 36, CronQueueTest.php line 35."
+    },
+    {
+      "id": 6,
+      "met": true,
+      "evidence": "All three kernel test setUp() methods call $this->installConfig(['group_ai_pm']). EntityCrudTest.php line 38, AccessControlTest.php line 39, CronQueueTest.php line 38."
+    },
+    {
+      "id": 7,
+      "met": false,
+      "evidence": "Both BrowserTestBase subclasses declare 'protected $defaultTheme = \"starterkit_theme\"' rather than 'stark' or 'claro'. SettingsFormFunctionalTest.php line 30, DashboardFunctionalTest.php line 30. The expectation explicitly requires 'stark' or 'claro'."
+    },
+    {
+      "id": 8,
+      "met": true,
+      "evidence": "All kernel test setUp() methods call parent::setUp() as the first statement: EntityCrudTest.php line 34, AccessControlTest.php line 35, CronQueueTest.php line 34. The two functional test classes (SettingsFormFunctionalTest, DashboardFunctionalTest) define no setUp() method, so there is no violation."
+    },
+    {
+      "id": 9,
+      "met": true,
+      "evidence": "Kernel tests reside at tests/src/Kernel/ (EntityCrudTest.php, AccessControlTest.php, CronQueueTest.php) and functional tests reside at tests/src/Functional/ (SettingsFormFunctionalTest.php, DashboardFunctionalTest.php). Correct directory layout confirmed by file listing."
+    },
+    {
+      "id": 10,
+      "met": true,
+      "evidence": "Kernel namespaces: 'Drupal\\Tests\\group_ai_pm\\Kernel' (EntityCrudTest.php line 3, AccessControlTest.php line 3, CronQueueTest.php line 3). Functional namespaces: 'Drupal\\Tests\\group_ai_pm\\Functional' (SettingsFormFunctionalTest.php line 3, DashboardFunctionalTest.php line 3). All match the required pattern."
+    },
+    {
+      "id": 11,
+      "met": true,
+      "evidence": "SettingsFormFunctionalTest.php lines 44-45: '$user = $this->createUser([\"administer group_ai_pm\"]); $this->drupalLogin($user);' before accessing the settings page at line 47. Pattern matches exactly what the expectation requires."
+    },
+    {
+      "id": 12,
+      "met": true,
+      "evidence": "SettingsFormFunctionalTest.php: statusCodeEquals(403) at line 37 (anonymous user), statusCodeEquals(200) at line 48 (authorized user), and statusCodeEquals(403) at line 184 (unauthorized logged-in user). DashboardFunctionalTest.php also has statusCodeEquals(403) at line 37 and statusCodeEquals(200) at line 48."
+    },
+    {
+      "id": 13,
+      "met": true,
+      "evidence": "'datetime' is included in protected static $modules for all three kernel tests: EntityCrudTest.php line 23, AccessControlTest.php line 23, CronQueueTest.php line 23."
+    },
+    {
+      "id": 14,
+      "met": false,
+      "evidence": "CronQueueTest.php calls 'group_ai_pm_cron()' directly (lines 66, 102, 136, 174, 219, 299, 333) rather than '$this->container->get(\"cron\")->run()' or '\\Drupal::service(\"cron\")->run()' as required by the expectation. The module's cron hook is invoked directly, bypassing the cron service pipeline."
+    }
+  ],
+  "runtime_assertions": [
+    {
+      "id": "rt-1",
+      "met": true,
+      "evidence": "PASS — module re-enables cleanly"
+    },
+    {
+      "id": "rt-2",
+      "met": true,
+      "evidence": "PASS — TESTS_FOUND:kernel=3,functional=2,unit=0,total=5"
+    },
+    {
+      "id": "rt-3",
+      "met": true,
+      "evidence": "PASS — all 5 files have no syntax errors"
+    },
+    {
+      "id": "rt-4",
+      "met": true,
+      "evidence": "PASS — PHPUnit discovers ~47 tests across all files (more comprehensive than WITHOUT variant)"
+    },
+    {
+      "id": "rt-5",
+      "met": false,
+      "evidence": "FAIL — Kernel tests error: 'flexible_permissions.chain_calculator service not found' (Group module dependency missing from $modules). WITH variant included more modules than WITHOUT (datetime, views, field, group) showing better dependency awareness, but missed the flexible_permissions transitive dependency."
+    },
+    {
+      "id": "rt-6",
+      "met": false,
+      "evidence": "NOT RUN — depends on rt-5 passing, which failed"
+    }
+  ]
+}

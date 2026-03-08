@@ -1,0 +1,114 @@
+{
+  "phase": "17-testing-final-eval",
+  "variant": "without-plugin",
+  "model": "claude-haiku-4-5-20251001",
+  "expectations_met": 12,
+  "expectations_total": 14,
+  "runtime_assertions_met": 4,
+  "runtime_assertions_total": 6,
+  "score_percent": 80.0,
+  "expectations": [
+    {
+      "id": 1,
+      "met": true,
+      "evidence": "All 5 test classes have '@group group_ai_pm' in class-level PHPDoc. ProjectEntityCrudTest.php:11-13, AccessControlTest.php:11-13, CronAndQueueTest.php:11-13, SettingsFormTest.php:9-11, DashboardTest.php:8-11."
+    },
+    {
+      "id": 2,
+      "met": true,
+      "evidence": "ProjectEntityCrudTest extends KernelTestBase (line 14). AccessControlTest extends KernelTestBase (line 14). Both CRUD and access control tests correctly use KernelTestBase, not BrowserTestBase."
+    },
+    {
+      "id": 3,
+      "met": true,
+      "evidence": "All kernel tests include 'system', 'user', and 'group_ai_pm'. ProjectEntityCrudTest.php:19: ['system', 'user', 'group_ai_pm']. AccessControlTest.php:19: ['system', 'user', 'group_ai_pm']. CronAndQueueTest.php:19: ['system', 'user', 'group_ai_pm', 'queue']."
+    },
+    {
+      "id": 4,
+      "met": true,
+      "evidence": "All 3 kernel test setUp() methods call installEntitySchema('project') and installEntitySchema('task'). ProjectEntityCrudTest.php:26-27, AccessControlTest.php:26-27, CronAndQueueTest.php:26-27."
+    },
+    {
+      "id": 5,
+      "met": true,
+      "evidence": "All 3 kernel test setUp() methods call installEntitySchema('user'). ProjectEntityCrudTest.php:28, AccessControlTest.php:28, CronAndQueueTest.php:28."
+    },
+    {
+      "id": 6,
+      "met": true,
+      "evidence": "All 3 kernel test setUp() methods call installConfig(['group_ai_pm']). ProjectEntityCrudTest.php:29, AccessControlTest.php:30, CronAndQueueTest.php:30."
+    },
+    {
+      "id": 7,
+      "met": false,
+      "evidence": "Both functional tests declare $defaultTheme = 'starterkit_theme', not 'stark' or 'claro'. SettingsFormTest.php:17: \"protected $defaultTheme = 'starterkit_theme';\". DashboardTest.php:18: \"protected $defaultTheme = 'starterkit_theme';\". The expectation requires 'stark' or 'claro' specifically."
+    },
+    {
+      "id": 8,
+      "met": true,
+      "evidence": "All setUp() methods in kernel tests call parent::setUp() as the first statement. ProjectEntityCrudTest.php:25, AccessControlTest.php:25, CronAndQueueTest.php:25. Functional tests have no setUp() method (inheriting parent behavior), so no violations."
+    },
+    {
+      "id": 9,
+      "met": true,
+      "evidence": "Kernel tests in tests/src/Kernel/ (ProjectEntityCrudTest.php, AccessControlTest.php, CronAndQueueTest.php). Functional tests in tests/src/Functional/ (SettingsFormTest.php, DashboardTest.php). All paths confirmed by directory listing."
+    },
+    {
+      "id": 10,
+      "met": true,
+      "evidence": "Kernel test namespaces: 'Drupal\\Tests\\group_ai_pm\\Kernel' (all 3 kernel files, line 3). Functional test namespaces: 'Drupal\\Tests\\group_ai_pm\\Functional' (both functional files, line 3). All match required pattern."
+    },
+    {
+      "id": 11,
+      "met": true,
+      "evidence": "SettingsFormTest.php:45 '$user = $this->drupalCreateUser([\"administer group_ai_pm\"])' and line 46 '$this->drupalLogin($user)'. Pattern used in testSettingsFormAccess(), testSettingsFormSubmit(), testSettingsFormRetainsValues(), testSettingsFormDefaults()."
+    },
+    {
+      "id": 12,
+      "met": true,
+      "evidence": "SettingsFormTest.php:31 assertSession()->statusCodeEquals(403) for anonymous user and line 48 statusCodeEquals(200) for authorized admin. DashboardTest.php:32 statusCodeEquals(403) for anonymous user and line 43 statusCodeEquals(200) for authorized user. Both 403-deny and 200-allow cases verified."
+    },
+    {
+      "id": 13,
+      "met": false,
+      "evidence": "No kernel test $modules array includes 'datetime'. ProjectEntityCrudTest.php:19: ['system', 'user', 'group_ai_pm']. AccessControlTest.php:19: ['system', 'user', 'group_ai_pm']. CronAndQueueTest.php:19: ['system', 'user', 'group_ai_pm', 'queue']. 'datetime' is absent from all three, despite Task having a due_date datetime field. This is the root cause of the rt-5 failure (missing 'options' module is a related symptom of incomplete $modules declaration)."
+    },
+    {
+      "id": 14,
+      "met": true,
+      "evidence": "CronAndQueueTest.php testCronQueueOverdueDetection(): creates Project and Task with past_date (lines 39-53), calls \\Drupal::service('cron')->run() (line 63), asserts queue has items with assertGreater(0, $queue_count) (line 68). The full hook_cron -> queue pipeline is tested as required."
+    }
+  ],
+  "runtime_assertions": [
+    {
+      "id": "rt-1",
+      "met": true,
+      "evidence": "PASS — module re-enables cleanly after test files were added."
+    },
+    {
+      "id": "rt-2",
+      "met": true,
+      "evidence": "PASS — TESTS_FOUND:kernel=3,functional=2,unit=0,total=5. Correct distribution: 3 Kernel tests (ProjectEntityCrudTest, AccessControlTest, CronAndQueueTest) and 2 Functional tests (SettingsFormTest, DashboardTest)."
+    },
+    {
+      "id": "rt-3",
+      "met": true,
+      "evidence": "PASS — all 5 files have no PHP syntax errors."
+    },
+    {
+      "id": "rt-4",
+      "met": true,
+      "evidence": "PASS — PHPUnit discovers 27 tests across all files. All test methods across the 5 test classes are discoverable."
+    },
+    {
+      "id": "rt-5",
+      "met": false,
+      "evidence": "FAIL — Kernel tests error: 'field_item:list_string plugin does not exist'. Root cause: missing 'options' module in $modules array across all kernel test classes. The list_string field type (used by Project status, Task status, Task priority fields) requires the 'options' module, which was not included."
+    },
+    {
+      "id": "rt-6",
+      "met": false,
+      "evidence": "NOT RUN — depends on rt-5 passing. Since kernel tests fail to execute due to missing 'options' module, actual test pass/fail results could not be verified."
+    }
+  ]
+}

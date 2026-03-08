@@ -1,0 +1,62 @@
+{
+  "milestone": "v3.0",
+  "title": "Group AI Project Management — Plugin Integration Eval",
+  "methodology": "Headless claude -p (haiku-4-5) with/without --plugin-dir, graded by eval-grader (sonnet)",
+  "phases": {
+    "14": {
+      "name": "Module Foundation",
+      "skills": ["scaffold", "entities-fields", "routing-controllers", "forms-api", "config-storage"],
+      "without": "7/12 (58.3%)",
+      "with_v2": "10/12 (83.3%)",
+      "delta": "+25.0%",
+      "tier": "HIGH"
+    },
+    "15": {
+      "name": "Group & AI Integration",
+      "skills": ["access-security", "plugins-blocks"],
+      "without": "12/16 (75.0%)",
+      "with_v2": "15/16 (93.75%)",
+      "delta": "+18.75%",
+      "tier": "HIGH"
+    },
+    "16": {
+      "name": "Views, Theming & Processing",
+      "skills": ["views-dev", "theming", "batch-queue-cron"],
+      "without": "13/18 (72.2%)",
+      "with_v2": "16/18 (88.9%)",
+      "delta": "+16.7%",
+      "tier": "HIGH"
+    },
+    "17": {
+      "name": "Testing & Final Eval",
+      "skills": ["testing"],
+      "without": "12/14 (85.7%)",
+      "with_v2": "13/14 (92.9%)",
+      "delta": "+7.1%",
+      "tier": "MODERATE"
+    }
+  },
+  "aggregate": {
+    "without_total": "44/60 (73.3%)",
+    "with_v2_total": "54/60 (90.0%)",
+    "aggregate_delta": "+16.7%",
+    "tier": "HIGH"
+  },
+  "skill_iteration_summary": {
+    "total_patches": 10,
+    "effective_patches": 8,
+    "ineffective_patches": 2,
+    "key_patterns": [
+      "CRITICAL NEVER callouts most effective for preventing wrong patterns",
+      "Module-to-field-type mappings partially effective (datetime yes, options no)",
+      "Theming declaration-usage gap is a Haiku limitation not addressable by skills"
+    ]
+  },
+  "module_output": {
+    "total_files": 35,
+    "location": "modules/group_ai_pm/",
+    "entities": ["Project (6 fields)", "Task (10 fields)"],
+    "features": ["CRUD", "access control", "permissions", "settings form", "dashboard", "AI tools", "Views integration", "Twig templates", "CSS libraries", "cron/queue", "block plugin", "6 test files (46 tests)"]
+  },
+  "conclusion": "The Drupal Skills plugin produces measurably better code than baseline across all tested development domains. Aggregate delta of +16.7% (90.0% vs 73.3%) validates the plugin's value for real-world Drupal development. Skills are most impactful for non-obvious patterns (entity annotations, access control, cron/queue architecture) and less impactful where baseline Haiku already knows the patterns."
+}
