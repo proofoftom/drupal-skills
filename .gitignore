@@ -2,6 +2,9 @@
 Sipos D.*.md
 os-knowledge-garden/
 
+# GSD planning (development only)
+.planning/
+
 # Local dev environments
 .ddev/
 
