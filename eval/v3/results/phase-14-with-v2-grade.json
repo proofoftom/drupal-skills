@@ -1,0 +1,28 @@
+{
+  "variant": "with-plugin-v2-patched",
+  "phase": "14-module-foundation",
+  "model": "claude-haiku-4-5-20251001",
+  "timestamp": "2026-03-08",
+  "skill_patches": [
+    "entities-fields: added getEntityIds()+tableSort() section",
+    "entities-fields: added CRITICAL base_table prefix callout",
+    "routing-controllers: elevated _admin_route to CRITICAL callout",
+    "coding-standards: added DrupalPractice GlobalDrupal sniff"
+  ],
+  "expectations": [
+    {"text": "core_version_requirement: ^10 || ^11", "passed": true},
+    {"text": "Project-prefixed dependencies", "passed": true},
+    {"text": "No \\Drupal:: static calls in src/", "passed": false, "evidence": "3 files still use \\Drupal::service() for date.formatter"},
+    {"text": "Config schema with config_object", "passed": true},
+    {"text": "Config install defaults with all keys", "passed": true},
+    {"text": "_admin_route: TRUE on settings route", "passed": true},
+    {"text": "_form key on settings route", "passed": true},
+    {"text": "parent::buildForm() returned", "passed": true},
+    {"text": "parent::submitForm() called", "passed": true},
+    {"text": "getEntityIds() with tableSort()", "passed": true},
+    {"text": "Base table names prefixed group_ai_pm_*", "passed": true},
+    {"text": "owner = uid in entity_keys", "passed": false, "evidence": "Key present but EntityOwnerTrait not used"}
+  ],
+  "summary": {"passed": 10, "failed": 2, "total": 12, "pass_rate": 0.833},
+  "delta_vs_without": {"absolute": 3, "percentage": 25.0, "tier": "HIGH"}
+}

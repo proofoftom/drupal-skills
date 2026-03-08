@@ -1,0 +1,19 @@
+group_ai_pm.settings:
+  path: '/admin/config/group_ai_pm/settings'
+  defaults:
+    _form: '\Drupal\group_ai_pm\Form\SettingsForm'
+    _title: 'Group AI Project Management Settings'
+  requirements:
+    _permission: 'administer group_ai_pm'
+  options:
+    _admin_route: TRUE
+
+group_ai_pm.dashboard:
+  path: '/admin/content/project-dashboard'
+  defaults:
+    _controller: '\Drupal\group_ai_pm\Controller\DashboardController::content'
+    _title: 'Project Dashboard'
+  requirements:
+    _permission: 'access group_ai_pm dashboard'
+  options:
+    _admin_route: TRUE

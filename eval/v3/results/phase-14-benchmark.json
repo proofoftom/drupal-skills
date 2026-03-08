@@ -1,0 +1,54 @@
+{
+  "phase": "14-module-foundation",
+  "model": "claude-haiku-4-5-20251001",
+  "timestamp": "2026-03-08",
+  "skills_tested": [
+    "drupal-module-scaffold",
+    "drupal-entities-fields",
+    "drupal-routing-controllers",
+    "drupal-forms-api",
+    "drupal-config-storage"
+  ],
+  "without_plugin": {
+    "pass_rate": 0.583,
+    "passed": 7,
+    "failed": 5,
+    "total": 12
+  },
+  "with_plugin": {
+    "pass_rate": 0.667,
+    "passed": 8,
+    "failed": 4,
+    "total": 12
+  },
+  "delta": {
+    "absolute": 1,
+    "percentage": 8.3,
+    "tier": "LOW"
+  },
+  "per_expectation_comparison": [
+    {"id": 1, "skill": "scaffold", "without": true, "with": true, "discriminating": false},
+    {"id": 2, "skill": "scaffold", "without": true, "with": true, "discriminating": false},
+    {"id": 3, "skill": "routing-controllers", "without": false, "with": false, "discriminating": false},
+    {"id": 4, "skill": "config-storage", "without": true, "with": true, "discriminating": false},
+    {"id": 5, "skill": "config-storage", "without": true, "with": true, "discriminating": false},
+    {"id": 6, "skill": "routing-controllers", "without": false, "with": false, "discriminating": false},
+    {"id": 7, "skill": "routing-controllers", "without": true, "with": true, "discriminating": false},
+    {"id": 8, "skill": "forms-api", "without": true, "with": true, "discriminating": false},
+    {"id": 9, "skill": "forms-api", "without": true, "with": true, "discriminating": false},
+    {"id": 10, "skill": "entities-fields", "without": false, "with": false, "discriminating": false},
+    {"id": 11, "skill": "entities-fields", "without": false, "with": false, "discriminating": false},
+    {"id": 12, "skill": "entities-fields", "without": false, "with": true, "discriminating": true}
+  ],
+  "analysis": {
+    "discriminating_expectations": ["#12: owner = uid entity key mapping"],
+    "both_passed": ["#1 core_version_requirement", "#2 dependency prefixes", "#4 config_object schema", "#5 config install defaults", "#7 _form key", "#8 parent::buildForm()", "#9 parent::submitForm()"],
+    "both_failed": ["#3 no \\Drupal:: calls", "#6 _admin_route: TRUE", "#10 getEntityIds() tableSort", "#11 base table prefix"],
+    "qualitative_differences": [
+      "WITH variant used partial table prefix (group_ai_) vs bare names",
+      "WITH variant included .install and .services.yml files",
+      "WITH variant organized ListBuilder/ in subdirectory",
+      "WITH variant had MORE \\Drupal:: violations (5 vs 4)"
+    ]
+  }
+}

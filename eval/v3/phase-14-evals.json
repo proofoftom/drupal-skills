@@ -1,0 +1,31 @@
+{
+  "phase": "14-module-foundation",
+  "skills_tested": [
+    "drupal-module-scaffold",
+    "drupal-entities-fields",
+    "drupal-routing-controllers",
+    "drupal-forms-api",
+    "drupal-config-storage"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a Drupal module called `group_ai_pm` (Group AI Project Management). It needs two custom content entities:\n\n1. **Project** — fields: title (string), description (text_long), status (list_string with values: planning, active, review, completed), plus owner and timestamps\n2. **Task** — fields: title (string), description (text_long), status (list_string: todo, in_progress, review, done), priority (list_string: low, medium, high, critical), due_date (datetime, date only), assignee (entity_reference to user), project (entity_reference to the Project entity), plus owner and timestamps\n\nBoth entities need: admin CRUD routes via an entity route provider, entity forms with save messages and redirect to collection, and sortable admin list builders showing key columns.\n\nAdd a settings form (ConfigFormBase) at `/admin/config/group_ai_pm/settings` for: default_project_status, default_task_status, and ai_provider (textfield). Include config schema and default values.\n\nAdd a dashboard controller at `/admin/content/project-dashboard` that shows project count and recent projects.\n\nAdd permissions: 'administer group_ai_pm' and 'access group_ai_pm dashboard'.\n\nModule dependencies: drupal:datetime, group:group, ai:ai, ai_agents:ai_agents. Target Drupal 10 and 11 compatibility.",
+      "expected_output": "A complete Drupal module with two content entities, CRUD UI, sortable list builders, ConfigFormBase settings form with config schema, dashboard controller, and proper dependency injection throughout.",
+      "expectations": [
+        ".info.yml uses `core_version_requirement: ^10 || ^11` (NOT the deprecated `core: 8.x` format, and NOT just `^10` without D11 support — the caret-pipe syntax supporting BOTH major versions is the correct modern format)",
+        "Dependencies in .info.yml use project-prefixed format: `drupal:datetime`, `group:group`, `ai:ai`, `ai_agents:ai_agents` (NOT bare module names like `datetime` or `group` — Drupal's dependency resolver requires the project prefix for drupal.org mapping)",
+        "NO static `\\Drupal::` service calls in ANY PHP class under src/ (controllers, forms, list builders must inject dependencies via a static create() method + constructor — \\Drupal:: calls are only acceptable in .module procedural code)",
+        "Config schema file exists at `config/schema/group_ai_pm.schema.yml` with root entry using `type: config_object` (NOT `type: config_entity` — simple module settings use config_object; config_entity is for config entity types only)",
+        "Config install defaults file exists at `config/install/group_ai_pm.settings.yml` containing ALL keys the settings form saves (default_project_status, default_task_status, ai_provider) — without this file, reading config before the form is ever saved returns NULL",
+        "Settings form route in .routing.yml has `options:` section with `_admin_route: TRUE` (routes under /admin/ do NOT automatically use the admin theme — this option is required or the settings page renders with the frontend theme)",
+        "Settings form route uses `_form` key in defaults (NOT `_controller`) — using _controller for a form class bypasses Drupal's form builder, losing CSRF protection, validation lifecycle, and ajax support",
+        "ConfigFormBase buildForm() method returns the result of `parent::buildForm($form, $form_state)` (the parent adds the submit button and handles form structure — without this call, the form has no submit button)",
+        "ConfigFormBase submitForm() method calls `parent::submitForm($form, $form_state)` (the parent adds the standard 'The configuration options have been saved.' status message — without this, users get no save confirmation)",
+        "EntityListBuilder for at least one entity overrides `getEntityIds()` with `$query->tableSort($header)` or equivalent (the default getEntityIds() has no sort support — without this override, table column headers are not clickable for sorting)",
+        "Entity base table names are prefixed with the module name: `group_ai_pm_project` and `group_ai_pm_task` in the entity annotation/attribute (NOT bare `project` or `task` — database table names are global and short names risk collision with other modules)",
+        "Entity annotation/attribute entity_keys includes `\"owner\" = \"uid\"` when EntityOwnerTrait is used (the trait's ownerBaseFieldDefinitions() method requires this key mapping — without it, getOwner()/getOwnerId() throw fatal errors)"
+      ]
+    }
+  ]
+}

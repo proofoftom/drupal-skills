@@ -148,3 +148,30 @@ Critical when overriding parent methods with nullable parameters.
 - **No closing `?>` tag**
 - **Two blank lines** before class declaration (after use statements)
 - **Space after control keywords** -- `if (`, `foreach (`, `while (`
+
+## DrupalPractice service patterns
+
+The `DrupalPractice` phpcs standard flags service anti-patterns. The `GlobalDrupal` sniff fails any `\Drupal::` static call inside a class file under `src/`.
+
+> WRONG: `\Drupal::service()`, `\Drupal::entityTypeManager()`, or any `\Drupal::` call in controllers, forms, services, or list builders:
+> ```php
+> class MyController extends ControllerBase {
+>   public function build() {
+>     $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple();
+>   }
+> }
+> ```
+
+> RIGHT: Inject via `create()` + constructor. `\Drupal::` is ONLY valid in `.module` procedural files:
+> ```php
+> class MyController extends ControllerBase {
+>   public function __construct(
+>     protected EntityTypeManagerInterface $entityTypeManager,
+>   ) {}
+>   public static function create(ContainerInterface $container) {
+>     return new static($container->get('entity_type.manager'));
+>   }
+> }
+> ```
+
+This applies to ALL classes: controllers, forms, list builders, event subscribers, services. Any class that can implement `ContainerInjectionInterface` MUST inject dependencies.

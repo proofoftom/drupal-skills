@@ -1,0 +1,8 @@
+administer group_ai_pm:
+  title: 'Administer Group AI Project Management'
+  description: 'Full administrative access to Group AI Project Management configuration.'
+  restrict access: true
+
+access group_ai_pm dashboard:
+  title: 'Access Group AI Project Management dashboard'
+  description: 'View the Group AI Project Management dashboard.'

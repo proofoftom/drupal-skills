@@ -54,6 +54,10 @@ options:
   _admin_route: TRUE
 ```
 
+> **CRITICAL -- ALWAYS add `_admin_route: TRUE` to admin settings form routes:**
+> WRONG: Settings form at `/admin/config/...` without `options: { _admin_route: TRUE }` — the page renders with the frontend theme instead of the admin theme.
+> RIGHT: Add `options:` with `_admin_route: TRUE` to every admin-facing route. Routes under `/admin/` do NOT automatically inherit this option.
+
 ### Route with parameters
 
 Define parameters in the path with curly braces. Drupal can automatically upcast entity parameters.
@@ -477,30 +481,15 @@ Control who can access your routes using these requirement keys:
 | `_access` | Unrestricted access | `_access: 'TRUE'` |
 | `_custom_access` | Custom access check method | `_custom_access: '\Drupal\my_module\Access\MyAccess::access'` |
 
-Custom access checkers return `AccessResult` objects:
-
-```php
-use Drupal\Core\Access\AccessResult;
-
-public function access(AccountInterface $account) {
-  return AccessResult::allowedIf($account->hasPermission('my permission'));
-}
-```
-
-For detailed access control patterns, see **drupal-access-security** (if installed).
+Custom access checkers return `AccessResult` objects (`AccessResult::allowedIf(...)`, `AccessResult::forbidden()`). See **drupal-access-security** for detailed patterns.
 
 ## D10/D11 compatibility notes
 
-Routing, controllers, and services have no syntax differences between Drupal 10 and Drupal 11. The `.routing.yml`, `.services.yml`, and controller class patterns are identical across both versions.
-
-The only D11 change relevant to routing is in entity route providers -- entity type annotations are replaced by PHP attributes in D11.1+. This affects how entity routes are auto-generated but not how you write custom routes. See **drupal-entities-fields** (if installed) for D11 attribute syntax for entity types.
+Routing, controllers, and services have no syntax differences between D10 and D11. Entity route providers use PHP attributes in D11.1+ (see **drupal-entities-fields**).
 
 ## Cross-references
 
-See also: **drupal-module-scaffold** (if installed) for module creation, `.info.yml` setup, PSR-4 namespace structure, and `.module` file patterns. If not available, every module needs at minimum a `module_name.info.yml` with `name`, `description`, `type: module`, and `core_version_requirement: ^10 || ^11`.
-
-See also: **drupal-entities-fields** (if installed) for entity route providers that auto-generate CRUD routes, content and config entity types, and base field definitions. If not available, use `AdminHtmlRouteProvider` as the `route_provider` handler in your entity type definition to auto-generate standard entity routes.
-
-See also: **drupal-forms-api** (if installed) for Form API lifecycle and form routes using `_form` default. If not available, extend `FormBase` or `ConfigFormBase` for new forms, reference the form class in `.routing.yml` with `_form` instead of `_controller`.
-
-For menu links, local tasks, and local actions, see **references/menus.md** in this skill directory.
+- **drupal-module-scaffold**: module creation, .info.yml, PSR-4 structure
+- **drupal-entities-fields**: entity route providers, CRUD route auto-generation
+- **drupal-forms-api**: form lifecycle, `_form` route key, ConfigFormBase
+- Menu links, local tasks: see `references/menus.md` in this skill directory
