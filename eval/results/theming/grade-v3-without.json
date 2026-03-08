@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "template_preprocess_team_profile() function exists in the .module file using the correct naming convention -- the default preprocessor MUST use the template_preprocess_ prefix followed by the exact hook name (NOT module_preprocess_team_profile which is for module-specific overrides, NOT team_profiles_preprocess_team_profile)",
+      "passed": true,
+      "evidence": "team_profiles.module line 36: `function template_preprocess_team_profile(array &$variables)` — uses the correct template_preprocess_ prefix, not module_preprocess_ or team_profiles_preprocess_"
+    },
+    {
+      "text": "Preprocess function modifies $variables by reference and adds or modifies attributes or CSS classes based on the role value (NOT just passing variables through unchanged -- the preprocess must actively transform data for the template)",
+      "passed": true,
+      "evidence": "team_profiles.module lines 36-44: function signature uses `array &$variables` (by reference), and lines 40-43 add a CSS class to `$variables['attributes']['class']` based on the sanitized role value using Html::getClass()"
+    },
+    {
+      "text": "hook_theme_suggestions_team_profile() or hook_theme_suggestions_team_profile_alter() is implemented to provide dynamic template suggestions based on the role variable value",
+      "passed": true,
+      "evidence": "team_profiles.module lines 49-59: `function team_profiles_theme_suggestions_team_profile(array $variables)` is implemented, reads `$variables['role']`, and returns suggestions array based on the role value"
+    },
+    {
+      "text": "Template suggestions use the double-underscore pattern: team_profile__rolename (NOT hyphen separator, NOT single underscore -- Drupal maps double underscores to directory separators for template discovery and single underscores break the suggestion system)",
+      "passed": true,
+      "evidence": "team_profiles.module line 55: `$suggestions[] = 'team_profile__' . $sanitized_role;` — uses double underscore separator correctly"
+    },
+    {
+      "text": "hook_theme() declares ALL template variables (name, role, bio) with default values in the 'variables' key (undeclared variables are undefined in Twig causing silent rendering failures -- the variables array IS the template's API contract)",
+      "passed": true,
+      "evidence": "team_profiles.module lines 11-23: hook_theme() declares 'variables' key with 'name' => '', 'role' => '', 'bio' => '' — all three variables declared with empty string defaults"
+    },
+    {
+      "text": "Template filename uses hyphens: team-profile.html.twig (NOT underscores -- Drupal maps underscores in hook names to hyphens in template filenames and will not find the template if this convention is wrong)",
+      "passed": true,
+      "evidence": "Template file exists at templates/team-profile.html.twig — uses hyphens, not underscores"
+    },
+    {
+      "text": "The module enables successfully: ddev drush en team_profiles returns exit code 0",
+      "passed": true,
+      "evidence": "Command `ddev drush en team_profiles -y` returned: '[notice] Already installed: team_profiles' with EXIT_CODE: 0 — module was already enabled successfully"
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to /team -- verify that team member profiles render with visible name and role content (not raw HTML, not PHP errors, not a blank page) (via eval-browser)",
+      "passed": true,
+      "evidence": "ddev exec curl to /team page returned rendered HTML with visible profile content: 'Alice Chen', 'Bob Johnson', 'Carol Martinez' names and roles (lead, developer, designer) visible in div.team-profile markup with no PHP errors or blank page"
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": true,
+      "evidence": "`ddev exec vendor/bin/phpcs --standard=Drupal,DrupalPractice web/modules/custom/team_profiles/` produced no output and exited with code 0 — no errors or warnings"
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0
+  }
+}

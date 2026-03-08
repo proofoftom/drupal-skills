@@ -1,0 +1,30 @@
+{
+  "skill": "drupal-batch-queue-cron",
+  "date": "2026-03-08",
+  "version": "v3",
+  "changes": [
+    "SKILL.md patched with try/catch SuspendQueueException in processItem() section (12-01)",
+    "Both variants now load coding-standards skill as baseline (12-03)",
+    "Browser step dropped from eval pipeline (zero discriminatory value)"
+  ],
+  "with_skill": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0,
+    "failed_expectations": []
+  },
+  "without_skill": {
+    "passed": 7,
+    "failed": 1,
+    "total": 8,
+    "pass_rate": 0.875,
+    "failed_expectations": [
+      "processItem() try/catch does not distinguish retryable vs permanent failures -- catch block re-throws generic Exception without using SuspendQueueException or RequeueException"
+    ]
+  },
+  "delta": 12.5,
+  "previous_delta": -12.5,
+  "delta_change": 25.0,
+  "notes": "Flipped from negative to positive. SKILL.md patch showing SuspendQueueException in processItem() directly taught the WITH variant the try/catch distinction pattern. Coding-standards baseline fixed phpcs docblock errors that previously hurt the WITH variant. WITHOUT variant produces generic re-throw without error type distinction."
+}

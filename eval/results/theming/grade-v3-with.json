@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "template_preprocess_team_profile() function exists in the .module file using the correct naming convention -- the default preprocessor MUST use the template_preprocess_ prefix followed by the exact hook name (NOT module_preprocess_team_profile which is for module-specific overrides, NOT team_profiles_preprocess_team_profile)",
+      "passed": true,
+      "evidence": "team_profiles.module line 28: 'function template_preprocess_team_profile(&$variables)' — uses correct template_preprocess_ prefix followed by exact hook name team_profile"
+    },
+    {
+      "text": "Preprocess function modifies $variables by reference and adds or modifies attributes or CSS classes based on the role value (NOT just passing variables through unchanged -- the preprocess must actively transform data for the template)",
+      "passed": true,
+      "evidence": "team_profiles.module lines 29-32: function checks $variables['role'], builds $role_class = 'team-profile--' . str_replace('_', '-', $variables['role']), then appends it to $variables['attributes']['class'][] — actively transforms role into a CSS class on the element's attributes"
+    },
+    {
+      "text": "hook_theme_suggestions_team_profile() or hook_theme_suggestions_team_profile_alter() is implemented to provide dynamic template suggestions based on the role variable value",
+      "passed": true,
+      "evidence": "team_profiles.module lines 38-44: 'function team_profiles_theme_suggestions_team_profile($variables)' is implemented, checks $variables['role'] and returns suggestions array"
+    },
+    {
+      "text": "Template suggestions use the double-underscore pattern: team_profile__rolename (NOT hyphen separator, NOT single underscore -- Drupal maps double underscores to directory separators for template discovery and single underscores break the suggestion system)",
+      "passed": true,
+      "evidence": "team_profiles.module line 41: '$suggestions[] = 'team_profile__' . $variables['role'];' — uses double-underscore separator (team_profile__ prefix) as required"
+    },
+    {
+      "text": "hook_theme() declares ALL template variables (name, role, bio) with default values in the 'variables' key (undeclared variables are undefined in Twig causing silent rendering failures -- the variables array IS the template's API contract)",
+      "passed": true,
+      "evidence": "team_profiles.module lines 13-19: hook_theme() returns 'team_profile' entry with 'variables' key containing 'name' => NULL, 'role' => NULL, 'bio' => NULL — all three declared with defaults"
+    },
+    {
+      "text": "Template filename uses hyphens: team-profile.html.twig (NOT underscores -- Drupal maps underscores in hook names to hyphens in template filenames and will not find the template if this convention is wrong)",
+      "passed": true,
+      "evidence": "ls /tmp/d10-theming-with/web/modules/custom/team_profiles/templates/ confirms file is named 'team-profile.html.twig' — correct hyphen convention"
+    },
+    {
+      "text": "The module enables successfully: ddev drush en team_profiles returns exit code 0",
+      "passed": true,
+      "evidence": "'cd /tmp/d10-theming-with && ddev drush en team_profiles -y' output: '[notice] Already installed: team_profiles' — module was enabled successfully with exit code 0"
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to /team -- verify that team member profiles render with visible name and role content (not raw HTML, not PHP errors, not a blank page) (via eval-browser)",
+      "passed": true,
+      "evidence": "ddev exec curl http://localhost/team returned HTTP 200 with rendered profile HTML including: 'Alice Johnson' (name), 'Lead' (role), 'Bob Smith', 'Developer', 'Carol Williams', 'David Brown', 'Designer' — all four profiles visible with correct name and role content, no PHP errors, no blank page"
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": true,
+      "evidence": "'ddev exec phpcs --standard=Drupal,DrupalPractice /var/www/html/web/modules/custom/team_profiles/' exits 0 with no output — no errors found. A WARNING (not error) about open page callback appeared only when YAML files were explicitly added via --extensions flag, which is not part of the standard phpcs invocation"
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0
+  }
+}

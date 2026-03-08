@@ -1,0 +1,28 @@
+{
+  "skill": "drupal-theming",
+  "date": "2026-03-08",
+  "version": "v3",
+  "changes": [
+    "Eval rewritten to test template_preprocess_HOOK naming and hook_theme_suggestions_HOOK with double-underscore pattern (12-02)",
+    "Both variants now load coding-standards skill as baseline (12-03)",
+    "Browser step dropped from eval pipeline (zero discriminatory value)"
+  ],
+  "with_skill": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0,
+    "failed_expectations": []
+  },
+  "without_skill": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0,
+    "failed_expectations": []
+  },
+  "delta": 0.0,
+  "previous_delta": 0.0,
+  "delta_change": 0.0,
+  "notes": "Still neutral despite harder eval targeting template_preprocess_HOOK naming and theme suggestions. Both variants correctly use template_preprocess_ prefix (not module_preprocess_), implement hook_theme_suggestions with double-underscore pattern, declare all template variables, and pass phpcs. Haiku's baseline Drupal theming knowledge includes these patterns. The skill adds no measurable delta for theming."
+}

@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "Content entity annotation/attribute includes bundle_entity_type key pointing to the config entity type ID (e.g., 'project_item_type') -- without this key Drupal does not know which config entity provides bundles for this content entity",
+      "passed": true,
+      "evidence": "ProjectItem.php line 16: `bundle_entity_type = \"project_item_type\"` present in @ContentEntityType annotation. Runtime confirms: `bundle_entity_type: 'project_item_type'`"
+    },
+    {
+      "text": "Config entity annotation/attribute includes bundle_of key pointing to the content entity type ID (e.g., 'project_item') -- this creates the reverse relationship and without it the config entity is not recognized as a bundle provider",
+      "passed": false,
+      "evidence": "ProjectItemType.php @ConfigEntityType annotation (lines 11-43) does NOT contain bundle_of key. Runtime confirms: `ddev drush php-eval` output shows `bundle_of: NULL`"
+    },
+    {
+      "text": "Content entity has 'bundle' key in entity_keys annotation mapping to a field (without this Drupal cannot determine which bundle an entity instance belongs to, causing fatal errors on entity creation)",
+      "passed": true,
+      "evidence": "ProjectItem.php line 37: `\"bundle\" = \"bundle\"` in entity_keys annotation. Runtime confirms: `entity_keys[bundle]: 'bundle'`"
+    },
+    {
+      "text": "Config entity class exists as a separate file from the content entity class -- one entity per file, config entity extends ConfigEntityBase or ConfigEntityBundleBase (NOT mixing content and config entity definitions in one class file)",
+      "passed": true,
+      "evidence": "Two separate files exist: src/Entity/ProjectItem.php (extends ContentEntityBase) and src/Entity/ProjectItemType.php (extends ConfigEntityBase line 5, 45). Each file contains only one entity class."
+    },
+    {
+      "text": "Content entity uses EntityChangedTrait AND defines a 'changed' base field in baseFieldDefinitions() (the trait provides getChangedTime/setChangedTime methods but requires the base field to exist in the database -- having the trait without the field or the field without the trait is an incomplete pattern)",
+      "passed": true,
+      "evidence": "ProjectItem.php line 8: `use Drupal\\Core\\Entity\\EntityChangedTrait;`, line 52: `use EntityChangedTrait;`, lines 218-220: `$fields['changed'] = BaseFieldDefinition::create('changed')`. Runtime confirms changed field exists."
+    },
+    {
+      "text": "Content entity baseFieldDefinitions() calls parent::baseFieldDefinitions($entity_type) and uses the result (MUST call parent or core base fields like id, uuid, and langcode are lost, causing entity creation to fail with missing primary key errors)",
+      "passed": true,
+      "evidence": "ProjectItem.php line 155-156: `public static function baseFieldDefinitions(EntityTypeInterface $entity_type) { $fields = parent::baseFieldDefinitions($entity_type);` — parent is called and result stored in $fields which is returned at line 222."
+    },
+    {
+      "text": "The module enables successfully: ddev drush en project_tracker returns exit code 0",
+      "passed": true,
+      "evidence": "Command `ddev drush en project_tracker -y` output: `[notice] Already installed: project_tracker` with EXIT:0"
+    },
+    {
+      "text": "Log in as admin via drush uli, navigate to the project item type admin page (e.g., /admin/structure/project_item_type or similar collection route) -- verify the bundle management UI loads without errors (via eval-browser)",
+      "passed": true,
+      "evidence": "Route `entity.project_item_type.collection` exists at path `/admin/structure/project-item-types` (confirmed via router). `ddev drush php-eval` rendering the list builder returns 'Bundle management UI renders successfully' without errors."
+    },
+    {
+      "text": "Generated module code passes phpcs --standard=Drupal,DrupalPractice static analysis without errors",
+      "passed": false,
+      "evidence": "phpcs exits with code 2 (failure). Errors found: ProjectItemType.php lines 47-49: 3 errors 'Missing member variable doc comment'; ProjectItemTypeForm.php line 77: 1 error 'Expected newline after closing brace'; ProjectItemForm.php line 34: 1 error 'Expected newline after closing brace'. Total: 5 errors across 3 files."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 2,
+    "total": 9,
+    "pass_rate": 0.78
+  }
+}

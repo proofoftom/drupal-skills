@@ -1,0 +1,34 @@
+{
+  "skill": "drupal-database-api",
+  "date": "2026-03-08",
+  "version": "v3",
+  "changes": [
+    "Eval prompt updated with 'alterable by other modules using appropriate query tags' to motivate addTag() (12-01)",
+    "Both variants now load coding-standards skill as baseline (12-03)",
+    "Browser step dropped from eval pipeline (zero discriminatory value)"
+  ],
+  "with_skill": {
+    "passed": 7,
+    "failed": 2,
+    "total": 9,
+    "pass_rate": 0.78,
+    "failed_expectations": [
+      "One select query uses raw SQL via ->query('SELECT COUNT(*)...') instead of dynamic query builder",
+      "phpcs warning: \\Drupal::time() static call in service class (DrupalPractice warning causes non-zero exit)"
+    ]
+  },
+  "without_skill": {
+    "passed": 7,
+    "failed": 2,
+    "total": 9,
+    "pass_rate": 0.78,
+    "failed_expectations": [
+      "HTTP 500 on analytics report page -- orderBy('COUNT(va.id)') raw expression causes SQL error instead of using alias",
+      "phpcs warning: unused use statement for Drupal\\Core\\Url"
+    ]
+  },
+  "delta": 0.0,
+  "previous_delta": 0.0,
+  "delta_change": 0.0,
+  "notes": "Still neutral. Both variants score 7/9 but fail on DIFFERENT expectations: WITH variant uses a raw query for one select and has a DrupalPractice warning; WITHOUT variant has a broken report page (SQL error) and unused import. The addTag() prompt fix worked (both variants now use addTag), but new failure modes emerged. The skill provides value on different axes (functional correctness vs code quality) that cancel out numerically."
+}
