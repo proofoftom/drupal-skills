@@ -97,6 +97,54 @@
 
 ---
 
+## Milestone: v3.0 -- Group AI Project Management
+
+**Shipped:** 2026-03-08
+**Phases:** 5 (13-17) | **Eval rounds:** 4 | **Sessions:** ~6
+
+### What Was Built
+- Plugin packaging: `.claude-plugin/plugin.json`, auto-trigger validation (12/12 skills triggered from natural prompts)
+- 39-file Drupal contrib module (`group_ai_pm`) built entirely by headless Haiku -- entities, forms, access control, views, theming, cron/queue, tests, AI integration sub-module
+- 4-phase integration eval: each phase measured plugin delta on a different skill domain
+- 10 skill patches, 8 effective, producing +16.7% aggregate delta (HIGH tier)
+- Production polish: 2 headless Haiku passes, 0 phpcs errors, UAT passed
+
+### What Worked
+- Eval-driven development: each phase was an eval round, not a build task. The module emerged as a byproduct of measuring skill effectiveness. Honest measurement by design.
+- Parallel headless runs: both with/without variants launched in background simultaneously, assertions drafted while waiting. Efficient use of time.
+- Two-tier assertion design: static assertions (targeting non-obvious SKILL.md patterns, designed before runs) + runtime assertions (drush-based functional checks, drafted during runs). Static measured skill value; runtime caught functional bugs.
+- Cumulative build: Phase 14 from scratch, 15+ extended previous output. Both variants got same starting code -- measured "can skills help extend existing code."
+- Plugin auto-triggering: `--plugin-dir ./` meant skills activated from natural prompts without explicit "read SKILL.md" instructions. Realistic product experience.
+- Skill iteration still works in integration context: patching access-security with `_csrf_token` CRITICAL callout fixed a shared failure in Phase 15 (+18.75% delta).
+
+### What Was Inefficient
+- Phase 14 initially run via GSD executor agents -- reverted when we realized agent harness confounds the A/B comparison. Same lesson as v2.0 Phase 10, relearned the hard way.
+- ddev template setup was manual and error-prone: copying module files, managing ddev instance names, ensuring correct module enable order. Could be scripted better.
+- Phase 16 runtime assertion design for cron/queue was tricky: initially checked queue count (wrong -- QueueWorker processes during same cron run), had to redesign to check watchdog instead.
+- Two skill patches were ineffective: theming #theme/#attached (Haiku declaration-usage gap) and module-to-field-type mapping (options module still missing). Diminishing returns on skill patching for model-level limitations.
+
+### Patterns Established
+- Plugin-based eval: `--plugin-dir ./` replaces explicit "read SKILL.md" for realistic testing
+- Cumulative module build across eval phases (not isolated per-skill evals)
+- Promote with-plugin output to both canonical source AND ddev template for next phase
+- `ddev template` in repo root: pre-configured Drupal 10 + contrib dependencies for fast eval setup
+- Runtime assertions via `ddev drush php-eval` for entity CRUD, permission checks, service resolution
+
+### Key Lessons
+1. **Don't confuse building with evaluating.** GSD executor agents build great code but aren't a valid A/B test. Eval phases must use the headless pipeline.
+2. **Skills work in integration context.** Individual skill deltas (v2.0) predicted integration deltas (v3.0). The +16.7% aggregate closely matches the v2.0 portfolio average (+14.4%).
+3. **Haiku has a "declaration-usage gap."** It builds infrastructure (hook_theme, .libraries.yml) but doesn't wire it to output (#theme, #attached in render arrays). CRITICAL callouts don't fix this -- it's a model limitation.
+4. **8/10 skill patches effective** means the iteration loop works, but expect ~20% of patches to hit model-level ceilings.
+5. **Runtime assertions catch things static can't.** Phase 15 WITHOUT variant had a fatal CRUD bug that looked fine in static code analysis.
+6. **Plugin auto-trigger validation matters.** Confirming 12/12 skills trigger from natural prompts means the plugin works as a product, not just as a research artifact.
+
+### Cost Observations
+- Model mix: ~60% Opus (orchestration, assertion design), ~30% Haiku (code gen), ~10% Sonnet (grading)
+- Sessions: ~6 sessions over 2 days
+- Notable: Eval-driven workflow was faster than v2.0's phase-heavy GSD cadence -- less planning overhead, more direct measurement
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -105,10 +153,23 @@
 |-----------|----------|--------|------------|
 | v1.0 | ~8 | 7 | Established skill authoring + eval pipeline |
 | v2.0 | ~11 | 5 | Headless pipeline, coding-standards baseline, tier classifications |
+| v3.0 | ~6 | 5 | Plugin packaging, eval-driven integration build, cumulative module |
+
+### Eval Results Trajectory
+
+| Milestone | Methodology | Key Metric | Result |
+|-----------|-------------|------------|--------|
+| v1.0 | Agent-based, 4 skills | Proof of concept | caching +75%, scaffold +43% |
+| v2.0 | Headless, 13 skills | Portfolio delta | +14.4% avg, 9/13 positive |
+| v3.0 | Plugin, 4-phase integration | Aggregate delta | +16.7% (73.3% -> 90.0%) |
 
 ### Top Lessons (Verified Across Milestones)
 
-1. Eval methodology matters more than skill content -- wrong assertions produce meaningless data (v1.0 Phase 7, v2.0 Phase 10-11)
-2. Skills add value only where model training data has gaps; standard patterns are already known (v1.0 0% delta on 9/13, v2.0 confirmed 4 neutral)
-3. Agent scaffolding confounds eval results -- implicit knowledge in system prompts inflates baselines (v1.0 discovered, v2.0 confirmed and fixed)
-4. Content placement within skill files matters as much as content presence (v2.0 CRITICAL NEVER callout experiment)
+1. **Eval methodology matters more than skill content.** Wrong assertions produce meaningless data (v1.0 Phase 7, v2.0 Phase 10-11, v3.0 Phase 14 executor revert).
+2. **Skills add value only where model training data has gaps.** Standard patterns are already known (v1.0 0% delta on 9/13, v2.0 confirmed 4 neutral, v3.0 theming still neutral).
+3. **Agent scaffolding confounds eval results.** Implicit knowledge in system prompts inflates baselines (v1.0 discovered, v2.0 confirmed, v3.0 re-learned with executor agents).
+4. **Content placement within skill files matters as much as content presence.** CRITICAL NEVER callouts early in the file produce the biggest swings (v2.0 +44.4% routing-controllers, v3.0 _csrf_token fix).
+5. **Individual skill deltas predict integration deltas.** v2.0 per-skill benchmarks (+14.4%) closely predicted v3.0 real-world integration performance (+16.7%).
+6. **Skills are checklists, not textbooks.** They don't teach the model new information -- they change its priorities. Haiku "knows" DI but doesn't prioritize it without a CRITICAL NEVER callout.
+7. **The iteration loop works but has a ceiling.** 8/10 patches effective in v3.0, but theming declaration-usage gap and module dependency resolution are model-level limitations no skill can fix.
+8. **Headless pipeline is the only valid eval approach.** Confirmed three times across three milestones. Any agent-mediated code generation introduces uncontrolled variables.

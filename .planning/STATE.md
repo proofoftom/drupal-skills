@@ -54,6 +54,6 @@ Progress: [░░░░░░░░░░] 0% (v4.0)
 ## Session Continuity
 
 Last session: 2026-03-08
-Stopped at: Defining v4.0 requirements
-Resume file: n/a
-Resume action: Continue requirements gathering and roadmap creation
+Stopped at: Research complete, ready for requirements + roadmap
+Resume file: .planning/.continue-here.md
+Resume action: Resume new-milestone workflow at Step 9 (Define Requirements)

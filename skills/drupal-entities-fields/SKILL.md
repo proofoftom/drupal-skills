@@ -169,9 +169,9 @@ class Product extends ContentEntityBase implements ProductInterface {
 > WRONG: Using `@Translation("Product")` inside `#[ContentEntityType(...)]` attribute syntax. The `@Translation` annotation helper does not work in PHP attributes.
 > RIGHT: Use `new TranslatableMarkup('Product')` in attributes. Import `Drupal\Core\StringTranslation\TranslatableMarkup` at the top of the file.
 
-> **CRITICAL -- ALWAYS prefix `base_table` with your module name:**
-> WRONG: `base_table = "product"` or `base_table = "task"` — bare table names are global in Drupal's database and WILL collide with other modules.
-> RIGHT: `base_table = "my_module_product"` — prefix with the full module machine name (e.g., `group_ai_pm_project`, `group_ai_pm_task`).
+> **CRITICAL -- Prefix `base_table` with your module name for custom entities:**
+> WRONG: `base_table = "product"` or `base_table = "task"` — bare table names risk collisions with other contrib/custom modules.
+> RIGHT: `base_table = "my_module_product"` — prefix with the full module machine name (e.g., `group_ai_pm_project`, `group_ai_pm_task`). Core entities like Node use bare names by convention, but custom modules should always namespace.
 
 ## Config entity type definition
 
