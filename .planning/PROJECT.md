@@ -28,7 +28,7 @@ Claude can generate correct, production-ready Drupal module code across all majo
 
 ### Active
 
-(None -- define with `/gsd:new-milestone`)
+(Defined in REQUIREMENTS.md for v3.0 -- pending creation)
 
 ### Out of Scope
 
@@ -37,7 +37,7 @@ Claude can generate correct, production-ready Drupal module code across all majo
 - Real-time book updates -- snapshot of 4th edition content
 - Migration API skill -- not in source book
 - Contrib module patterns -- stale quickly, not in book's scope
-- Description/trigger optimization -- deferred until needed
+- Description/trigger optimization -- active in v3.0 (run if skills don't auto-trigger)
 - Multi-run variance analysis (3+ runs per config) -- single-run sufficient for tier classification
 
 ## Context
@@ -95,5 +95,22 @@ Claude can generate correct, production-ready Drupal module code across all majo
 | Single-run eval design | Sufficient for tier classification; variance analysis deferred | ⚠️ Revisit if signal unclear |
 | Neutral skills accepted | 4 skills cover baseline Haiku knowledge -- no iteration needed | ✓ Good -- honest classification |
 
+## Current Milestone: v3.0 Group AI Project Management
+
+**Goal:** Build a real Drupal contrib module (Group-based project management with Drupal AI/AI Agents integration) as the ultimate integration eval — validating that all 14 skills auto-trigger and produce better code than baseline, in a realistic development workflow.
+
+**Target features:**
+- Plugin packaging: restructure repo as Claude Code plugin with auto-triggering skill descriptions
+- Description optimization: run skill-creator optimization loop if skills don't auto-trigger from natural prompts
+- Group-based project management contrib module with AI/AI Agents integration
+- Phase-level eval: without-plugin baseline first, then build real version with plugin installed
+- Each phase isolates a skill domain (entities, routing, forms, caching, etc.)
+- Real contribution to Group module ecosystem
+
+**Eval methodology shift from v2.0:**
+- v2.0: headless `claude -p` with explicit "read SKILL.md" → measures skill content value
+- v3.0: plugin installed, skills must auto-trigger from natural prompts → measures full product experience
+- Without-plugin baseline generated first per phase, then real module built with plugin
+
 ---
-*Last updated: 2026-03-08 after v2.0 milestone*
+*Last updated: 2026-03-08 after v3.0 milestone started*
