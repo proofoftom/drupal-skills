@@ -87,8 +87,8 @@ Full details: milestones/v4.0-ROADMAP.md
   4. Eval-author output enforces assertion category distribution (60% differentiating, 20% wiring, max 20% structural) with explicit tautology rejection
 **Plans:** 2/2 plans complete
 Plans:
-- [ ] 22-01-PLAN.md -- Author Drush usage skill and eval assertions
-- [ ] 22-02-PLAN.md -- Create eval-author Opus subagent
+- [x] 22-01-PLAN.md -- Author Drush usage skill and eval assertions
+- [x] 22-02-PLAN.md -- Create eval-author Opus subagent
 
 ### Phase 23: Skill Gap Fixes + Eval-Author Validation
 **Goal**: Three skill gaps are closed and the eval-author agent is validated against known-good evals before relying on it for new phases
@@ -99,7 +99,10 @@ Plans:
   2. entities-fields SKILL.md includes bundle_of pattern with hook_update_N() for schema changes
   3. caching SKILL.md includes lazy_builder pattern and CacheableMetadata bubbling examples
   4. forms-api SKILL.md includes concrete #ajax patterns (callback, wrapper, AjaxResponse) within the 500-line budget
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 23-01-PLAN.md -- Patch 3 skill gaps (entities-fields bundle_of, caching CacheableMetadata bubbling, forms-api #ajax)
+- [ ] 23-02-PLAN.md -- Validate eval-author agent against Phase 18 gold-standard
 
 ### Phase 24: AI Task Service + NL Task Creation
 **Goal**: Users can create tasks from natural language input via both the REST API and AI agent tools
@@ -155,8 +158,8 @@ Phases execute in numeric order: 22 -> 23 -> 24 -> 25 -> 26 -> 27
 | 8-12 | v2.0 | 23/23 | Shipped | 2026-03-08 |
 | 13-17 | v3.0 | Complete | Shipped | 2026-03-08 |
 | 18-21 | v4.0 | 10/10 | Shipped | 2026-03-09 |
-| 22. Drush Skill + Eval-Author Agent | 2/2 | Complete    | 2026-03-09 | - |
-| 23. Skill Gap Fixes + Eval-Author Validation | v5.0 | 0/TBD | Not started | - |
+| 22. Drush Skill + Eval-Author Agent | v5.0 | 2/2 | Complete | 2026-03-09 |
+| 23. Skill Gap Fixes + Eval-Author Validation | v5.0 | 0/2 | Not started | - |
 | 24. AI Task Service + NL Task Creation | v5.0 | 0/TBD | Not started | - |
 | 25. Batch AI Operations + Agent Tools | v5.0 | 0/TBD | Not started | - |
 | 26. Task History Analytics | v5.0 | 0/TBD | Not started | - |
