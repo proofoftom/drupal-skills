@@ -1,0 +1,117 @@
+{
+  "phase": "20-dashboard-list-enhancements",
+  "runtime_assertions": [
+    {
+      "id": "rt-1",
+      "name": "Module still installs cleanly after changes",
+      "command": "ddev drush cr && ddev drush pm:list --status=enabled 2>&1 | grep -q group_ai_pm && echo PASS || echo FAIL",
+      "expected": "PASS",
+      "rationale": "Baseline sanity — any PHP syntax error or broken service definition prevents module from loading"
+    },
+    {
+      "id": "rt-2",
+      "name": "Dashboard route exists and returns 200",
+      "command": "ddev drush php-eval \"$route = \\Drupal::service('router.route_provider')->getRouteByName('group_ai_pm.dashboard'); echo $route ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Dashboard route must still be registered after controller rewrite"
+    },
+    {
+      "id": "rt-3",
+      "name": "TaskStatusForm route exists with _form key",
+      "command": "ddev drush php-eval \"$route = \\Drupal::service('router.route_provider')->getRouteByName('group_ai_pm.task_overview'); $defaults = $route->getDefaults(); echo isset($defaults['_form']) ? 'PASS' : 'FAIL';\" 2>/dev/null || echo 'FAIL'",
+      "expected": "PASS",
+      "rationale": "Task overview route must use _form key for form processing pipeline"
+    },
+    {
+      "id": "rt-4",
+      "name": "TaskStatusForm route has _admin_route TRUE",
+      "command": "ddev drush php-eval \"$route = \\Drupal::service('router.route_provider')->getRouteByName('group_ai_pm.task_overview'); echo $route->getOption('_admin_route') ? 'PASS' : 'FAIL';\" 2>/dev/null || echo 'FAIL'",
+      "expected": "PASS",
+      "rationale": "Task overview route must render with admin theme"
+    },
+    {
+      "id": "rt-5",
+      "name": "Dashboard theme hook is registered",
+      "command": "ddev drush php-eval \"$hooks = \\Drupal::service('theme.registry')->get(); $found = FALSE; foreach (array_keys($hooks) as $hook) { if (strpos($hook, 'group_ai_pm_dashboard') !== FALSE || strpos($hook, 'dashboard') !== FALSE && strpos($hook, 'group_ai_pm') !== FALSE) { $found = TRUE; break; } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Dashboard theme hook must be registered for #theme render array to work"
+    },
+    {
+      "id": "rt-6",
+      "name": "Dashboard library is defined",
+      "command": "ddev drush php-eval \"$lib = \\Drupal::service('library.discovery')->getLibraryByName('group_ai_pm', 'dashboard'); echo $lib ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Dashboard CSS library must be discoverable by Drupal"
+    },
+    {
+      "id": "rt-7",
+      "name": "Dashboard template file exists",
+      "command": "find /tmp/phase20-VARIANT/web/modules/custom/group_ai_pm/templates/ -name '*dashboard*' -name '*.html.twig' | head -1 | grep -q . && echo PASS || echo FAIL",
+      "expected": "PASS",
+      "rationale": "Twig template file must exist for theme hook rendering"
+    },
+    {
+      "id": "rt-8",
+      "name": "Dashboard CSS file exists",
+      "command": "find /tmp/phase20-VARIANT/web/modules/custom/group_ai_pm/css/ -name '*dashboard*' -name '*.css' | head -1 | grep -q . && echo PASS || echo FAIL",
+      "expected": "PASS",
+      "rationale": "Dashboard CSS file must exist for library attachment"
+    },
+    {
+      "id": "rt-9",
+      "name": "TaskStatusForm class exists and extends FormBase",
+      "command": "ddev drush php-eval \"$rc = new \\ReflectionClass('\\\\Drupal\\\\group_ai_pm\\\\Form\\\\TaskStatusForm'); echo $rc->isSubclassOf('\\\\Drupal\\\\Core\\\\Form\\\\FormBase') ? 'PASS' : 'FAIL';\" 2>/dev/null || echo 'FAIL'",
+      "expected": "PASS",
+      "rationale": "TaskStatusForm must extend FormBase for AJAX form processing"
+    },
+    {
+      "id": "rt-10",
+      "name": "TaskStatusForm has AJAX callback method",
+      "command": "ddev drush php-eval \"$rc = new \\ReflectionClass('\\\\Drupal\\\\group_ai_pm\\\\Form\\\\TaskStatusForm'); $methods = $rc->getMethods(); $found = FALSE; foreach ($methods as $m) { if (strpos(strtolower($m->getName()), 'callback') !== FALSE || strpos(strtolower($m->getName()), 'status') !== FALSE && strpos(strtolower($m->getName()), 'update') !== FALSE) { $found = TRUE; break; } } echo $found ? 'PASS' : 'FAIL';\" 2>/dev/null || echo 'FAIL'",
+      "expected": "PASS",
+      "rationale": "TaskStatusForm must have an AJAX callback method for status updates"
+    },
+    {
+      "id": "rt-11",
+      "name": "Project entity can still be created",
+      "command": "ddev drush php-eval \"$project = \\Drupal::entityTypeManager()->getStorage('project')->create(['title' => 'Test Project P20', 'status' => 'active']); $project->save(); echo $project->id() ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Baseline sanity — entity creation still works after module changes"
+    },
+    {
+      "id": "rt-12",
+      "name": "Task entity can still be created",
+      "command": "ddev drush php-eval \"$projects = \\Drupal::entityTypeManager()->getStorage('project')->loadMultiple(); $pid = array_key_first($projects); $task = \\Drupal::entityTypeManager()->getStorage('task')->create(['title' => 'Test Task P20', 'status' => 'todo', 'priority' => 'medium', 'project' => $pid]); $task->save(); echo $task->id() ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Baseline sanity — task creation with project reference still works"
+    },
+    {
+      "id": "rt-13",
+      "name": "DashboardController class still has DI create() method",
+      "command": "ddev drush php-eval \"$rc = new \\ReflectionClass('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\DashboardController'); echo $rc->hasMethod('create') && $rc->getMethod('create')->isStatic() ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "DashboardController must maintain DI pattern after rewrite"
+    },
+    {
+      "id": "rt-14",
+      "name": "DashboardController content() executes without exception (empty state)",
+      "command": "ddev drush php-eval \"$controller = \\Drupal::classResolver()->getInstanceFromDefinition('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\DashboardController'); try { $result = $controller->content(); echo is_array($result) ? 'PASS' : 'FAIL'; } catch (\\Exception $e) { echo 'FAIL: ' . $e->getMessage(); }\"",
+      "expected": "PASS",
+      "rationale": "Executes the dashboard controller empty-state code path — catches non-existent route references in Url::fromRoute() (e.g., 'group_ai_pm.project.add' vs 'entity.project.add_form') that only crash at render time"
+    },
+    {
+      "id": "rt-15",
+      "name": "DashboardController content() executes with projects present",
+      "command": "ddev drush php-eval \"$project = \\Drupal::entityTypeManager()->getStorage('project')->create(['title' => 'Dashboard Render Test', 'status' => 'active']); $project->save(); $task = \\Drupal::entityTypeManager()->getStorage('task')->create(['title' => 'Dash Task', 'status' => 'todo', 'priority' => 'medium', 'project' => $project->id()]); $task->save(); $controller = \\Drupal::classResolver()->getInstanceFromDefinition('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\DashboardController'); try { $result = $controller->content(); echo is_array($result) ? 'PASS' : 'FAIL'; } catch (\\Exception $e) { echo 'FAIL: ' . $e->getMessage(); }\"",
+      "expected": "PASS",
+      "rationale": "Exercises the populated dashboard code path — catches entity query field name errors (e.g., 'project_id' vs 'project') and entity method calls (getStatus(), getTitle()) that only execute when data exists"
+    },
+    {
+      "id": "rt-16",
+      "name": "KanbanController board() executes without exception",
+      "command": "ddev drush php-eval \"$project = \\Drupal::entityTypeManager()->getStorage('project')->create(['title' => 'Board Render Test P20', 'status' => 'active']); $project->save(); $controller = \\Drupal::classResolver()->getInstanceFromDefinition('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\KanbanController'); try { $result = $controller->board($project); echo is_array($result) ? 'PASS' : 'FAIL'; } catch (\\Exception $e) { echo 'FAIL: ' . $e->getMessage(); }\"",
+      "expected": "PASS",
+      "rationale": "Executes the board controller to catch runtime errors like calling methods on wrong objects — complements phase 18's assertion for regression detection after dashboard rewrite"
+    }
+  ]
+}

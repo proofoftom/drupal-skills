@@ -57,6 +57,8 @@ return ['#type' => 'html_tag', '#tag' => 'h2', '#value' => $this->t('Title')];
 > WRONG: Returning raw HTML strings from controllers (`return '<div>Hello</div>';`). Strings bypass caching, theme overrides, altering hooks, and security filtering.
 > RIGHT: Always return render arrays. Even simple output should use `#markup` or `#plain_text`, which integrate with Drupal's render pipeline.
 
+> **CRITICAL**: When you define custom theme hooks via `hook_theme()`, you MUST actually USE them by returning render arrays with `'#theme' => 'your_hook_name'` from controllers, block `build()` methods, or preprocess functions. Declaring a theme hook without using `#theme` in a render array means the template is never rendered. ALSO: Always attach your CSS library in the SAME render array via `'#attached' => ['library' => ['module_name/library_name']]`. A `.libraries.yml` file without `#attached` means your CSS is never loaded.
+
 ## Render arrays -- the core concept
 
 Render arrays are NOT HTML. They are declarative descriptions that Drupal renders through its pipeline (applying cache metadata, security filtering, theme overrides, and asset attachment).
@@ -248,6 +250,28 @@ $build = [
 ```
 
 The library name format is `module_name/library_name`.
+
+### Library load ordering and `defer`
+
+When a library externalizes a dependency as a global variable (e.g., Vue loaded separately from the consuming bundle), be careful with `defer` and `header` attributes:
+
+> WRONG: Using `{ attributes: { defer: true } }` on a library that provides a global variable (like Vue) consumed by IIFE-format bundles in the footer. Deferred scripts execute AFTER non-deferred footer scripts, so the consuming bundle runs before the global is defined — causing "X is not defined" errors.
+> RIGHT: Omit `defer` on libraries that provide globals consumed by other scripts. Use `header: true` and `weight: -20` to ensure the global loads first. Drupal's library dependency system handles load ordering — `defer` breaks it by changing execution timing.
+
+```yaml
+# WRONG: defer causes Vue to execute AFTER kanban.js
+vue:
+  js:
+    js/vendor/vue.global.prod.js: { attributes: { defer: true } }
+  header: true
+
+# RIGHT: no defer, dependency chain handles ordering
+vue:
+  js:
+    js/vendor/vue.global.prod.js: { minified: true }
+  header: true
+  weight: -20
+```
 
 ### Attaching to all pages
 
