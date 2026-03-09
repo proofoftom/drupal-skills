@@ -16,7 +16,7 @@
       tag="div"
       class="gapm-kanban-column__tasks"
       group="kanban-tasks"
-      @change="handleDragChange"
+      @add="handleDragAdd"
       @start="emit('drag-start')"
       @end="emit('drag-end')"
       ghost-class="gapm-task-card--ghost"
@@ -85,12 +85,13 @@ const localTasks = computed({
   set: () => { /* Parent handles state update via drag events */ },
 });
 
-const handleDragChange = (e) => {
-  // Only handle move events (between or within columns).
-  if (e.moved) {
-    const { element } = e.moved;
+const handleDragAdd = (evt) => {
+  // SortableJS @add fires on the destination column when a task is dropped in.
+  // Read task ID from the data-task-id attribute on the dragged DOM element.
+  const taskId = Number(evt.item.dataset.taskId);
+  if (taskId) {
     emit('task-status-change', {
-      taskId: element.id,
+      taskId,
       newStatus: props.status,
     });
   }

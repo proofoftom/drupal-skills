@@ -398,3 +398,5 @@ See also: **drupal-routing-controllers** (if installed) for controllers that ret
 See also: **drupal-entities-fields** (if installed) for entity view builders and field formatters that produce render arrays. If not available, use `\Drupal::entityTypeManager()->getViewBuilder('node')->view($node)` to get a render array for an entity.
 
 See also: **references/js-ajax.md** for JavaScript behaviors, Ajax API, and States system patterns.
+
+See also: **references/vue-drupal.md** for embedding Vue 3 apps in Drupal modules — Vite IIFE builds, Drupal.behaviors mounting, vue-draggable-plus v0.1.x patterns, CSRF for REST endpoints, and optimistic updates.

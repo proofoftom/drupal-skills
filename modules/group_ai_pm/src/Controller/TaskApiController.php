@@ -221,11 +221,17 @@ class TaskApiController extends ControllerBase {
       );
     }
 
+    $status = $data['status'] ?? 'todo';
+    $allowed_statuses = ['todo', 'in_progress', 'review', 'done'];
+    if (!in_array($status, $allowed_statuses)) {
+      $status = 'todo';
+    }
+
     try {
       $task = $storage->create([
         'title' => trim($title),
         'project' => $project->id(),
-        'status' => 'todo',
+        'status' => $status,
         'priority' => 'medium',
       ]);
       $task->save();
