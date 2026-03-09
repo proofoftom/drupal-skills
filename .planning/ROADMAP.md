@@ -101,7 +101,10 @@ Plans:
   1. The dashboard page shows project summary cards with task count bars per status and a progress percentage, pulling data from the project summary API endpoint
   2. Dashboard quick actions (New Project, recent project links, Board links) are visible and functional without scrolling
   3. Task list pages have inline AJAX status toggle dropdowns that update without page reload, using pure Drupal AJAX (no Vue dependency)
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 20-01-PLAN.md -- Enhanced dashboard with project summary cards, progress bars, quick actions (DASH-01, DASH-02)
+- [ ] 20-02-PLAN.md -- TaskStatusForm with AJAX status toggle dropdowns (DASH-03)
 
 ### Phase 21: Testing + Final Eval
 **Goal**: The complete v4.0 module passes automated tests and coding standards, and three-tier eval results validate that skills produce correct Vue/REST/AJAX wiring
@@ -127,5 +130,5 @@ Phases execute in numeric order: 18 -> 19 -> 20 -> 21
 | 13-17 | v3.0 | Complete | Shipped | 2026-03-08 |
 | 18. REST API + Vue + Board | v4.0 | 0/3 | Planned | - |
 | 19. Interactions + Detail + Visual | v4.0 | 0/3 | Planned | - |
-| 20. Dashboard + List | v4.0 | 0/TBD | Not started | - |
+| 20. Dashboard + List | v4.0 | 0/2 | Planned | - |
 | 21. Testing + Final Eval | v4.0 | 0/TBD | Not started | - |
