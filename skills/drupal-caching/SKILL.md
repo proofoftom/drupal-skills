@@ -257,6 +257,54 @@ $metadata->applyTo($build);
 
 AccessResult already implements CacheableDependencyInterface -- access results carry cache tags and contexts that affect the render pipeline.
 
+### CacheableMetadata bubbling in controllers
+
+When a controller loads multiple entities, aggregate their cache metadata into a single CacheableMetadata object and apply it to the response.
+
+**Render array controller pattern:**
+
+```php
+public function list() {
+  $build = ['#theme' => 'my_list', '#items' => []];
+  $cache_metadata = new CacheableMetadata();
+  $cache_metadata->addCacheTags(['my_entity_list']);
+  $cache_metadata->addCacheContexts(['user.permissions']);
+
+  $entities = $this->entityTypeManager->getStorage('my_entity')
+    ->loadMultiple();
+  foreach ($entities as $entity) {
+    $cache_metadata->addCacheableDependency($entity);
+    $build['#items'][] = [...];
+  }
+
+  $cache_metadata->applyTo($build);
+  return $build;
+}
+```
+
+**JSON controller pattern:**
+
+```php
+public function apiList() {
+  $data = [];
+  $cache_metadata = new CacheableMetadata();
+  $cache_metadata->addCacheTags(['my_entity_list']);
+  $cache_metadata->addCacheContexts(['user.permissions']);
+
+  foreach ($this->entityTypeManager->getStorage('my_entity')->loadMultiple() as $entity) {
+    $cache_metadata->addCacheableDependency($entity);
+    $data[] = $this->serialize($entity);
+  }
+
+  $response = new CacheableJsonResponse($data);
+  $response->addCacheableDependency($cache_metadata);
+  return $response;
+}
+```
+
+> WRONG: Loading multiple entities but only adding cache tags for the first, or hardcoding generic tags like `['node_list']` without per-entity tags. Changes to specific entities do not invalidate the response.
+> RIGHT: Call `addCacheableDependency($entity)` for EACH entity in the loop. This captures both individual entity tags AND entity type list tags automatically.
+
 ## Block plugin caching
 
 Block plugins extend `BlockBase`, which implements `CacheableDependencyInterface`. Override the cache methods to declare your block's caching requirements.
