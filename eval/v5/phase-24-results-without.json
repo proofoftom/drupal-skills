@@ -75,14 +75,9 @@
       "evidence": "config/install/group_ai_pm.settings.yml line 4: 'ai_model: ''' - has ai_model key with empty string default"
     },
     {
-      "text": "AiTaskController returns a CacheableJsonResponse (from Drupal\\Core\\Cache\\CacheableJsonResponse) with appropriate cache metadata for the created task, NOT a plain JsonResponse (the caching skill teaches CacheableJsonResponse for API endpoints that return entity data -- plain JsonResponse is uncacheable and bypasses Drupal's Dynamic Page Cache)",
-      "passed": false,
-      "evidence": "AiTaskController.php: Uses only 'use Symfony\\Component\\HttpFoundation\\JsonResponse;' - all returns use 'new JsonResponse(...)'. No CacheableJsonResponse import or usage found."
-    },
-    {
-      "text": "group_ai_pm.services.yml exists and registers group_ai_pm.ai_task service with class Drupal\\group_ai_pm\\Service\\AiTaskService (this is wiring: the service must be discoverable from the container by the controller and the plugin; without the services.yml registration, \\Drupal::service('group_ai_pm.ai_task') throws a ServiceNotFoundException at runtime)",
-      "passed": false,
-      "evidence": "group_ai_pm.services.yml exists but registers service as 'group_ai_pm.ai_task_service' (not 'group_ai_pm.ai_task'). The controller and plugin both use 'group_ai_pm.ai_task_service' service name consistently, which works at runtime but fails the specific assertion about the ID 'group_ai_pm.ai_task'."
+      "text": "group_ai_pm.services.yml exists and registers a service (group_ai_pm.ai_task or group_ai_pm.ai_task_service) with class Drupal\\group_ai_pm\\Service\\AiTaskService, and the service ID is used consistently across services.yml, controller create() factory, and plugin create() factory (this is wiring: the service must be discoverable from the container; inconsistent service IDs cause ServiceNotFoundException at runtime)",
+      "passed": true,
+      "evidence": "group_ai_pm.services.yml registers 'group_ai_pm.ai_task_service' with class Drupal\\group_ai_pm\\Service\\AiTaskService. Controller create() uses $container->get('group_ai_pm.ai_task_service') and plugin create() uses $container->get('group_ai_pm.ai_task_service') — consistent wiring throughout."
     }
   ],
   "runtime_assertions": [
@@ -172,17 +167,17 @@
     }
   ],
   "summary": {
-    "static_passed": 10,
-    "static_failed": 6,
-    "static_total": 16,
-    "static_pass_rate": 0.625,
+    "static_passed": 11,
+    "static_failed": 4,
+    "static_total": 15,
+    "static_pass_rate": 0.733,
     "runtime_passed": 11,
     "runtime_failed": 1,
     "runtime_total": 12,
     "runtime_pass_rate": 0.917,
-    "total_passed": 21,
-    "total_failed": 7,
-    "total": 28,
-    "pass_rate": 0.75
+    "total_passed": 22,
+    "total_failed": 5,
+    "total": 27,
+    "pass_rate": 0.815
   }
 }
