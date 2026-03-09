@@ -1,0 +1,7 @@
+services:
+  group_ai_pm.ai_task:
+    class: Drupal\group_ai_pm\Service\AiTaskService
+    arguments:
+      - '@config.factory'
+      - '@entity_type.manager'
+      - '@?ai.provider'

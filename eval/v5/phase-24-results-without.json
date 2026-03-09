@@ -1,0 +1,188 @@
+{
+  "phase": "phase-24-ai-task-service-nl-creation",
+  "variant": "without-skill",
+  "model": "claude-haiku-4-5-20251001",
+  "skills": ["drupal-coding-standards"],
+  "expectations": [
+    {
+      "text": "CreateTaskTool extends FunctionCallBase (from Drupal\\ai\\Base\\FunctionCallBase) not AiFunctionCallBase (the existing CreateProjectTool in the codebase extends Drupal\\ai_agents\\Plugin\\AiFunctionCall\\AiFunctionCallBase which is a non-existent class -- without skill guidance, Haiku copies this broken pattern from existing code instead of using the correct base class from the installed AI module)",
+      "passed": true,
+      "evidence": "CreateTaskTool.php line 38: 'class CreateTaskTool extends FunctionCallBase implements ExecutableFunctionCallInterface' with use statement 'use Drupal\\ai\\Base\\FunctionCallBase;' - uses correct base class"
+    },
+    {
+      "text": "CreateTaskTool is discovered via #[FunctionCall] PHP attribute (from Drupal\\ai\\Attribute\\FunctionCall), not via @AiFunctionCall docblock annotation (the existing CreateProjectTool uses @AiFunctionCall annotation syntax -- without the module-scaffold skill teaching PHP 8 attributes as the preferred discovery mechanism, Haiku copies the annotation pattern from existing tools, which is the outdated API)",
+      "passed": true,
+      "evidence": "CreateTaskTool.php line 17-37: Has '#[FunctionCall(id: 'create_task_tool', ...)]' PHP attribute with use statement 'use Drupal\\ai\\Attribute\\FunctionCall;'"
+    },
+    {
+      "text": "CreateTaskTool defines its inputs ('text' and 'project_id') via context_definitions array in the #[FunctionCall] attribute, not via a getArguments() method (the existing CreateProjectTool uses getArguments() which is the old annotation-era pattern -- without the plugins-blocks skill teaching ContextDefinition, Haiku copies getArguments(), preventing the AI chatbot from knowing what arguments the tool accepts)",
+      "passed": true,
+      "evidence": "CreateTaskTool.php lines 23-36: Has 'context_definitions: [\"text\" => new ContextDefinition(...), \"project_id\" => new ContextDefinition(...)]' in the #[FunctionCall] attribute - no getArguments() method present"
+    },
+    {
+      "text": "CreateTaskTool accesses input values via $this->getContextValue('text') and $this->getContextValue('project_id'), not via $this->functionCall->getArgumentsObject()->text (the old accessor pattern from CreateProjectTool; getContextValue() is the context-aware plugin system method that corresponds to context_definitions declared in the #[FunctionCall] attribute)",
+      "passed": true,
+      "evidence": "CreateTaskTool.php lines 66-67: '$text = $this->getContextValue(\"text\");' and '$project_id = $this->getContextValue(\"project_id\");'"
+    },
+    {
+      "text": "CreateTaskTool create() method has 4 parameters: create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) -- NOT the controller-style 1-parameter create(ContainerInterface $container) (the plugins-blocks skill explicitly teaches the CRITICAL plugin DI pattern with 4 parameters; Haiku frequently confuses controller DI with plugin DI because both use a method named create() but with incompatible signatures that cause a fatal error when the plugin manager calls it)",
+      "passed": true,
+      "evidence": "CreateTaskTool.php line 50: 'public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): FunctionCallInterface|static' - correct 4-parameter signature"
+    },
+    {
+      "text": "AiTaskService is registered in group_ai_pm.services.yml with @?ai.provider as the third argument (the config-storage skill teaches services.yml registration with DI; the @? prefix is the Symfony/Drupal optional service injection syntax that passes NULL when ai.provider service is not available -- without skill, Haiku uses \\Drupal::service('ai.provider') or makes it a required dependency, causing a fatal error when the AI module is not installed)",
+      "passed": false,
+      "evidence": "group_ai_pm.services.yml: Service registered as 'group_ai_pm.ai_task_service' (not 'group_ai_pm.ai_task') with '@?ai.chat' as third argument (not '@?ai.provider'). Service ID mismatch and wrong optional service name."
+    },
+    {
+      "text": "AiTaskService constructor accepts a nullable parameter for the AI provider -- either ?AiProviderPluginManager $aiProvider = NULL or similar nullable type hint (the @?ai.provider in services.yml injects NULL when AI module is absent; without a nullable parameter declaration, PHP throws a type error when NULL is injected into a non-nullable typed parameter)",
+      "passed": true,
+      "evidence": "AiTaskService.php lines 46-53: Constructor has third parameter '$ai_chat = NULL' (defaulting to NULL). The parameter is typed as nullable with 'ChatInterface|null $ai_chat' in the docblock."
+    },
+    {
+      "text": "The ai_create route includes _csrf_request_header_token: 'TRUE' in its requirements, NOT _csrf_token: 'TRUE' (the access-security skill and routing-controllers skill both teach the CRITICAL distinction: _csrf_token validates tokens in the URL query string for server-rendered links, while _csrf_request_header_token validates the X-CSRF-Token request header for JavaScript fetch() callers -- using _csrf_token on API routes causes 403 errors for all JavaScript POST requests)",
+      "passed": true,
+      "evidence": "group_ai_pm.routing.yml lines 40-41: 'requirements:\\n    _permission: 'access group_ai_pm kanban'\\n    _csrf_request_header_token: 'TRUE'' - correct header-based CSRF protection"
+    },
+    {
+      "text": "The ai_create route includes _format: json in its requirements section (the routing-controllers skill explicitly teaches this pattern with CRITICAL callout: without _format:json, Drupal returns HTML error pages for 403/404/422 instead of JSON -- JavaScript callers receive unparseable HTML instead of a structured error object)",
+      "passed": false,
+      "evidence": "group_ai_pm.routing.yml: '_format: json' appears in the 'defaults' section (line 37), NOT in the 'requirements' section. This is incorrect placement - _format must be in requirements to control error response format."
+    },
+    {
+      "text": "The ai_create route uses entity upcasting via options.parameters.project.type: entity:project (the routing-controllers skill has a CRITICAL callout for custom entity types: without explicit upcasting config, Drupal may pass a raw ID string instead of a loaded Project entity object to the controller method, causing a type error when the controller calls entity methods)",
+      "passed": false,
+      "evidence": "group_ai_pm.routing.yml: No 'options.parameters.project.type: entity:project' present. The route has only 'options: _admin_route: TRUE' with no entity upcasting configuration."
+    },
+    {
+      "text": "The ai_create route includes options._admin_route: TRUE (the routing-controllers skill has a CRITICAL callout that routes under /admin/ do NOT automatically inherit the admin theme -- without _admin_route: TRUE, this route renders with the frontend theme; this is consistently missed without the skill)",
+      "passed": true,
+      "evidence": "group_ai_pm.routing.yml lines 43-44: 'options:\\n    _admin_route: TRUE' - correct admin route marking"
+    },
+    {
+      "text": "AiTaskController uses a create() factory method with proper DI to inject AiTaskService from the container, NOT the lazy entityTypeManager() or currentUser() helper methods from ControllerBase for loading entities (the routing-controllers skill marks static \\Drupal:: calls as the #1 DI violation and teaches explicit create()+constructor injection; without skill, Haiku may skip create() and use \\Drupal::service() or lazy helpers)",
+      "passed": true,
+      "evidence": "AiTaskController.php lines 39-43: 'public static function create(ContainerInterface $container) { return new static($container->get(\"group_ai_pm.ai_task_service\")); }' - proper DI factory method"
+    },
+    {
+      "text": "Config schema file group_ai_pm.schema.yml includes ai_model in its mapping with type: string (the config-storage skill teaches that every config key needs a schema entry -- the existing schema has ai_provider but not ai_model; without skill, Haiku adds the functional code to read ai_model but omits the schema, which breaks config export validation)",
+      "passed": true,
+      "evidence": "config/schema/group_ai_pm.schema.yml: Has 'ai_model:\\n  type: string\\n  label: 'AI Model'' in the mapping section"
+    },
+    {
+      "text": "Config install file group_ai_pm.settings.yml includes ai_model with a default value (the config-storage skill teaches that config/install/ files provide defaults so the config object exists from module installation; without the default, code reading ai_model gets NULL until someone saves the settings form)",
+      "passed": true,
+      "evidence": "config/install/group_ai_pm.settings.yml line 4: 'ai_model: ''' - has ai_model key with empty string default"
+    },
+    {
+      "text": "AiTaskController returns a CacheableJsonResponse (from Drupal\\Core\\Cache\\CacheableJsonResponse) with appropriate cache metadata for the created task, NOT a plain JsonResponse (the caching skill teaches CacheableJsonResponse for API endpoints that return entity data -- plain JsonResponse is uncacheable and bypasses Drupal's Dynamic Page Cache)",
+      "passed": false,
+      "evidence": "AiTaskController.php: Uses only 'use Symfony\\Component\\HttpFoundation\\JsonResponse;' - all returns use 'new JsonResponse(...)'. No CacheableJsonResponse import or usage found."
+    },
+    {
+      "text": "group_ai_pm.services.yml exists and registers group_ai_pm.ai_task service with class Drupal\\group_ai_pm\\Service\\AiTaskService (this is wiring: the service must be discoverable from the container by the controller and the plugin; without the services.yml registration, \\Drupal::service('group_ai_pm.ai_task') throws a ServiceNotFoundException at runtime)",
+      "passed": false,
+      "evidence": "group_ai_pm.services.yml exists but registers service as 'group_ai_pm.ai_task_service' (not 'group_ai_pm.ai_task'). The controller and plugin both use 'group_ai_pm.ai_task_service' service name consistently, which works at runtime but fails the specific assertion about the ID 'group_ai_pm.ai_task'."
+    }
+  ],
+  "runtime_assertions": [
+    {
+      "id": "rt-1",
+      "name": "Main module enables cleanly without AI module",
+      "command": "ddev drush cr && ddev drush pm:list --status=enabled | grep group_ai_pm",
+      "result": "PASS",
+      "evidence": "group_ai_pm module is enabled and cache rebuild completes successfully"
+    },
+    {
+      "id": "rt-2",
+      "name": "AiTaskService resolves from service container",
+      "command": "ddev drush php-eval (adapted: group_ai_pm.ai_task_service)",
+      "result": "PASS",
+      "evidence": "Service 'group_ai_pm.ai_task_service' resolves successfully from container (note: both variants used ai_task_service not ai_task as the service ID)"
+    },
+    {
+      "id": "rt-3",
+      "name": "AiTaskService isAvailable() returns false when AI module not configured",
+      "command": "ddev drush php:script rt3.php",
+      "result": "PASS",
+      "evidence": "isAvailable() returns false - AI chat service is NULL (no AI module configured)"
+    },
+    {
+      "id": "rt-4",
+      "name": "AI submodule enables cleanly",
+      "command": "ddev drush en group_ai_pm_ai -y",
+      "result": "PASS",
+      "evidence": "group_ai_pm_ai is 'Enabled' in pm:list output"
+    },
+    {
+      "id": "rt-5",
+      "name": "CreateTaskTool plugin is discovered by function calls plugin manager",
+      "command": "ddev drush php:script rt5.php",
+      "result": "PASS",
+      "evidence": "Plugin with ID containing 'create_task' found in plugin.manager.ai.function_calls definitions"
+    },
+    {
+      "id": "rt-6",
+      "name": "AI create route is registered",
+      "command": "ddev drush php:script rt6.php",
+      "result": "PASS",
+      "evidence": "Route 'group_ai_pm.api.ai_create' found in router.route_provider"
+    },
+    {
+      "id": "rt-7",
+      "name": "AI create route has _csrf_request_header_token requirement",
+      "command": "ddev drush php:script rt7_fixed.php",
+      "result": "PASS",
+      "evidence": "Route requirements include '_csrf_request_header_token'"
+    },
+    {
+      "id": "rt-8",
+      "name": "AI create route has _format:json requirement",
+      "command": "ddev drush php:script rt8_fixed.php",
+      "result": "FAIL",
+      "evidence": "_format is in route defaults, not requirements. The requirement check returns FAIL."
+    },
+    {
+      "id": "rt-9",
+      "name": "AiTaskController class is autoloadable",
+      "command": "ddev drush php:script rt9.php",
+      "result": "PASS",
+      "evidence": "class_exists('Drupal\\group_ai_pm\\Controller\\AiTaskController') returns true"
+    },
+    {
+      "id": "rt-10",
+      "name": "AiTaskService class is autoloadable",
+      "command": "ddev drush php:script rt10.php",
+      "result": "PASS",
+      "evidence": "class_exists('Drupal\\group_ai_pm\\Service\\AiTaskService') returns true"
+    },
+    {
+      "id": "rt-11",
+      "name": "Config schema includes ai_model key",
+      "command": "ddev drush php:script rt11.php",
+      "result": "PASS",
+      "evidence": "config.typed returns schema with ai_model in mapping"
+    },
+    {
+      "id": "rt-12",
+      "name": "Config install default includes ai_model key",
+      "command": "ddev drush php:script rt12.php (after manual cset)",
+      "result": "PASS",
+      "evidence": "config/install/group_ai_pm.settings.yml contains ai_model: '' - present on fresh install"
+    }
+  ],
+  "summary": {
+    "static_passed": 10,
+    "static_failed": 6,
+    "static_total": 16,
+    "static_pass_rate": 0.625,
+    "runtime_passed": 11,
+    "runtime_failed": 1,
+    "runtime_total": 12,
+    "runtime_pass_rate": 0.917,
+    "total_passed": 21,
+    "total_failed": 7,
+    "total": 28,
+    "pass_rate": 0.75
+  }
+}

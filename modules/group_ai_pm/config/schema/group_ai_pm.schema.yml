@@ -11,3 +11,6 @@ group_ai_pm.settings:
     ai_provider:
       type: string
       label: 'AI Provider'
+    ai_model:
+      type: string
+      label: 'AI Model'
