@@ -85,7 +85,10 @@ Full details: milestones/v4.0-ROADMAP.md
   2. `skills/drupal-drush/evals/evals.json` contains assertions targeting non-obvious Drush patterns (file location, DI approach, attribute syntax) -- not boilerplate file existence checks
   3. Eval-author agent (`.claude/agents/eval-author.md`) accepts skill content + module code + phase prompt and outputs three-tier assertions (static + runtime + browser)
   4. Eval-author output enforces assertion category distribution (60% differentiating, 20% wiring, max 20% structural) with explicit tautology rejection
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 22-01-PLAN.md -- Author Drush skill and eval assertions
+- [ ] 22-02-PLAN.md -- Create eval-author Opus subagent
 
 ### Phase 23: Skill Gap Fixes + Eval-Author Validation
 **Goal**: Three skill gaps are closed and the eval-author agent is validated against known-good evals before relying on it for new phases
@@ -152,7 +155,7 @@ Phases execute in numeric order: 22 -> 23 -> 24 -> 25 -> 26 -> 27
 | 8-12 | v2.0 | 23/23 | Shipped | 2026-03-08 |
 | 13-17 | v3.0 | Complete | Shipped | 2026-03-08 |
 | 18-21 | v4.0 | 10/10 | Shipped | 2026-03-09 |
-| 22. Drush Skill + Eval-Author Agent | v5.0 | 0/TBD | Not started | - |
+| 22. Drush Skill + Eval-Author Agent | v5.0 | 0/2 | Planned | - |
 | 23. Skill Gap Fixes + Eval-Author Validation | v5.0 | 0/TBD | Not started | - |
 | 24. AI Task Service + NL Task Creation | v5.0 | 0/TBD | Not started | - |
 | 25. Batch AI Operations + Agent Tools | v5.0 | 0/TBD | Not started | - |
