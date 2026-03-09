@@ -71,7 +71,11 @@ Full details: milestones/v3.0-ROADMAP.md
   3. Clicking the "+" button on a column header creates a new task pre-filled with that column's status, and the card appears in the column immediately
   4. The board page loads with server-rendered initial state (no loading spinner for initial data) and shows loading/empty/error states for subsequent interactions
   5. A "Board" local task tab appears alongside existing entity tabs, and the board is only accessible to users with appropriate entity-level permissions
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 18-01-PLAN.md -- REST API endpoints (TaskApiController + ProjectApiController + routes)
+- [ ] 18-02-PLAN.md -- Vue build pipeline + Drupal integration (Vite, behaviors bridge, CSRF wrapper, libraries)
+- [ ] 18-03-PLAN.md -- KanbanController page shell + Vue board components (4 components + composable)
 
 ### Phase 19: Interactions + Detail Panel + Visual Polish
 **Goal**: Users can manage all task properties directly from the board without navigating to entity edit forms, with optimistic feedback, visual indicators, and polished interaction patterns
@@ -117,7 +121,7 @@ Phases execute in numeric order: 18 -> 19 -> 20 -> 21
 | 1-7 | v1.0 | 26/28 | Shipped | 2026-03-07 |
 | 8-12 | v2.0 | 23/23 | Shipped | 2026-03-08 |
 | 13-17 | v3.0 | Complete | Shipped | 2026-03-08 |
-| 18. REST API + Vue + Board | v4.0 | 0/TBD | Not started | - |
+| 18. REST API + Vue + Board | v4.0 | 0/3 | Planned | - |
 | 19. Interactions + Detail + Visual | v4.0 | 0/TBD | Not started | - |
 | 20. Dashboard + List | v4.0 | 0/TBD | Not started | - |
 | 21. Testing + Final Eval | v4.0 | 0/TBD | Not started | - |
