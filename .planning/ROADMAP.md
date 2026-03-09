@@ -4,7 +4,8 @@
 
 - ✅ **v1.0 Skill Authoring** -- Phases 1-7 (shipped 2026-03-07)
 - ✅ **v2.0 Eval & Optimization Loop** -- Phases 8-12 (shipped 2026-03-08)
-- 🚧 **v3.0 Group AI Project Management** -- Phases 13-17 (in progress)
+- ✅ **v3.0 Group AI Project Management** -- Phases 13-17 (shipped 2026-03-08)
+- 🚧 **v4.0 UX Overhaul** -- Phases 18-21 (in progress)
 
 ## Phases
 
@@ -36,92 +37,87 @@ Full details: milestones/v2.0-ROADMAP.md
 
 </details>
 
-### v3.0 Group AI Project Management (In Progress)
+<details>
+<summary>v3.0 Group AI Project Management (Phases 13-17) -- SHIPPED 2026-03-08</summary>
 
-**Milestone Goal:** Build a real Drupal contrib module (Group-based project management with AI Agents integration) as the ultimate integration eval -- validating that all 14 skills auto-trigger and produce better code than baseline, in a realistic development workflow.
+- [x] Phase 13: Plugin Packaging (2/2 plans) -- completed 2026-03-08
+- [x] Phase 14: Module Foundation -- completed 2026-03-08
+- [x] Phase 15: Group & AI Integration -- completed 2026-03-08
+- [x] Phase 16: Views, Theming & Processing -- completed 2026-03-08
+- [x] Phase 17: Testing & Final Eval -- completed 2026-03-08
 
-- [x] **Phase 13: Plugin Packaging** - Package skills as Claude Code plugin with auto-triggering validation
-- [ ] **Phase 14: Module Foundation** - Scaffold module with entities, routes, and forms
-- [ ] **Phase 15: Group & AI Integration** - Group relation plugins, permissions, and AI agent tools
-- [ ] **Phase 16: Views, Theming & Processing** - User-facing displays, templates, caching, and background jobs
-- [ ] **Phase 17: Testing & Final Eval** - Automated tests, quality pass, and full delta report
+Full details: milestones/v3.0-ROADMAP.md
+
+</details>
+
+### v4.0 UX Overhaul (In Progress)
+
+**Milestone Goal:** Transform group_ai_pm from functional admin CRUD into a polished, interactive project management tool -- Vue.js Kanban boards with drag-and-drop, AJAX interactions, and visual polish -- validated through eval-driven development with three-tier assertions (static + runtime + browser).
+
+- [ ] **Phase 18: REST API + Vue Infrastructure + Basic Board** - Working Kanban board with drag-and-drop on a Drupal admin page
+- [ ] **Phase 19: Interactions + Detail Panel + Visual Polish** - Full task management from the board with inline editing and optimistic UI
+- [ ] **Phase 20: Dashboard + List Enhancements** - Enhanced dashboard entry point and AJAX list improvements
+- [ ] **Phase 21: Testing + Final Eval** - Test coverage and three-tier eval results validating skill effectiveness
 
 ## Phase Details
 
-### Phase 13: Plugin Packaging
-**Goal**: Skills are installable as a Claude Code plugin that auto-triggers from natural Drupal development prompts
-**Depends on**: Nothing (first phase of v3.0)
-**Requirements**: PLUG-01, PLUG-02, PLUG-03, PLUG-04, EVAL-01
+### Phase 18: REST API + Vue Infrastructure + Basic Board
+**Goal**: Users can view and manage task status via a drag-and-drop Kanban board embedded in the Drupal admin UI, backed by custom REST endpoints and a Vite-built Vue 3 application
+**Depends on**: v3.0 complete (existing module with Project/Task entities, Group integration)
+**Requirements**: API-01, API-02, API-03, API-04, API-05, API-06, API-07, API-08, VUE-01, VUE-02, VUE-03, VUE-04, VUE-05, VUE-06, VUE-07, VUE-08, BOARD-01, BOARD-02, BOARD-03, BOARD-04, BOARD-05, BOARD-06, BOARD-07, BOARD-08, BOARD-09, BOARD-10
 **Success Criteria** (what must be TRUE):
-  1. Running `claude --plugin-dir .` in the repo root loads all 14 skills (verifiable via debug output)
-  2. Natural Drupal development prompts (e.g., "create a custom entity type") activate the relevant skill without explicit skill references, at >80% rate across a sample of 10+ prompts
-  3. Plugin root contains a minimal CLAUDE.md with only non-obvious project rules (not LLM-generated boilerplate)
-  4. install.sh is marked deprecated with clear migration instructions pointing to plugin-based installation
-**Plans**: 2 plans
-
-Plans:
-- [x] 13-01-PLAN.md -- Create plugin manifest, CLAUDE.md, deprecate install.sh
-- [x] 13-02-PLAN.md -- Auto-trigger validation and test infrastructure
-
-### Phase 14: Module Foundation
-**Goal**: A functional Drupal module exists with Project and Task entities, CRUD routes, forms, and configuration -- buildable and installable on a fresh Drupal 10 site
-**Depends on**: Phase 13
-**Requirements**: SCAF-01, SCAF-02, SCAF-03, ENTY-01, ENTY-02, ENTY-03, ENTY-04, ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04, EVAL-02
-**Success Criteria** (what must be TRUE):
-  1. `drush en group_ai_pm -y` installs the module without errors on a Drupal 10 site with Group and AI modules present
-  2. A user can create, edit, view, and delete Project and Task entities through the admin UI
-  3. Project and Task list pages display all existing entities with sortable columns
-  4. A settings form at `/admin/config/group_ai_pm/settings` saves and loads configuration for default statuses and AI provider
-  5. Without-plugin baseline code has been generated for this phase's scope (for later comparison)
+  1. Navigating to /admin/content/project/{id}/board displays a Kanban board with 4 status columns showing that project's tasks as draggable cards
+  2. Dragging a task card from one column to another updates the task's status via a PATCH request with CSRF protection, and the board reflects the change without page reload
+  3. Clicking the "+" button on a column header creates a new task pre-filled with that column's status, and the card appears in the column immediately
+  4. The board page loads with server-rendered initial state (no loading spinner for initial data) and shows loading/empty/error states for subsequent interactions
+  5. A "Board" local task tab appears alongside existing entity tabs, and the board is only accessible to users with appropriate entity-level permissions
 **Plans**: TBD
 
-### Phase 15: Group & AI Integration
-**Goal**: Projects and Tasks are scoped to groups with proper permission enforcement, and an AI agent can create and query entities within group context
-**Depends on**: Phase 14
-**Requirements**: GRP-01, GRP-02, GRP-03, GRP-04, GRP-05, ENTY-05, AI-01, AI-02, AI-03, AI-04, AI-05
+### Phase 19: Interactions + Detail Panel + Visual Polish
+**Goal**: Users can manage all task properties directly from the board without navigating to entity edit forms, with optimistic feedback, visual indicators, and polished interaction patterns
+**Depends on**: Phase 18
+**Requirements**: INTERACT-01, INTERACT-02, INTERACT-03, INTERACT-04, INTERACT-05, INTERACT-06, INTERACT-07, VISUAL-01, VISUAL-02, VISUAL-03
 **Success Criteria** (what must be TRUE):
-  1. A Project or Task created within a group is only visible to members of that group (non-members get access denied)
-  2. Group-scoped permissions (create/edit own/edit any/delete own/delete any) independently control access for both Project and Task entities
-  3. The AI ProjectManager agent can create a task in a group, query tasks by status, and update task status -- all scoped to the current group
-  4. The module installs and functions normally when the AI module is not present (AI is optional)
-  5. Entity and permission design is compatible with Open Social's group type conventions
+  1. Clicking a task card opens a slide-over panel showing full task metadata, and the board remains visible behind it
+  2. Double-clicking a task title on the card enables inline editing -- Enter saves, Escape cancels, and the update persists after page reload
+  3. Drag-and-drop shows immediate visual feedback (card lift shadow, destination highlight) and rolls back with a toast notification if the server request fails
+  4. Overdue tasks show a red border, due-today tasks show amber, and assignees display as colored-initial avatars on task cards
+  5. The filter bar narrows visible cards by assignee and priority, with active filters shown as dismissible pills and persisted in URL query params
 **Plans**: TBD
 
-### Phase 16: Views, Theming & Processing
-**Goal**: Users see styled project dashboards and task lists with proper caching, and background jobs handle overdue detection and notifications
-**Depends on**: Phase 14, Phase 15
-**Requirements**: VIEW-01, VIEW-02, VIEW-03, VIEW-04, THEME-01, THEME-02, CACHE-01, CACHE-02, CACHE-03, BG-01, BG-02, BG-03
+### Phase 20: Dashboard + List Enhancements
+**Goal**: Users have an enhanced dashboard showing project health at a glance, and can toggle task status directly from list views without JavaScript frameworks
+**Depends on**: Phase 18 (uses API-05 endpoint for dashboard data)
+**Requirements**: DASH-01, DASH-02, DASH-03
 **Success Criteria** (what must be TRUE):
-  1. A group member sees a project dashboard view with task counts and status summary, filtered to their current group only
-  2. Task list view supports filtering by status, priority, and assignee -- and updates immediately when a task is modified (cache invalidation)
-  3. Task cards and project pages render with custom Twig templates and attached CSS library
-  4. Running cron flags overdue tasks and queues notification items for processing
-  5. Block plugins for project status and task list display properly on group pages with correct cache tags and group membership cache context
+  1. The dashboard page shows project summary cards with task count bars per status and a progress percentage, pulling data from the project summary API endpoint
+  2. Dashboard quick actions (New Project, recent project links, Board links) are visible and functional without scrolling
+  3. Task list pages have inline AJAX status toggle dropdowns that update without page reload, using pure Drupal AJAX (no Vue dependency)
 **Plans**: TBD
 
-### Phase 17: Testing & Final Eval
-**Goal**: The complete module passes automated tests and coding standards, and the v3.0 eval produces a per-phase delta report comparing with-plugin vs without-plugin output
-**Depends on**: Phase 13, Phase 14, Phase 15, Phase 16
-**Requirements**: TEST-01, TEST-02, TEST-03, EVAL-03, EVAL-04
+### Phase 21: Testing + Final Eval
+**Goal**: The complete v4.0 module passes automated tests and coding standards, and three-tier eval results validate that skills produce correct Vue/REST/AJAX wiring
+**Depends on**: Phase 18, Phase 19, Phase 20
+**Requirements**: TEST-01, TEST-02, TEST-03, EVAL-01, EVAL-02, EVAL-03, EVAL-04
 **Success Criteria** (what must be TRUE):
-  1. Kernel tests pass for entity CRUD operations and group-based access control
-  2. Functional tests pass for forms, views, and route access (all green on `phpunit --group group_ai_pm`)
-  3. `phpcs --standard=Drupal,DrupalPractice` reports zero errors on the entire module
-  4. The module installs cleanly on a fresh Drupal 10 site and completes an end-to-end workflow (create group, add project, add task, assign, update status, verify AI agent interaction)
-  5. Per-phase delta report shows with-plugin vs without-plugin quality comparison for each development phase
+  1. Kernel tests pass for all REST endpoints (response shapes, access control, CSRF validation, cache tags)
+  2. Functional tests pass for board page rendering (local task tab present, drupalSettings populated, Vue mount point exists)
+  3. `phpcs --standard=Drupal,DrupalPractice` reports zero errors on all new and modified PHP files
+  4. Browser eval assertions confirm the board renders, drag-and-drop changes task status, and AJAX list toggles function
+  5. Per-phase delta report shows with-plugin vs without-plugin comparison across all three tiers (static + runtime + browser)
 **Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 13 -> 14 -> 15 -> 16 -> 17
+Phases execute in numeric order: 18 -> 19 -> 20 -> 21
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-7 | v1.0 | 26/28 | Shipped | 2026-03-07 |
 | 8-12 | v2.0 | 23/23 | Shipped | 2026-03-08 |
-| 13. Plugin Packaging | v3.0 | Complete    | 2026-03-08 | 2026-03-08 |
-| 14. Module Foundation | v3.0 | 0/TBD | Not started | - |
-| 15. Group & AI Integration | v3.0 | 0/TBD | Not started | - |
-| 16. Views, Theming & Processing | v3.0 | 0/TBD | Not started | - |
-| 17. Testing & Final Eval | v3.0 | 0/TBD | Not started | - |
+| 13-17 | v3.0 | Complete | Shipped | 2026-03-08 |
+| 18. REST API + Vue + Board | v4.0 | 0/TBD | Not started | - |
+| 19. Interactions + Detail + Visual | v4.0 | 0/TBD | Not started | - |
+| 20. Dashboard + List | v4.0 | 0/TBD | Not started | - |
+| 21. Testing + Final Eval | v4.0 | 0/TBD | Not started | - |

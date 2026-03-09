@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: UX Overhaul
-status: defining_requirements
-stopped_at: Milestone v4.0 started — defining requirements
+status: ready_to_plan
+stopped_at: Roadmap created — ready to plan Phase 18
 last_updated: "2026-03-08"
-last_activity: 2026-03-08 -- Milestone v4.0 started, gathering requirements
+last_activity: 2026-03-08 -- Roadmap created with 4 phases (18-21), 46 requirements mapped
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** v4.0 UX Overhaul — Vue.js Kanban, AJAX, Linear-quality UX for group_ai_pm module
+**Current focus:** v4.0 UX Overhaul — Phase 18 (REST API + Vue Infrastructure + Basic Board)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-08 — Milestone v4.0 started
+Phase: 18 of 21 (REST API + Vue Infrastructure + Basic Board)
+Plan: Ready to plan
+Status: Ready to plan
+Last activity: 2026-03-08 — Roadmap created
 
 Progress: [░░░░░░░░░░] 0% (v4.0)
 
@@ -38,9 +38,10 @@ Progress: [░░░░░░░░░░] 0% (v4.0)
 
 - [v3.0]: Aggregate +16.7% delta validates plugin value for real-world Drupal development
 - [v4.0]: Vue 3 for Kanban board, Drupal AJAX for simpler interactions
-- [v4.0]: Dashboard overview as primary entry point (not Kanban-first)
+- [v4.0]: Custom REST controllers (not JSON:API, not REST resource plugins)
 - [v4.0]: Eval-driven with three-tier assertions (static + runtime + browser)
-- [v4.0]: eval-browser revived for UX testing (was deprecated in v2.0 for backend patterns)
+- [v4.0]: eval-browser revived for UX testing
+- [v4.0]: All VISUAL requirements assigned to Phase 19 (board card enhancements belong with interaction polish)
 
 ### Pending Todos
 
@@ -54,6 +55,6 @@ Progress: [░░░░░░░░░░] 0% (v4.0)
 ## Session Continuity
 
 Last session: 2026-03-08
-Stopped at: Research complete, ready for requirements + roadmap
+Stopped at: Roadmap created with 4 phases (18-21), 46 requirements mapped
 Resume file: .planning/.continue-here.md
-Resume action: Resume new-milestone workflow at Step 9 (Define Requirements)
+Resume action: Plan Phase 18 via /gsd:plan-phase 18
