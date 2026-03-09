@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: AI Integration & Eval Tooling
 status: completed
-stopped_at: Completed 24-01-PLAN.md (Phase 24 plan 1 complete)
-last_updated: "2026-03-09T14:19:12.137Z"
+stopped_at: "Checkpoint: 24-02 Task 3 human-verify -- awaiting review of A/B eval results and promoted code"
+last_updated: "2026-03-09T14:51:55.418Z"
 last_activity: 2026-03-09 -- completed eval-author validation (plan 23-02), Phase 23 complete
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
   percent: 100
 ---
 
@@ -51,6 +51,8 @@ Progress: [██████████] 100% (v5.0 Phase 23)
 - [23-02]: All 17 static assertions made 100% differentiating (exceeds 60% minimum) -- matches gold-standard distribution
 - [23-02]: Eval-author validated against Phase 18 gold-standard: 17 assertions, 5/5 differentiators, 0 tautological -- approved for production use
 - [Phase 24]: Phase prompt references outdated CreateProjectTool as WRONG pattern; context_definitions vs getArguments() is the top differentiator; runtime assertions use flexible multi-name matching
+- [Phase 24]: A/B delta was -3.6% (NEUT/negative): WITH variant copied AiFunctionCallBase from existing CreateProjectTool despite skill warning; skills failed to override codebase context signal for plugin base class selection
+- [Phase 24]: Skill patches applied for FunctionCallBase (@AiFunctionCall WRONG) and @? optional injection (both in relevant skills); manual post-promotion bug fixes: service ID mismatch, nullable AI provider param, method rename
 
 ### Pending Todos
 
@@ -63,7 +65,7 @@ Progress: [██████████] 100% (v5.0 Phase 23)
 
 ## Session Continuity
 
-Last session: 2026-03-09T14:19:12.135Z
-Stopped at: Completed 24-01-PLAN.md (Phase 24 plan 1 complete)
+Last session: 2026-03-09T14:51:40.347Z
+Stopped at: Checkpoint: 24-02 Task 3 human-verify -- awaiting review of A/B eval results and promoted code
 Resume file: None
 Resume action: Run `/gsd:plan-phase` for Phase 24
