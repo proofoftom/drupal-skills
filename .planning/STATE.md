@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: AI Integration & Eval Tooling
-status: completed
-stopped_at: Completed 22-02-PLAN.md (phase 22 complete)
-last_updated: "2026-03-09T12:58:38.855Z"
-last_activity: 2026-03-09 -- completed eval-author agent (plan 22-02), phase 22 complete
+status: executing
+stopped_at: Completed 23-01-PLAN.md
+last_updated: "2026-03-09T13:31:36.313Z"
+last_activity: 2026-03-09 -- completed skill gap fixes (plan 23-01)
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 17
+  total_plans: 4
+  completed_plans: 3
+  percent: 75
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** v5.0 Phase 22 -- Drush Skill + Eval-Author Agent
+**Current focus:** v5.0 Phase 23 -- Skill Gap Fixes + Eval-Author Validation
 
 ## Current Position
 
-Phase: 22 of 27 (Drush Skill + Eval-Author Agent) -- COMPLETE
-Plan: 2 of 2 complete
-Status: Phase Complete
-Last activity: 2026-03-09 -- completed eval-author agent (plan 22-02), phase 22 complete
+Phase: 23 of 27 (Skill Gap Fixes + Eval-Author Validation) -- IN PROGRESS
+Plan: 1 of 2 complete
+Status: In Progress
+Last activity: 2026-03-09 -- completed skill gap fixes (plan 23-01)
 
-Progress: [##░░░░░░░░] 17% (v5.0)
+Progress: [████████░░] 75% (v5.0)
 
 ## Accumulated Context
 
@@ -46,10 +46,12 @@ Progress: [##░░░░░░░░] 17% (v5.0)
 - [22-02]: eval-author uses Opus model for deep reasoning about skill impact on code quality
 - [22-02]: 60/20/20 category distribution enforced with counting + rebalancing instructions
 - [22-02]: 6 specific tautological assertion anti-patterns explicitly rejected
+- [Phase 23-01]: bundle_of content in reference file (not inline) due to 497-line budget constraint
+- [Phase 23-01]: forms-api AJAX section trimmed to 60 lines to fit exactly at 500-line limit
 
 ### Pending Todos
 
-- entities-fields bundle_of gap: SKILL.md needs explicit coverage
+- ~~entities-fields bundle_of gap: SKILL.md needs explicit coverage~~ DONE (23-01)
 - Test vue-drupal.md reference impact on eval scores
 
 ### Blockers/Concerns
@@ -58,7 +60,7 @@ Progress: [##░░░░░░░░] 17% (v5.0)
 
 ## Session Continuity
 
-Last session: 2026-03-09T12:54:29.653Z
-Stopped at: Completed 22-02-PLAN.md (phase 22 complete)
+Last session: 2026-03-09T13:31:36.311Z
+Stopped at: Completed 23-01-PLAN.md
 Resume file: None
 Resume action: Run `/gsd:plan-phase` for the next phase
