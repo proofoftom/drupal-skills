@@ -28,3 +28,18 @@ group_ai_pm.project.complete:
     _csrf_token: 'TRUE'
   options:
     _admin_route: TRUE
+
+group_ai_pm.api.ai_create:
+  path: '/api/kanban/project/{project}/ai-create'
+  defaults:
+    _controller: '\Drupal\group_ai_pm\Controller\AiTaskController::createTask'
+  methods: [POST]
+  requirements:
+    _permission: 'edit group_ai_pm task'
+    _csrf_request_header_token: 'TRUE'
+    _format: json
+  options:
+    _admin_route: TRUE
+    parameters:
+      project:
+        type: entity:project
