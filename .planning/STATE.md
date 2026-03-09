@@ -1,48 +1,36 @@
 ---
 gsd_state_version: 1.0
-milestone: v4.0
-milestone_name: UX Overhaul
-status: milestone_complete
-stopped_at: v4.0 COMPLETE — Phase 21 eval 0% delta (NEUT), v4.0 aggregate +7.6% (MOD)
+milestone: v5.0
+milestone_name: AI Integration & Eval Tooling
+status: defining_requirements
+stopped_at: Defining v5.0 requirements
 last_updated: "2026-03-09"
-last_activity: 2026-03-09 -- Phase 21 eval complete, v4.0 shipped
+last_activity: 2026-03-09 -- v5.0 milestone started
 progress:
-  total_phases: 4
-  completed_phases: 4
+  total_phases: 6
+  completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 100
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-08)
+See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** v4.0 UX Overhaul — SHIPPED
+**Current focus:** v5.0 AI Integration & Eval Tooling
 
 ## Current Position
 
-Phase: 21 of 21 (Testing + Final Eval) — COMPLETE
-Plan: Eval-driven (1 round, no iteration needed)
-Status: v4.0 milestone COMPLETE — all 4 phases shipped
-Last activity: 2026-03-09 — Phase 21 eval complete, v4.0 aggregate computed
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-09 — Milestone v5.0 started
 
-Progress: [██████████] 100% (v4.0)
-
-## v4.0 Final Results
-
-| Phase | WITHOUT | WITH | Delta | Tier |
-|-------|---------|------|-------|------|
-| 18 REST+Vue+Board | 73.3% | 96.7% | +23.3% | HIGH |
-| 19 Interactions+Polish | 100% | 100% | 0% | NEUT |
-| 20 Dashboard+Lists | 78.6% | 85.7% | +7.1% | MOD |
-| 21 Testing+Final | 87.0% | 87.0% | 0% | NEUT |
-| **v4.0 Aggregate** | **84.7%** | **92.3%** | **+7.6%** | **MOD** |
-
-Cross-milestone: v3.0 aggregate +16.7% (HIGH) vs v4.0 aggregate +7.6% (MOD)
+Progress: [░░░░░░░░░░] 0% (v5.0)
 
 ## Accumulated Context
 
@@ -52,15 +40,15 @@ Cross-milestone: v3.0 aggregate +16.7% (HIGH) vs v4.0 aggregate +7.6% (MOD)
 - [v4.0]: Vue 3 for Kanban board, Drupal AJAX for simpler interactions
 - [v4.0]: Custom REST controllers (not JSON:API, not REST resource plugins)
 - [v4.0]: Eval-driven with three-tier assertions (static + runtime + browser)
-- [Phase 18]: 4 skill patches proved effective: _format:json, CacheableJsonResponse, CacheableMetadata, entity upcasting
-- [Phase 19]: 0% delta — existing module patterns self-replicate through context
-- [Phase 20]: +7.1% delta — skills help for NEW patterns (cache contexts, Url::fromRoute)
-- [Phase 21]: 0% delta — existing test files demonstrate all testing skill patterns, Haiku learns from codebase
+- [v4.0-UAT]: Manual testing found bugs automated pipeline missed — browser assertions must be first-class
+- [v4.0-UAT]: forms-api #ajax gap fixed, routing-controllers ISO 8601 callout added
+- [v5.0]: Drush skill first — enables smarter runtime assertions and agent self-checking
+- [v5.0]: eval-author Opus subagent — offloads eval design from main context window
 
 ### Pending Todos
 
 - entities-fields bundle_of gap: SKILL.md needs explicit coverage
-- Create drupal-drush skill (Drush CLI knowledge gaps found during evals)
+- Test vue-drupal.md reference impact on eval scores
 
 ### Blockers/Concerns
 
@@ -69,6 +57,6 @@ Cross-milestone: v3.0 aggregate +16.7% (HIGH) vs v4.0 aggregate +7.6% (MOD)
 ## Session Continuity
 
 Last session: 2026-03-09
-Stopped at: v4.0 milestone complete
+Stopped at: Defining v5.0 requirements
 Resume file: N/A
-Resume action: Start v5.0 planning or package/publish repo
+Resume action: Complete requirements → roadmap → plan phase 22
