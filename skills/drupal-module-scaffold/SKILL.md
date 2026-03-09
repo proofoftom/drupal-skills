@@ -253,6 +253,39 @@ services:
     arguments: ['@config.factory']
 ```
 
+### Optional service injection with @?
+
+When your module has an **optional dependency** on another module (e.g., depends on `drupal/ai` but must work without it), use the `@?` prefix to inject NULL when the service is absent:
+
+```yaml
+services:
+  my_module.my_service:
+    class: Drupal\my_module\Service\MyService
+    arguments: ['@config.factory', '@entity_type.manager', '@?optional.service']
+```
+
+```php
+// The constructor MUST accept a nullable type for the optional parameter.
+// Without the nullable type hint, PHP throws a fatal type error when NULL is injected.
+public function __construct(
+  ConfigFactoryInterface $config_factory,
+  EntityTypeManagerInterface $entity_type_manager,
+  ?OptionalServiceClass $optional_service = NULL,  // @? injects NULL when absent
+) {
+  $this->configFactory = $config_factory;
+  $this->entityTypeManager = $entity_type_manager;
+  $this->optionalService = $optional_service;
+}
+
+public function isAvailable(): bool {
+  // Guard with NULL check before using the optional service
+  return $this->optionalService !== NULL;
+}
+```
+
+> WRONG: Using `\Drupal::service('optional.service')` in methods when you need to support the module being absent. Static service calls throw `ServiceNotFoundException` when the service is not registered (i.e., when the optional module is not installed).
+> RIGHT: Inject the service via `@?service_name` in services.yml + nullable constructor parameter. Then guard with `if ($this->optionalService === NULL) { return; }` or `isAvailable()` check. This is the standard Drupal core pattern (used in `core.services.yml`, `content_moderation.services.yml`, etc.).
+
 ### src/Controller/HelloWorldController.php
 
 ```php

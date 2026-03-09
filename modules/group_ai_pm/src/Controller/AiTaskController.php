@@ -38,7 +38,7 @@ class AiTaskController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('group_ai_pm.ai_task_service')
+      $container->get('group_ai_pm.ai_task')
     );
   }
 
@@ -53,7 +53,7 @@ class AiTaskController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   JSON response with the created task or error message.
    */
-  public function createTask(ProjectInterface $project, Request $request) {
+  public function createFromText(ProjectInterface $project, Request $request) {
     // Parse request body.
     $data = json_decode($request->getContent(), TRUE);
 

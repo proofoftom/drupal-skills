@@ -2,6 +2,9 @@
 
 namespace Drupal\group_ai_pm\Service;
 
+use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai\OperationType\Chat\ChatInput;
+use Drupal\ai\OperationType\Chat\ChatMessage;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -29,16 +32,26 @@ class AiTaskService {
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
+   * The AI provider plugin manager (optional).
+   *
+   * @var \Drupal\ai\AiProviderPluginManager|null
+   */
+  protected ?AiProviderPluginManager $aiProvider;
+
+  /**
    * Constructs an AiTaskService object.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
+   * @param \Drupal\ai\AiProviderPluginManager|null $ai_provider
+   *   The AI provider plugin manager, or NULL when the AI module is absent.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, ?AiProviderPluginManager $ai_provider = NULL) {
     $this->configFactory = $config_factory;
     $this->entityTypeManager = $entity_type_manager;
+    $this->aiProvider = $ai_provider;
   }
 
   /**
@@ -48,9 +61,8 @@ class AiTaskService {
    *   TRUE if AI module is installed and configured, FALSE otherwise.
    */
   public function isAvailable(): bool {
-    // Check if AI module is installed.
-    $module_handler = \Drupal::moduleHandler();
-    if (!$module_handler->moduleExists('ai')) {
+    // Check if AI provider plugin manager was injected (AI module installed).
+    if ($this->aiProvider === NULL) {
       return FALSE;
     }
 
@@ -78,72 +90,46 @@ class AiTaskService {
     }
 
     $config = $this->configFactory->get('group_ai_pm.settings');
-    $provider = $config->get('ai_provider');
-    $model = $config->get('ai_model') ?? 'claude-3-5-sonnet';
+    $provider_id = $config->get('ai_provider');
+    $model_id = $config->get('ai_model') ?? '';
 
-    // Build JSON schema for structured output.
-    $schema = [
+    // Get the provider instance.
+    $provider = $this->aiProvider->createInstance($provider_id);
+
+    // Build chat input with structured JSON schema.
+    $input = new ChatInput([
+      new ChatMessage('user', $this->buildPrompt($text)),
+    ]);
+
+    $input->setSystemPrompt('You are a project management assistant. Parse the task description into structured JSON fields: title (required string), description (optional string), status (one of: todo, in_progress, review, done; default: todo), priority (one of: low, medium, high, critical; default: medium), assignee_name (optional string). Return ONLY valid JSON.');
+
+    $input->setChatStructuredJsonSchema([
       'type' => 'object',
       'properties' => [
-        'title' => [
-          'type' => 'string',
-          'description' => 'The task title/summary',
-        ],
-        'description' => [
-          'type' => 'string',
-          'description' => 'Detailed task description',
-        ],
+        'title' => ['type' => 'string'],
+        'description' => ['type' => 'string'],
         'status' => [
           'type' => 'string',
           'enum' => ['todo', 'in_progress', 'review', 'done'],
-          'description' => 'Task status',
         ],
         'priority' => [
           'type' => 'string',
           'enum' => ['low', 'medium', 'high', 'critical'],
-          'description' => 'Task priority',
         ],
-        'assignee_name' => [
-          'type' => 'string',
-          'description' => 'Name of person to assign to (optional)',
-        ],
+        'assignee_name' => ['type' => 'string'],
       ],
       'required' => ['title'],
-    ];
+    ]);
 
     try {
-      // Use AI module's chat API to parse natural language.
-      $client = \Drupal::service('ai.client');
-      $response = $client->complete(
-        $provider,
-        $model,
-        [
-          [
-            'role' => 'user',
-            'content' => $this->buildPrompt($text),
-          ],
-        ],
-        [
-          'response_format' => [
-            'type' => 'json_schema',
-            'json_schema' => [
-              'name' => 'task_fields',
-              'schema' => $schema,
-              'strict' => TRUE,
-            ],
-          ],
-        ]
-      );
+      $output = $provider->chat($input, $model_id, ['group_ai_pm']);
+      $parsed = json_decode($output->getNormalized()->getText(), TRUE);
 
-      // Extract and parse the response.
-      if ($response && isset($response['content'])) {
-        $parsed = json_decode($response['content'], TRUE);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($parsed)) {
-          return $this->normalizeParsedData($parsed);
-        }
+      if (!is_array($parsed) || empty($parsed['title'])) {
+        throw new \Exception('Failed to parse AI response into task fields.');
       }
 
-      throw new \Exception('Failed to parse AI response.');
+      return $this->normalizeParsedData($parsed);
     }
     catch (\Exception $e) {
       throw new \Exception('AI parsing error: ' . $e->getMessage());
