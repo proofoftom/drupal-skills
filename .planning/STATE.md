@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: AI Integration & Eval Tooling
 status: completed
-stopped_at: "Checkpoint: 24-02 Task 3 human-verify -- awaiting review of A/B eval results and promoted code"
-last_updated: "2026-03-09T14:51:55.418Z"
-last_activity: 2026-03-09 -- completed eval-author validation (plan 23-02), Phase 23 complete
+stopped_at: "Completed 24-02-PLAN.md"
+last_updated: "2026-03-09T15:20:31Z"
+last_activity: 2026-03-09 -- completed A/B eval pipeline (plan 24-02), Phase 24 plan 2 of 2 complete
 progress:
   total_phases: 6
   completed_phases: 3
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-09)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** v5.0 Phase 23 complete -- ready for Phase 24
+**Current focus:** v5.0 Phase 24 complete -- ready for Phase 25
 
 ## Current Position
 
-Phase: 23 of 27 (Skill Gap Fixes + Eval-Author Validation) -- COMPLETE
+Phase: 24 of 27 (AI Task Service + NL Task Creation) -- Plan 2 of 2 COMPLETE
 Plan: 2 of 2 complete
 Status: Complete
-Last activity: 2026-03-09 -- completed eval-author validation (plan 23-02), Phase 23 complete
+Last activity: 2026-03-09 -- completed A/B eval pipeline (plan 24-02), +14.8% delta (HIGH)
 
-Progress: [██████████] 100% (v5.0 Phase 23)
+Progress: [██████████] 100% (v5.0 Phase 24)
 
 ## Accumulated Context
 
@@ -53,6 +53,8 @@ Progress: [██████████] 100% (v5.0 Phase 23)
 - [Phase 24]: Phase prompt references outdated CreateProjectTool as WRONG pattern; context_definitions vs getArguments() is the top differentiator; runtime assertions use flexible multi-name matching
 - [Phase 24]: A/B delta was -3.6% (NEUT/negative): WITH variant copied AiFunctionCallBase from existing CreateProjectTool despite skill warning; skills failed to override codebase context signal for plugin base class selection
 - [Phase 24]: Skill patches applied for FunctionCallBase (@AiFunctionCall WRONG) and @? optional injection (both in relevant skills); manual post-promotion bug fixes: service ID mismatch, nullable AI provider param, method rename
+- [Phase 24-02]: v1 delta -3.6% (NEUT) -> skill patches -> v2 delta +14.8% (HIGH); WRONG/RIGHT callouts in skills essential to override codebase context when existing code shows wrong patterns
+- [Phase 24-02]: SA-15 removed (CacheableJsonResponse wrong for POST endpoints); SA-16 relaxed (service ID naming flexibility); SA-6 kept as non-differentiating shared failure
 
 ### Pending Todos
 
@@ -65,7 +67,7 @@ Progress: [██████████] 100% (v5.0 Phase 23)
 
 ## Session Continuity
 
-Last session: 2026-03-09T14:51:40.347Z
-Stopped at: Checkpoint: 24-02 Task 3 human-verify -- awaiting review of A/B eval results and promoted code
+Last session: 2026-03-09T15:20:31Z
+Stopped at: Completed 24-02-PLAN.md
 Resume file: None
-Resume action: Run `/gsd:plan-phase` for Phase 24
+Resume action: Run `/gsd:plan-phase` for Phase 25
