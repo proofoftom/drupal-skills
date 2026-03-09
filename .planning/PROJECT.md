@@ -28,7 +28,7 @@ Claude can generate correct, production-ready Drupal module code across all majo
 
 ### Active
 
-(Defined in REQUIREMENTS.md for v4.0)
+(Defined in REQUIREMENTS.md for v5.0)
 
 ### Out of Scope
 
@@ -98,24 +98,25 @@ Claude can generate correct, production-ready Drupal module code across all majo
 | Browser eval deprecated (v2.0) | Zero discriminatory value for backend patterns | ⚠️ Revived for v4.0 UX testing |
 | Three-tier assertions (v4.0) | Static + runtime + browser covers backend AND frontend quality | — Pending |
 
-## Current Milestone: v4.0 UX Overhaul
+## Current Milestone: v5.0 AI Integration & Eval Tooling
 
-**Goal:** Transform the group_ai_pm module from functional-but-bare-bones into a polished, Linear-quality project management experience -- with Vue.js Kanban boards, AJAX interactions, keyboard shortcuts, and proper Drupal navigation integration -- validated through eval-driven development with browser-based UX assertions.
+**Goal:** Add AI-powered project management features to group_ai_pm (natural language task creation, AI-suggested assignments, batch AI operations) while first building the foundational tooling -- a Drush skill and an eval-author agent -- that makes all subsequent phases more robust and less context-heavy.
 
 **Target features:**
-- Dashboard overview: project stats, recent activity, quick actions as primary entry point
-- Per-project Kanban board (Vue 3): drag-and-drop task management across status columns
-- Drupal AJAX for simpler interactions: status toggles, inline editing
-- Local task tabs connecting entity pages under /admin/content/
-- Keyboard shortcuts, smooth animations, filtered/sorted views
-- Rich task display: status badges, assignee avatars, due dates, priority indicators
-- REST/JSON:API endpoints for Vue.js ↔ Drupal communication
+- drupal-drush skill: Drush CLI knowledge for agents and runtime assertions
+- eval-author Opus subagent: automated eval design (static + runtime + browser assertions)
+- Skill gap fixes: entities-fields bundle_of, caching lazy_builder, forms-api #ajax hardening
+- AI-powered task creation from natural language input
+- AI-suggested task assignments and status updates
+- Batch AI operations on multiple tasks
+- Task history analytics with database schema and Views integration
+- Final cross-cutting eval pass with eval-author agent
 
-**Eval methodology shift from v3.0:**
-- v3.0: headless code gen + static/runtime assertions → measures backend code quality
-- v4.0: three-tier assertions (static + runtime + browser) → measures UX quality too
-- eval-browser (agent-browser) revived for frontend/interaction testing: does Kanban render, does drag-drop work, does AJAX fire
-- Continues cumulative build: extends v3.0 module output
+**Eval methodology evolution from v4.0:**
+- v4.0: manual eval design in main context window, browser assertions as afterthought
+- v5.0: eval-author agent (Opus) designs three-tier assertions systematically
+- Browser assertions promoted to first-class (manual UAT found bugs automated pipeline missed)
+- Drush skill enables smarter runtime assertions (drush php-eval, config:get, user:info)
 
 ---
-*Last updated: 2026-03-08 after v4.0 milestone started*
+*Last updated: 2026-03-09 after v5.0 milestone started*
