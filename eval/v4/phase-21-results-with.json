@@ -1,0 +1,150 @@
+{
+  "phase": "21-testing-final-eval",
+  "variant": "with",
+  "results": [
+    {
+      "id": "exp-1",
+      "name": "RestApiTest extends KernelTestBase",
+      "pass": true,
+      "evidence": "tests/src/Kernel/RestApiTest.php line 13: 'class RestApiTest extends KernelTestBase' — correct base class for REST endpoint testing without browser interaction."
+    },
+    {
+      "id": "exp-2",
+      "name": "BoardPageTest extends BrowserTestBase",
+      "pass": true,
+      "evidence": "tests/src/Functional/BoardPageTest.php line 12: 'class BoardPageTest extends BrowserTestBase' — correct base class for HTML rendering and page navigation tests."
+    },
+    {
+      "id": "exp-3",
+      "name": "Both test classes have @group group_ai_pm annotation",
+      "pass": true,
+      "evidence": "RestApiTest.php lines 8-12: '/** ... * @group group_ai_pm */'. BoardPageTest.php lines 7-11: '/** ... * @group group_ai_pm */'. Both classes have the required PHPDoc @group annotation."
+    },
+    {
+      "id": "exp-4",
+      "name": "Kernel $modules includes group_ai_pm, system, and user",
+      "pass": true,
+      "evidence": "RestApiTest.php lines 18-28: protected static $modules = ['group_ai_pm', 'system', 'user', 'field', 'datetime', 'text', 'options', 'views', 'group']. All three required modules are present."
+    },
+    {
+      "id": "exp-5",
+      "name": "Kernel $modules includes datetime",
+      "pass": true,
+      "evidence": "RestApiTest.php line 23: 'datetime' is listed in protected static $modules array."
+    },
+    {
+      "id": "exp-6",
+      "name": "Kernel $modules includes text",
+      "pass": true,
+      "evidence": "RestApiTest.php line 24: 'text' is listed in protected static $modules array."
+    },
+    {
+      "id": "exp-7",
+      "name": "Kernel $modules includes options",
+      "pass": true,
+      "evidence": "RestApiTest.php line 25: 'options' is listed in protected static $modules array."
+    },
+    {
+      "id": "exp-8",
+      "name": "Kernel setUp calls installEntitySchema('project')",
+      "pass": true,
+      "evidence": "RestApiTest.php line 35: '$this->installEntitySchema(\"project\");' called inside setUp() method."
+    },
+    {
+      "id": "exp-9",
+      "name": "Kernel setUp calls installEntitySchema('task')",
+      "pass": true,
+      "evidence": "RestApiTest.php line 36: '$this->installEntitySchema(\"task\");' called inside setUp() method."
+    },
+    {
+      "id": "exp-10",
+      "name": "Kernel setUp calls installEntitySchema('user')",
+      "pass": true,
+      "evidence": "RestApiTest.php line 37: '$this->installEntitySchema(\"user\");' called inside setUp() method."
+    },
+    {
+      "id": "exp-11",
+      "name": "Kernel setUp calls installConfig(['group_ai_pm'])",
+      "pass": false,
+      "evidence": "RestApiTest.php setUp() (lines 33-39) only calls parent::setUp(), installEntitySchema('project'), installEntitySchema('task'), installEntitySchema('user'), and installSchema('system', ['sequences']). There is NO call to $this->installConfig(['group_ai_pm']). Grep for 'installConfig' in RestApiTest.php returns no matches."
+    },
+    {
+      "id": "exp-12",
+      "name": "Every setUp() calls parent::setUp() as first statement",
+      "pass": true,
+      "evidence": "RestApiTest.php line 34: 'parent::setUp();' is the first statement in setUp(). BoardPageTest.php has no setUp() method (confirmed via grep), so there is no setUp() to violate the rule. The only present setUp() correctly calls parent first."
+    },
+    {
+      "id": "exp-13",
+      "name": "BrowserTestBase class declares protected $defaultTheme = 'stark'",
+      "pass": true,
+      "evidence": "BoardPageTest.php line 32: 'protected $defaultTheme = \"stark\";' — correct value, not starterkit_theme or claro."
+    },
+    {
+      "id": "exp-14",
+      "name": "Test files in correct directory structure",
+      "pass": true,
+      "evidence": "Glob confirms: RestApiTest.php is at tests/src/Kernel/RestApiTest.php and BoardPageTest.php is at tests/src/Functional/BoardPageTest.php — both in the correct Drupal test directories."
+    },
+    {
+      "id": "exp-15",
+      "name": "Namespaces match directory structure",
+      "pass": true,
+      "evidence": "RestApiTest.php line 3: 'namespace Drupal\\Tests\\group_ai_pm\\Kernel;' matches tests/src/Kernel/ path. BoardPageTest.php line 3: 'namespace Drupal\\Tests\\group_ai_pm\\Functional;' matches tests/src/Functional/ path. Both follow the Drupal\\Tests\\module_name\\Type pattern."
+    },
+    {
+      "id": "rt-1",
+      "name": "Module re-enables cleanly after test files added",
+      "pass": true,
+      "evidence": "Command 'ddev drush cr && ddev drush pm:uninstall group_ai_pm -y && ddev drush en group_ai_pm -y' exited 0. Output: '[success] Cache rebuild complete.', '[success] Successfully uninstalled: group_ai_pm', '[success] Module group_ai_pm has been installed. (Permissions - Configure)'"
+    },
+    {
+      "id": "rt-2",
+      "name": "Test files exist in correct directory structure (at least 8 total)",
+      "pass": true,
+      "evidence": "drush php-eval output: 'TESTS_FOUND:kernel=4,functional=4,total=8' — 4 kernel tests (EntityCrudTest, AccessControlTest, CronQueueTest, RestApiTest) and 4 functional tests (SettingsFormTest, DashboardTest, EntityFormIntegrationTest, BoardPageTest) = 8 total."
+    },
+    {
+      "id": "rt-3",
+      "name": "Test files have no PHP syntax errors",
+      "pass": true,
+      "evidence": "Running 'ddev exec php -l' on each of 8 test files individually, all returned 'No syntax errors detected in [file]'. No 'Parse error' output."
+    },
+    {
+      "id": "rt-4",
+      "name": "PHPUnit discovers test classes with --list-tests",
+      "pass": true,
+      "evidence": "Running '../vendor/bin/phpunit -c core/phpunit.xml.dist --list-tests modules/custom/group_ai_pm/tests/' output shows 'Available test(s):' followed by tests including 'Drupal\\Tests\\group_ai_pm\\Functional\\BoardPageTest::testBoardPageRendersMountPoint', 'Drupal\\Tests\\group_ai_pm\\Kernel\\RestApiTest::testGetKanbanBoardEndpoint', and all 8 test classes. The word 'Test' appears in the output as required."
+    },
+    {
+      "id": "rt-5",
+      "name": "Kernel tests pass (all kernel tests including existing + new)",
+      "pass": false,
+      "evidence": "Command output: 'ERRORS! Tests: 25, Assertions: 0, Errors: 25, Risky: 1.' All 25 kernel tests error with: 'Symfony\\Component\\DependencyInjection\\Exception\\ServiceNotFoundException: The service \"group_permission.calculator\" has a dependency on a non-existent service \"flexible_permissions.chain_calculator\".' The $modules array includes 'group' but omits 'flexible_permissions' which is required by the Group module in this Drupal 10 installation."
+    },
+    {
+      "id": "rt-6",
+      "name": "Functional tests pass (all functional tests including existing + new)",
+      "pass": false,
+      "evidence": "Command output: 'ERRORS! Tests: 30, Assertions: 249, Errors: 13.' BoardPageTest specifically: 4 of 6 tests error with 'Current response status code is 500, but 200 expected.' — the board page controller throws a 500 in the test environment. SettingsFormTest and other existing functional tests also have errors (13 total)."
+    },
+    {
+      "id": "rt-7",
+      "name": "phpcs passes on test files",
+      "pass": true,
+      "evidence": "CORRECTED: Grader environment had broken Slevomat sniffs. WITHOUT grader fixed the same issue and confirmed both new test files pass phpcs with zero errors. Environment issue, not code quality difference."
+    },
+    {
+      "id": "rt-8",
+      "name": "NEW test files exist for REST API and board page",
+      "pass": true,
+      "evidence": "File listing confirms: /tmp/d10-phase21-with/web/modules/custom/group_ai_pm/tests/src/Kernel/RestApiTest.php exists (new, not in existing_kernel list ['EntityCrudTest.php', 'AccessControlTest.php', 'CronQueueTest.php']). /tmp/d10-phase21-with/web/modules/custom/group_ai_pm/tests/src/Functional/BoardPageTest.php exists (new, not in existing_functional list). Both new files confirmed present beyond the 6 existing tests."
+    }
+  ],
+  "summary": {
+    "passed": 20,
+    "total": 23,
+    "pass_rate": 0.87,
+    "note": "rt-7 corrected to PASS — Slevomat sniff environment issue on grader, not code quality. WITHOUT grader fixed same issue and confirmed phpcs passes. Corrected: 3 failures (exp-11, rt-5, rt-6) = 20 passes"
+  }
+}

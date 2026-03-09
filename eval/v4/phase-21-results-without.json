@@ -1,0 +1,150 @@
+{
+  "phase": "21-testing-final-eval",
+  "variant": "without",
+  "results": [
+    {
+      "id": "exp-1",
+      "name": "REST API test class extends KernelTestBase",
+      "pass": true,
+      "evidence": "RestApiTest.php line 13: 'class RestApiTest extends KernelTestBase' — correctly uses KernelTestBase for REST endpoint testing, not BrowserTestBase."
+    },
+    {
+      "id": "exp-2",
+      "name": "Board page test class extends BrowserTestBase",
+      "pass": true,
+      "evidence": "BoardPageTest.php line 12: 'class BoardPageTest extends BrowserTestBase' — correctly uses BrowserTestBase for HTML page rendering tests."
+    },
+    {
+      "id": "exp-3",
+      "name": "Every test class has @group annotation set to 'group_ai_pm'",
+      "pass": true,
+      "evidence": "RestApiTest.php lines 8-12: '* @group group_ai_pm'. BoardPageTest.php lines 7-11: '* @group group_ai_pm'. Both classes have the required annotation."
+    },
+    {
+      "id": "exp-4",
+      "name": "Kernel test $modules includes 'group_ai_pm', 'system', and 'user' at minimum",
+      "pass": true,
+      "evidence": "RestApiTest.php lines 18-28: protected static $modules = ['group_ai_pm', 'system', 'user', 'field', 'datetime', 'text', 'options', 'views', 'group']. All three required modules are present."
+    },
+    {
+      "id": "exp-5",
+      "name": "Kernel test $modules includes 'datetime' module",
+      "pass": true,
+      "evidence": "RestApiTest.php line 23: 'datetime' is included in the $modules array."
+    },
+    {
+      "id": "exp-6",
+      "name": "Kernel test $modules includes 'text' module",
+      "pass": true,
+      "evidence": "RestApiTest.php line 24: 'text' is included in the $modules array."
+    },
+    {
+      "id": "exp-7",
+      "name": "Kernel test $modules includes 'options' module",
+      "pass": true,
+      "evidence": "RestApiTest.php line 25: 'options' is included in the $modules array."
+    },
+    {
+      "id": "exp-8",
+      "name": "Kernel test setUp() calls installEntitySchema('project')",
+      "pass": true,
+      "evidence": "RestApiTest.php line 35: '$this->installEntitySchema(\"project\");' is present in setUp()."
+    },
+    {
+      "id": "exp-9",
+      "name": "Kernel test setUp() calls installEntitySchema('task')",
+      "pass": true,
+      "evidence": "RestApiTest.php line 36: '$this->installEntitySchema(\"task\");' is present in setUp()."
+    },
+    {
+      "id": "exp-10",
+      "name": "Kernel test setUp() calls installEntitySchema('user')",
+      "pass": true,
+      "evidence": "RestApiTest.php line 37: '$this->installEntitySchema(\"user\");' is present in setUp()."
+    },
+    {
+      "id": "exp-11",
+      "name": "Kernel test setUp() calls installConfig(['group_ai_pm'])",
+      "pass": false,
+      "evidence": "RestApiTest.php setUp() (lines 33-39) contains only: parent::setUp(), installEntitySchema('project'), installEntitySchema('task'), installEntitySchema('user'), installSchema('system', ['sequences']). No installConfig(['group_ai_pm']) call is present. grep for 'installConfig' returns no matches."
+    },
+    {
+      "id": "exp-12",
+      "name": "Every setUp() method calls parent::setUp() as the FIRST statement",
+      "pass": true,
+      "evidence": "RestApiTest.php line 34: 'parent::setUp();' is the first statement in setUp() before any installEntitySchema calls. BoardPageTest.php has no setUp() override at all, so the inherited parent setUp() runs correctly without violation."
+    },
+    {
+      "id": "exp-13",
+      "name": "BrowserTestBase test declares protected $defaultTheme = 'stark'",
+      "pass": true,
+      "evidence": "BoardPageTest.php line 32: 'protected $defaultTheme = \"stark\";'"
+    },
+    {
+      "id": "exp-14",
+      "name": "Test files placed in correct directory structure (Kernel/ and Functional/)",
+      "pass": true,
+      "evidence": "Glob confirms: tests/src/Kernel/RestApiTest.php and tests/src/Functional/BoardPageTest.php — both in the correct Drupal test directory structure."
+    },
+    {
+      "id": "exp-15",
+      "name": "Test class namespaces follow correct pattern for Kernel and Functional",
+      "pass": true,
+      "evidence": "RestApiTest.php line 3: 'namespace Drupal\\Tests\\group_ai_pm\\Kernel;'. BoardPageTest.php line 3: 'namespace Drupal\\Tests\\group_ai_pm\\Functional;'. Both match the required pattern."
+    },
+    {
+      "id": "rt-1",
+      "name": "Module re-enables cleanly after test files added",
+      "pass": true,
+      "evidence": "ddev drush cr && ddev drush pm:uninstall group_ai_pm -y && ddev drush en group_ai_pm -y output: '[success] Cache rebuild complete.', '[success] Successfully uninstalled: group_ai_pm', '[success] Module group_ai_pm has been installed.'"
+    },
+    {
+      "id": "rt-2",
+      "name": "Test files exist in correct directory structure (at least 8 total: 6 existing + 2 new)",
+      "pass": true,
+      "evidence": "ddev drush php-eval output: 'TESTS_FOUND:kernel=4,functional=4,total=8' — 8 total test files found, threshold of 8 met."
+    },
+    {
+      "id": "rt-3",
+      "name": "Test files have no PHP syntax errors",
+      "pass": true,
+      "evidence": "php -l on all 8 test files (via ddev exec) returns 'No syntax errors detected' for each file including RestApiTest.php and BoardPageTest.php. No 'Parse error' output found."
+    },
+    {
+      "id": "rt-4",
+      "name": "PHPUnit discovers test classes with --list-tests",
+      "pass": true,
+      "evidence": "ddev exec phpunit --configuration core/phpunit.xml --list-tests modules/custom/group_ai_pm/tests/ lists 28+ tests including Drupal\\Tests\\group_ai_pm\\Functional\\BoardPageTest::testBoardPageAccessAnonymous and other BoardPageTest methods. Discovery succeeds with phpunit.xml config."
+    },
+    {
+      "id": "rt-5",
+      "name": "Kernel tests pass (all kernel tests including existing + new)",
+      "pass": false,
+      "evidence": "ddev exec phpunit --configuration core/phpunit.xml --group group_ai_pm modules/custom/group_ai_pm/tests/src/Kernel/ output: 'ERRORS! Tests: 24, Assertions: 0, Errors: 24'. All 24 kernel tests fail with 'ServiceNotFoundException: The service \"group_permission.calculator\" has a dependency on a non-existent service \"flexible_permissions.chain_calculator\"'. RestApiTest also fails with the same error (3/3 errors). The generated test includes 'group' in $modules which causes a chain dependency failure in Kernel context."
+    },
+    {
+      "id": "rt-6",
+      "name": "Functional tests pass (all functional tests including existing + new)",
+      "pass": false,
+      "evidence": "ddev exec phpunit --configuration core/phpunit.xml --group group_ai_pm modules/custom/group_ai_pm/tests/src/Functional/ output: 'ERRORS! Tests: 35, Assertions: 281, Errors: 18'. BoardPageTest tests that check for 200 status fail with 'Current response status code is 500, but 200 expected' (9 errors in BoardPageTest). Other errors come from existing SettingsFormTest. Does not contain 'OK' without errors."
+    },
+    {
+      "id": "rt-7",
+      "name": "phpcs passes on test files",
+      "pass": true,
+      "evidence": "After configuring installed_paths to include slevomat/coding-standard, ddev exec vendor/bin/phpcs --standard=Drupal,DrupalPractice --extensions=php web/modules/custom/group_ai_pm/tests/src/Kernel/RestApiTest.php web/modules/custom/group_ai_pm/tests/src/Functional/BoardPageTest.php produces no output (no errors, no warnings). Exit code 0."
+    },
+    {
+      "id": "rt-8",
+      "name": "NEW test files exist for REST API and board page",
+      "pass": true,
+      "evidence": "Directory listing confirms: Kernel/ contains RestApiTest.php (new), EntityCrudTest.php, AccessControlTest.php, CronQueueTest.php. Functional/ contains BoardPageTest.php (new), DashboardTest.php, EntityFormIntegrationTest.php, SettingsFormTest.php. Both new files exist beyond the 6 existing ones."
+    }
+  ],
+  "summary": {
+    "passed": 20,
+    "total": 23,
+    "pass_rate": 0.87,
+    "note": "Grader arithmetic corrected: 15 static + 8 runtime = 23 total, 3 failures (exp-11, rt-5, rt-6) = 20 passes"
+  }
+}
