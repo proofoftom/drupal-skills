@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: UX Overhaul
-status: ready_to_plan
-stopped_at: Roadmap created — ready to plan Phase 18
-last_updated: "2026-03-08"
-last_activity: 2026-03-08 -- Roadmap created with 4 phases (18-21), 46 requirements mapped
+status: phase_complete
+stopped_at: Phase 19 eval complete — WITHOUT 100% = WITH 100% = 0% delta (NEUTRAL)
+last_updated: "2026-03-09"
+last_activity: 2026-03-09 -- Phase 19 eval complete (WITHOUT 29/29 100% = WITH 29/29 100% = 0% NEUTRAL)
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 2
   total_plans: 0
   completed_plans: 0
-  percent: 0
+  percent: 50
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
-**Current focus:** v4.0 UX Overhaul — Phase 18 (REST API + Vue Infrastructure + Basic Board)
+**Current focus:** v4.0 UX Overhaul — Phase 19 complete, ready for Phase 20
 
 ## Current Position
 
-Phase: 18 of 21 (REST API + Vue Infrastructure + Basic Board)
-Plan: Ready to plan
-Status: Ready to plan
-Last activity: 2026-03-08 — Roadmap created
+Phase: 19 of 21 (Interactions + Detail Panel + Visual Polish) — COMPLETE
+Plan: Eval-driven (1 round, no iteration needed)
+Status: Promoted, ddev instances torn down
+Last activity: 2026-03-09 — Phase 19 eval complete
 
-Progress: [░░░░░░░░░░] 0% (v4.0)
+Progress: [█████░░░░░] 50% (v4.0)
 
 ## Accumulated Context
 
@@ -42,6 +42,9 @@ Progress: [░░░░░░░░░░] 0% (v4.0)
 - [v4.0]: Eval-driven with three-tier assertions (static + runtime + browser)
 - [v4.0]: eval-browser revived for UX testing
 - [v4.0]: All VISUAL requirements assigned to Phase 19 (board card enhancements belong with interaction polish)
+- [Phase 18]: 4 skill patches proved effective: _format:json, CacheableJsonResponse, CacheableMetadata, entity upcasting
+- [Phase 18]: Haiku consistently uses ControllerBase lazy methods instead of explicit DI create()/construct() — not fixable via skill patches
+- [Phase 19]: 0% delta — existing module already demonstrates all tested patterns (routes, CSRF, caching, upcasting). Skills add value for NEW patterns, not extending existing ones. This confirms v2.0 finding that skills are most impactful for non-obvious patterns.
 
 ### Pending Todos
 
@@ -54,7 +57,7 @@ Progress: [░░░░░░░░░░] 0% (v4.0)
 
 ## Session Continuity
 
-Last session: 2026-03-08
-Stopped at: Roadmap created with 4 phases (18-21), 46 requirements mapped
-Resume file: .planning/.continue-here.md
-Resume action: Plan Phase 18 via /gsd:plan-phase 18
+Last session: 2026-03-09
+Stopped at: Phase 20 planned (research + 2 plans + verification passed), ready for eval pipeline
+Resume file: .planning/phases/20-dashboard-list-enhancements/.continue-here.md
+Resume action: Run Phase 20 eval pipeline (design assertions → headless code gen → grade → promote)
