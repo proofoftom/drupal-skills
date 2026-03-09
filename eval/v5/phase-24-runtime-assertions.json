@@ -1,0 +1,89 @@
+{
+  "phase": "phase-24-ai-task-service-nl-creation",
+  "runtime_assertions": [
+    {
+      "id": "rt-1",
+      "name": "Main module enables cleanly without AI module",
+      "command": "ddev drush cr && ddev drush pm:list --status=enabled 2>&1 | grep -q group_ai_pm && echo PASS || echo FAIL",
+      "expected": "PASS",
+      "rationale": "AiTaskService uses @?ai.provider optional injection -- the module MUST enable even when the AI module is absent. If services.yml uses a hard @ai.provider dependency, Drupal throws a ServiceNotFoundException on module enable."
+    },
+    {
+      "id": "rt-2",
+      "name": "AiTaskService resolves from service container",
+      "command": "ddev drush php-eval \"try { $s = \\Drupal::service('group_ai_pm.ai_task'); echo $s ? 'PASS' : 'FAIL'; } catch (\\Exception $e) { echo 'FAIL: ' . $e->getMessage(); }\"",
+      "expected": "PASS",
+      "rationale": "Verifies AiTaskService is registered in group_ai_pm.services.yml AND the class is autoloadable at correct namespace (Drupal\\group_ai_pm\\Service\\AiTaskService). Catches both missing services.yml registration and wrong namespace/path."
+    },
+    {
+      "id": "rt-3",
+      "name": "AiTaskService isAvailable() returns false when AI module not configured",
+      "command": "ddev drush php-eval \"$s = \\Drupal::service('group_ai_pm.ai_task'); echo method_exists($s, 'isAvailable') ? ($s->isAvailable() ? 'FAIL: should be false' : 'PASS') : 'FAIL: method missing';\"",
+      "expected": "PASS",
+      "rationale": "isAvailable() must return false when AI provider is NULL (no AI module) or when ai_provider config is empty. Verifies the optional dependency guard logic works correctly in a clean Drupal without AI configured."
+    },
+    {
+      "id": "rt-4",
+      "name": "AI submodule enables cleanly (when ai_agents available)",
+      "command": "ddev drush en group_ai_pm_ai -y 2>&1 | grep -v 'already enabled' | grep -q 'was enabled\\|successfully' && echo PASS || ddev drush pm:list --status=enabled 2>&1 | grep -q group_ai_pm_ai && echo PASS || echo FAIL",
+      "expected": "PASS",
+      "rationale": "CreateTaskTool plugin must not cause fatal errors on module enable. If CreateTaskTool uses a non-existent base class (AiFunctionCallBase) or wrong namespace, the class loader fails and the submodule cannot be enabled."
+    },
+    {
+      "id": "rt-5",
+      "name": "CreateTaskTool plugin is discovered by the function calls plugin manager",
+      "command": "ddev drush php-eval \"$defs = \\Drupal::service('plugin.manager.ai.function_calls')->getDefinitions(); $found = FALSE; foreach (array_keys($defs) as $id) { if (strpos($id, 'create_task') !== FALSE || strpos($id, 'CreateTask') !== FALSE || strpos($id, 'group_ai_pm:create_task') !== FALSE) { $found = TRUE; break; } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Verifies CreateTaskTool is registered in the plugin.manager.ai.function_calls registry. If it uses @AiFunctionCall annotation instead of #[FunctionCall] attribute, the modern plugin manager may not discover it. Checks multiple naming conventions (id, class name prefix, namespaced id)."
+    },
+    {
+      "id": "rt-6",
+      "name": "AI create route is registered",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $found = FALSE; foreach (['group_ai_pm.api.ai_create', 'group_ai_pm.ai_create', 'group_ai_pm.api.ai-create', 'group_ai_pm.task.ai_create'] as $name) { try { $provider->getRouteByName($name); $found = TRUE; break; } catch (\\Exception $e) {} } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Verifies the POST AI task creation route was added to group_ai_pm.routing.yml. Checks multiple naming conventions since Haiku may choose a different machine name than specified. Route must exist before the CSRF and _format requirements can be validated."
+    },
+    {
+      "id": "rt-7",
+      "name": "AI create route has _csrf_request_header_token requirement",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); foreach (['group_ai_pm.api.ai_create', 'group_ai_pm.ai_create', 'group_ai_pm.api.ai-create', 'group_ai_pm.task.ai_create'] as $name) { try { $route = $provider->getRouteByName($name); $reqs = $route->getRequirements(); if (isset($reqs['_csrf_request_header_token'])) { echo 'PASS'; exit; } } catch (\\Exception $e) {} } echo 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "The AI create route is a JavaScript REST endpoint and MUST use _csrf_request_header_token (not _csrf_token). This is the primary differentiating assertion for the access-security and routing-controllers skills -- without them, Haiku uses _csrf_token (query-string based, broken for JS fetch) or omits CSRF protection entirely."
+    },
+    {
+      "id": "rt-8",
+      "name": "AI create route has _format:json requirement",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); foreach (['group_ai_pm.api.ai_create', 'group_ai_pm.ai_create', 'group_ai_pm.api.ai-create', 'group_ai_pm.task.ai_create'] as $name) { try { $route = $provider->getRouteByName($name); $reqs = $route->getRequirements(); if (isset($reqs['_format']) && $reqs['_format'] === 'json') { echo 'PASS'; exit; } } catch (\\Exception $e) {} } echo 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Without _format:json, Drupal returns HTML error pages for 403/404/422 instead of JSON. This is taught explicitly by the routing-controllers skill and is consistently missed by Haiku without it."
+    },
+    {
+      "id": "rt-9",
+      "name": "AiTaskController class is autoloadable",
+      "command": "ddev drush php-eval \"echo class_exists('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\AiTaskController') ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Verifies the controller file is at the correct PSR-4 path (src/Controller/AiTaskController.php) with the correct namespace. A namespace mismatch or file at wrong path causes autoloading failure."
+    },
+    {
+      "id": "rt-10",
+      "name": "AiTaskService class is autoloadable",
+      "command": "ddev drush php-eval \"echo class_exists('\\\\Drupal\\\\group_ai_pm\\\\Service\\\\AiTaskService') ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Verifies AiTaskService is at src/Service/AiTaskService.php with correct namespace Drupal\\group_ai_pm\\Service\\AiTaskService. Wrong directory (e.g., src/Services/ or src/AiTaskService.php) causes autoloading failure."
+    },
+    {
+      "id": "rt-11",
+      "name": "Config schema includes ai_model key",
+      "command": "ddev drush php-eval \"$schema = \\Drupal::service('config.typed')->getDefinition('group_ai_pm.settings'); echo isset($schema['mapping']['ai_model']) ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Verifies the config schema was updated to include ai_model. The config-storage skill teaches that every config key needs a schema entry. Missing schema causes config export/import validation failures."
+    },
+    {
+      "id": "rt-12",
+      "name": "Config install default includes ai_model key",
+      "command": "ddev drush php-eval \"$config = \\Drupal::config('group_ai_pm.settings'); $val = $config->get('ai_model'); echo $val !== NULL ? 'PASS' : 'FAIL: ai_model key missing from settings';\"",
+      "expected": "PASS",
+      "rationale": "Verifies group_ai_pm.settings.yml in config/install/ includes ai_model with a default value. Without this, any code reading ai_model gets NULL and the config object may not have the key defined."
+    }
+  ]
+}
