@@ -1,613 +1,535 @@
-# Domain Pitfalls: v4.0 Vue.js Kanban UX Overhaul
+# Domain Pitfalls: v5.0 AI Integration, Drush Skill, Eval Tooling & Analytics
 
-**Domain:** Adding Vue.js, AJAX, and rich frontend UX to an existing Drupal 10 module (group_ai_pm)
-**Researched:** 2026-03-08
-**Confidence:** HIGH for Drupal asset pipeline and CSRF patterns (official docs verified); MEDIUM for Vue.js + Drupal integration (community patterns, no single authoritative source); MEDIUM for Haiku code generation limitations (empirical from v3.0 evals)
+**Domain:** Adding AI-powered task management, a Drush CLI skill, an eval-author Opus subagent, skill gap fixes, and task analytics to an existing Drupal module (group_ai_pm) and skill collection
+**Researched:** 2026-03-09
+**Confidence:** HIGH for Drush command authoring (official Drush 13.x docs verified); HIGH for Drupal queue/batch patterns (existing skill + official docs); MEDIUM for Drupal AI module integration (official docs incomplete on exception handling, verified via issue queue); MEDIUM for eval-author agent design (Anthropic eval guide + project-specific empirical data); MEDIUM for analytics schema (general Drupal schema patterns verified, analytics-specific patterns from community)
 
-**Scope:** Pitfalls specific to ADDING Vue.js Kanban boards, REST endpoints, AJAX interactions, and keyboard-driven UX to the existing group_ai_pm module. v3.0 pitfalls (Group API, AI integration, plugin packaging) are archived in git history.
+**Scope:** Pitfalls specific to ADDING these six feature domains to the existing group_ai_pm module (10+ controllers, 2 entity types, Vue frontend, REST API, AJAX forms, 8 tests). v4.0 pitfalls (CSRF, Vue double-mounting, Claro CSS) are archived in git history.
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause rewrites, broken UX, or security vulnerabilities.
+Mistakes that cause rewrites, broken eval pipelines, or wasted iteration cycles.
 
-### Pitfall 1: CSRF Token Not Fetched Before First Mutation -- Silent 403 on Drag-and-Drop
+### Pitfall 1: Drush Skill Teaches Deprecated Command Patterns -- Generated Commands Not Discovered
 
 **What goes wrong:**
-The Vue.js Kanban board loads, renders tasks correctly via GET, and the user drags a card to a new column. The optimistic UI moves the card. Then the PATCH request to update the task status returns a 403. The card snaps back. This happens on every single mutation because the JavaScript never fetched a CSRF token from `/session/token` before issuing write requests.
+The Drush skill teaches Haiku to create command files extending `DrushCommands` base class with annotation-based `@command` attributes and a `drush.services.yml` file. The generated command is placed in `src/Commands/` (missing the `Drush/` subdirectory). Drush 12+ cannot discover the command. `drush list` does not show it. The user gets "Command not found."
 
 **Why it happens:**
-Drupal requires an `X-CSRF-Token` header on all POST/PATCH/DELETE requests when using session (cookie) authentication. The token must be retrieved via a separate GET to `/session/token` before any write operation. This is not optional -- missing it produces a 403 with an empty or unhelpful body. The token is per-session, not per-request, so it only needs to be fetched once -- but it MUST be fetched before the first mutation.
+Drush underwent three major breaking changes between Drush 11 and 13:
 
-Many Vue/React tutorials show REST calls without CSRF because they assume Bearer token auth (which bypasses CSRF checks). Drupal admin pages use session cookies, so CSRF protection is always active for authenticated admin users.
+1. **Directory**: Commands moved from `src/Commands/` to `src/Drush/Commands/`. The `Drush/` subdirectory is a hard requirement for auto-discovery in Drush 12+.
+2. **Base class**: `DrushCommands` is deprecated in favor of extending `Symfony\Component\Console\Command\Command` directly with `#[AsCommand]` attribute (Drush 13.7+).
+3. **DI**: `drush.services.yml` is deprecated. Drush 13 uses `AutowireTrait` for constructor injection with type-hinted parameters. Drush 14 will remove `drush.services.yml` support entirely.
+
+Most training data (including the Sipos book which is the basis for all existing skills) predates these changes. Claude's training data likely contains a mix of Drush 8-12 patterns, with the majority being the deprecated style. Without a skill explicitly teaching the Drush 13 pattern, code generation will reliably produce undiscoverable commands.
 
 **Consequences:**
-- Every drag-and-drop, inline edit, quick-create, and status toggle fails silently or with a confusing 403
-- Optimistic UI reverts look like bugs to the user
-- If error handling is poor, the UI shows the card in the new column but the server state is unchanged -- data inconsistency
+- Commands not found at runtime despite file existing
+- Module installs fine but `drush my-command` fails
+- Runtime assertions using `drush` to verify module behavior fail (eval pipeline broken)
+- Developers debug nonexistent code issues when the problem is purely structural
 
 **Prevention:**
-- Fetch CSRF token in the Vue app's `onMounted()` lifecycle hook, BEFORE any user interaction is possible
-- Store the token in a module-level variable or Pinia store, include it in every mutation request
-- Pass the `/session/token` URL via `drupalSettings` (do not hardcode it -- base path may vary)
-- Example pattern for the API service layer:
-  ```javascript
-  let csrfToken = null;
-  async function ensureCsrfToken() {
-    if (!csrfToken) {
-      const response = await fetch(drupalSettings.path.baseUrl + 'session/token');
-      csrfToken = await response.text();
+- The Drush skill MUST teach the Drush 12/13 pattern as the PRIMARY pattern, not as a footnote:
+  ```
+  Directory: src/Drush/Commands/ (NOT src/Commands/)
+  Base class: Symfony\Component\Console\Command\Command (NOT DrushCommands)
+  Attribute: #[AsCommand(name: 'my:command')]
+  DI: use AutowireTrait (NOT drush.services.yml)
+  ```
+- Include a CRITICAL NEVER callout: "NEVER place Drush commands in `src/Commands/`. Drush 12+ requires `src/Drush/Commands/` for auto-discovery."
+- Include both D10 (Drush 12, `create()` method) and D11 (Drush 13, `AutowireTrait`) patterns, with Drush 12 as the D10-compatible baseline
+- Add `#[Autowire]` attribute documentation for services that cannot be resolved by type hint alone (e.g., multiple LoggerInterface implementations)
+- Eval assertions MUST test discovery: `drush list | grep my_command` as a runtime check, not just file existence
+
+**Detection:**
+- `drush list --filter=module_name` returns empty
+- `drush my:command` returns "Command 'my:command' is not defined"
+- `drush -vvv my:command` shows service instantiation errors (if DI is wrong)
+
+**Phase to address:** Drush Skill phase. This is the foundational deliverable -- if the skill teaches wrong patterns, every downstream phase using Drush commands will fail.
+
+---
+
+### Pitfall 2: Eval-Author Agent Generates Tautological Assertions That Pass Both With and Without Skills
+
+**What goes wrong:**
+The eval-author Opus subagent reads the SKILL.md file and the eval prompt, then generates assertions like "Controller file exists at src/Controller/MyController.php" or "Module has a .info.yml file" or "Route is defined in routing.yml." These assertions pass 100% for both with-skill and without-skill runs. The eval shows 0% delta. The team concludes skills have no value, when actually the assertions are measuring the wrong thing.
+
+**Why it happens:**
+This is the #1 failure mode of automated assertion generation, observed empirically in this project and confirmed by Anthropic's eval design guidance. The root cause is that LLMs gravitate toward assertions they can verify with high confidence -- which are exactly the assertions that test obvious, undifferentiated behavior. "Does the file exist?" is easy to verify. "Does the file use CacheableJsonResponse instead of JsonResponse?" requires domain knowledge about WHY one is better.
+
+The eval-author agent lacks the key insight that drove v2.0-v4.0 success: **assertions must target patterns where Haiku WITHOUT the skill gets it wrong**. This requires understanding what Haiku's baseline behavior is -- knowledge the eval-author does not inherently have.
+
+From Anthropic's eval design guide: "There is a common instinct to check that agents followed very specific steps... We've found this approach too rigid." But the opposite extreme -- checking only that output exists -- is equally useless. The sweet spot is checking for specific patterns that differentiate skilled from unskilled output.
+
+**Consequences:**
+- Eval results show 0% delta across the board
+- Skills appear useless when they may actually be highly effective
+- The team wastes cycles iterating on skills that are already good (false negative on skill quality)
+- The eval pipeline becomes a rubber stamp instead of a measurement tool
+
+**Prevention:**
+- The eval-author agent MUST receive as context: (1) the SKILL.md file, (2) the eval prompt, AND (3) a curated list of "differentiating patterns" extracted from SKILL.md -- patterns that Haiku is unlikely to produce without the skill
+- Provide the agent with examples of GOOD assertions from v2.0-v4.0 (Phase 18 evals are the gold standard -- 17 assertions, all targeting non-obvious patterns, producing +23.3% delta)
+- Include a system prompt rule: "NEVER generate assertions that test for file existence, standard Drupal boilerplate, or patterns that any competent Drupal developer would use. ALWAYS test for specific patterns documented in the skill as WRONG-WAY or CRITICAL callouts."
+- Build a "tautology check" into the agent pipeline: after generating assertions, have a second pass ask "Would Haiku produce this pattern WITHOUT the skill?" If the answer is likely "yes," discard the assertion
+- Include a mandatory assertion category distribution: at least 60% must be "differentiating" (tests non-obvious skill patterns), max 20% can be "structural" (tests file/class existence), and at least 20% must be "wiring" (tests that components connect to each other, not just exist)
+
+**Detection:**
+- All assertions pass at 100% for both with and without skill
+- Assertions read like a checklist of file names rather than behavioral checks
+- No assertion mentions a specific API method, class, or pattern from the SKILL.md
+- Assertions do not reference any WRONG-WAY callout from the skill
+
+**Phase to address:** Eval-Author Agent phase. This phase defines the tool that all subsequent phases depend on. Getting this wrong propagates to every future eval.
+
+---
+
+### Pitfall 3: AI Module Integration Swallows Rate Limit Exceptions -- Queue Worker Deletes Items That Should Be Retried
+
+**What goes wrong:**
+The batch AI QueueWorker catches `\Exception` generically in `processItem()`, logs the error, and the queue runner deletes the item. When OpenAI/Anthropic returns a rate limit error (HTTP 429), the Drupal AI module throws `AiRateLimitException`. The generic catch swallows it, the item is deleted, and the AI operation is permanently lost. The user's batch of 50 task descriptions that needed AI-generated summaries loses 15 items silently.
+
+**Why it happens:**
+The existing `OverdueNotificationWorker` in the module correctly implements the two-catch pattern (`SuspendQueueException` first, then generic `\Exception`). But `AiRateLimitException` does NOT extend `SuspendQueueException` -- it is its own exception class in the AI module hierarchy. The two-catch pattern is necessary but not sufficient for AI operations. There is a third category of exception (rate limit / quota) that means "retry later" rather than "bad item" or "systemic failure."
+
+Additionally, Azure OpenAI provider has a known bug where `AiRateLimitException` is not thrown even when the API response indicates rate limiting, because the provider checks for specific text ("Request too large") that does not match Azure's actual rate limit response format.
+
+**Consequences:**
+- Queue items representing valid AI operations are permanently deleted
+- Users see partial results with no indication that items were lost (not failed -- lost)
+- Rate limits are transient -- the same items would succeed if retried 60 seconds later
+- At scale (batch of 100 tasks), losing 10-20% of items to rate limiting destroys trust
+
+**Prevention:**
+- Implement a THREE-catch pattern for AI queue workers:
+  ```php
+  public function processItem($data) {
+    try {
+      // AI operation
     }
-    return csrfToken;
+    catch (SuspendQueueException $e) {
+      throw $e; // Systemic failure -- stop queue
+    }
+    catch (AiRateLimitException | AiQuotaException $e) {
+      // Transient -- release item for retry
+      throw new \Drupal\Core\Queue\RequeueException(
+        'AI rate limited, requeueing: ' . $e->getMessage()
+      );
+    }
+    catch (\Exception $e) {
+      // Bad item -- log and skip
+      $this->logger->error('AI processing failed: @msg', ['@msg' => $e->getMessage()]);
+    }
   }
   ```
-- Add `_csrf_request_header_token: 'TRUE'` to custom REST route requirements (not `_csrf_token: 'TRUE'` -- that is for query-string tokens used in link URLs, not header-based tokens)
-- Verify: `_csrf_request_header_token` always succeeds for anonymous users, so ALWAYS pair it with a permission requirement
+- Use `RequeueException` (not `SuspendQueueException`) for rate limits. `RequeueException` puts the single item back in the queue. `SuspendQueueException` stops ALL queue processing.
+- Add exponential backoff tracking via item metadata: store retry count and last attempt timestamp in the queue item data. After N retries (e.g., 5), let the item fall through to the generic catch and be discarded with a logged error.
+- Set the QueueWorker `cron = {"time" = 30}` for AI workers (higher than the 15-second default) because AI API calls have latency -- processing 1 item might take 5+ seconds
+- Document in the batch-queue-cron skill that AI queue workers need three catches, not two
 
 **Detection:**
-- 403 responses on PATCH/POST/DELETE requests in browser DevTools Network tab
-- Drupal watchdog showing "X-CSRF-Token request header is missing" or "is invalid"
-- Optimistic UI updates that consistently revert
+- Queue depth drops to 0 after cron but fewer results exist than items queued
+- Drupal watchdog shows "AI processing failed: rate limit" logged as error (item was deleted)
+- Items succeed when manually re-queued (proves the failure was transient)
 
-**Phase to address:** API Layer (Phase 1). Must be correct before any mutation endpoint is testable.
+**Phase to address:** AI Integration phase (batch operations). Must be correct before any AI queue worker is built.
 
 ---
 
-### Pitfall 2: Vue App Mounts Multiple Times Due to Drupal Behaviors / BigPipe
+### Pitfall 4: Eval-Author Agent Cannot Assess Runtime Behavior -- Generates Only Static Assertions
 
 **What goes wrong:**
-The Kanban board Vue app initializes correctly on first page load. Then a Drupal AJAX operation on the same page (dialog close, Views exposed filter update, admin toolbar refresh) triggers `Drupal.attachBehaviors()` again. If the Vue app initialization code is inside a Drupal behavior without a `once()` guard, the app mounts a second time on the same DOM element. This creates duplicate event listeners, double rendering, and eventually a memory leak that causes the tab to slow down and crash.
+The eval-author agent generates 15 static assertions (file patterns, class names, method signatures) and 0 runtime assertions. The static assertions pass, but the module does not actually work -- `drush en` fails due to a missing dependency, or the AI service throws an unhandled exception at runtime. The eval pipeline reports a high pass rate that does not reflect reality.
 
 **Why it happens:**
-Drupal's behavior system calls `Drupal.attachBehaviors(context, settings)` on initial page load AND after every AJAX response. BigPipe also triggers it when replacing placeholders. In Drupal 10.1+, behaviors can fire twice on page load (once when the script loads, once from `drupal.init.js`). Without the `once()` utility from `@drupal/once`, any initialization code will re-execute.
+The eval-author agent designs assertions by reading code files and SKILL.md content. Static assertions are natural outputs of code analysis. Runtime assertions require understanding what can go wrong at execution time, which requires domain expertise about Drupal's bootstrap, service container, entity schema installation, and external API behavior. An LLM generating assertions from code cannot predict that a `use` statement for a class in a non-installed module will cause a fatal error during service container compilation.
 
-Vue 3's `createApp()` does not protect against double mounting. Calling `createApp().mount('#kanban-board')` twice on the same element produces unpredictable behavior.
+The v3.0 and v4.0 pipelines split assertions into two tiers (static + runtime) precisely because this problem was discovered empirically. Static assertions measure code quality. Runtime assertions measure "does it work."
 
 **Consequences:**
-- Duplicate Vue app instances competing for the same DOM
-- Event listeners stacking (keyboard shortcuts fire twice per keystroke)
-- Memory usage grows with each AJAX operation until the page becomes unresponsive
-- Drag-and-drop behaves erratically because two app instances handle the same events
+- High eval scores that mask broken modules
+- Skills appear to produce working code when they produce code that fails at install time
+- False positive deltas: with-skill code might have better static patterns but equally broken runtime behavior
 
 **Prevention:**
-- ALWAYS use `once()` to guard Vue app initialization inside Drupal behaviors:
-  ```javascript
-  Drupal.behaviors.kanbanBoard = {
-    attach: function (context, settings) {
-      once('kanban-board', '#kanban-board-mount', context).forEach(function (element) {
-        const app = createApp(KanbanBoard, {
-          projectId: settings.groupAiPm.projectId,
-          csrfTokenUrl: settings.path.baseUrl + 'session/token',
-        });
-        app.mount(element);
-        // Store app reference for detach cleanup
-        element._vueApp = app;
-      });
-    },
-    detach: function (context, settings, trigger) {
-      if (trigger === 'unload') {
-        document.querySelectorAll('[data-once="kanban-board"]').forEach(function (element) {
-          if (element._vueApp) {
-            element._vueApp.unmount();
-            element._vueApp = null;
-          }
-        });
-      }
-    }
-  };
+- Provide the eval-author agent with a mandatory runtime assertion template:
   ```
-- Declare `core/once` as a dependency in `libraries.yml` (it is a separate library, not bundled with `core/drupal`)
-- Implement the `detach` handler to unmount Vue when Drupal removes the DOM (page navigation, AJAX replacement)
-- Store the Vue app instance on the DOM element so `detach` can find and unmount it
+  REQUIRED runtime assertions for EVERY eval:
+  1. Module enables: "ddev drush en {module} -y returns exit code 0"
+  2. No PHP errors on enable: "ddev drush en {module} -y 2>&1 does not contain 'Error'"
+  3. Key routes accessible: "ddev drush eval 'print \Drupal::service('router.route_provider')->getRouteByName('route.name')->getPath();'"
+  4. Services resolve: "ddev drush eval 'print get_class(\Drupal::service('my.service'));'"
+  5. Permissions exist: "ddev drush eval 'print_r(array_keys(\Drupal::service('user.permissions')->getPermissions()));' | grep 'expected permission'"
+  ```
+- Add a pipeline step that automatically prepends these 5 baseline runtime assertions to every eval, regardless of what the eval-author generates
+- The eval-author should generate ADDITIONAL runtime assertions specific to the phase (e.g., "drush php-eval loads an entity and checks a computed field" or "config:get returns expected default values")
+- For AI integration phases, add AI-specific runtime assertions: "AI provider service resolves," "function call plugin is discoverable," "queue worker processes a test item"
 
 **Detection:**
-- Console warnings about mounting on a non-empty DOM node
-- Keyboard shortcuts executing twice per keystroke
-- Increasing memory usage in browser DevTools Performance tab over time
-- Multiple `#kanban-board-mount` elements or duplicate Vue devtools instances
+- Eval results with >90% pass rate but module fails `drush en`
+- Zero runtime assertions in the generated eval file
+- All assertions are file-pattern greps, no `ddev drush` commands
 
-**Phase to address:** Vue Infrastructure (Phase 1). The mounting pattern must be established as part of the initial Vue integration.
+**Phase to address:** Eval-Author Agent phase. Build runtime assertion generation as a separate capability from static assertion generation, with different prompting strategies for each.
 
 ---
 
-### Pitfall 3: Custom Controller Returns JsonResponse Without Proper Content Negotiation -- Drupal Error Handler Serves HTML on Errors
+### Pitfall 5: Adding Analytics Table Without Indexes on Time-Series Query Columns -- Dashboard Queries Time Out
 
 **What goes wrong:**
-The custom REST controller returns `JsonResponse` for task data. Normal operation works. But when a validation error or access denied occurs, Drupal's default exception handler returns an HTML error page instead of a JSON error response. The Vue app receives HTML where it expects JSON, fails to parse it, and shows a generic "something went wrong" error instead of actionable information.
+A `group_ai_pm_task_history` table is created via `hook_schema()` with columns for `task_id`, `field_name`, `old_value`, `new_value`, `uid`, and `timestamp`. The table accumulates rows for every status change, priority change, and assignment change. After 6 months of use with 500 tasks and 20 active users, the table has 50,000+ rows. The analytics dashboard runs a query like `SELECT * FROM {group_ai_pm_task_history} WHERE task_id = :id ORDER BY timestamp DESC` -- but there is no index on `task_id` or `timestamp`. The query does a full table scan. The dashboard takes 8+ seconds to render.
 
 **Why it happens:**
-Drupal dispatches exceptions to different exception subscribers based on the request's `Accept` header and the `?_format` query parameter. Without `?_format=json`, Drupal defaults to HTML error responses. Custom controllers using `JsonResponse` directly (not `ResourceResponse` from the REST module) bypass the content negotiation system. The controller works for happy-path responses but Drupal's error infrastructure does not know the client expects JSON.
+Drupal's entity system automatically creates indexes for entity keys, but custom tables created via `hook_schema()` have NO automatic indexes beyond the primary key. Developers create the table, verify it works with 10 test rows, and ship it. The performance problem only manifests at scale, which is never tested during development.
+
+Additionally, analytics queries almost always involve time-range filtering (`WHERE timestamp BETWEEN ? AND ?`) combined with entity filtering (`AND task_id = ?`). Composite indexes on `(task_id, timestamp)` are required, but developers typically only index individual columns -- which MySQL/MariaDB cannot use efficiently for combined WHERE + ORDER BY queries.
 
 **Consequences:**
-- Validation errors (missing required field, invalid status value) return HTML instead of JSON
-- 403 responses return Drupal's full HTML access denied page
-- 404 responses for deleted tasks return HTML
-- Vue app's error handling cannot parse the response, so users see unhelpful error messages
-- Debugging is difficult because the JSON error body is absent
+- Dashboard page load times grow linearly with data volume
+- Cron jobs that aggregate analytics data time out
+- Database locks during INSERT + SELECT contention
+- Eventually the analytics feature is disabled because it "makes the site slow"
 
 **Prevention:**
-- ALWAYS append `?_format=json` to the route path or require clients to include it:
-  ```yaml
-  group_ai_pm.api.tasks:
-    path: '/api/group-ai-pm/project/{project}/tasks'
-    defaults:
-      _controller: '\Drupal\group_ai_pm\Controller\TaskApiController::list'
-    requirements:
-      _permission: 'access group_ai_pm dashboard'
-      _format: json
-      _csrf_request_header_token: 'TRUE'
-  ```
-- When `_format: json` is a route requirement, Drupal's JSON exception subscriber handles errors and returns JSON error bodies
-- NEVER rely on the Accept header alone -- Drupal's content negotiation requires `_format` in the route definition or query string
-- In the Vue API service, always include `?_format=json` in request URLs:
-  ```javascript
-  const response = await fetch(
-    `${baseUrl}api/group-ai-pm/project/${projectId}/tasks?_format=json`
-  );
-  ```
-- Use `try/catch` with response type checking in the API layer to handle the edge case where HTML is returned despite configuration
-
-**Detection:**
-- Error responses in browser DevTools Network tab showing `text/html` content type
-- Vue app's JSON parse throwing `SyntaxError: Unexpected token '<'`
-- Drupal watchdog not logging JSON serialization for error responses
-
-**Phase to address:** API Layer (Phase 1). Route definitions must include `_format: json` from the start.
-
----
-
-### Pitfall 4: Vue Production Bundle Not Committed -- Module Requires npm Build Step
-
-**What goes wrong:**
-The module ships with `package.json`, `vite.config.js`, and Vue source files in `js/src/`. But the compiled production bundle (`js/dist/kanban.js`) is in `.gitignore`. End users install the module via `composer require`, enable it, and get a blank page where the Kanban board should be because the compiled JavaScript does not exist. Users must run `npm install && npm run build` -- but most Drupal admins do not have Node.js in production and should not need it.
-
-**Why it happens:**
-Modern JavaScript development workflows use `.gitignore` to exclude `node_modules/` and build artifacts from version control. This is correct for application development but wrong for Drupal contrib modules. Drupal modules must be installable via Composer alone -- no secondary build steps. The pattern used by Drupal core itself is: source files + build tooling exist, and compiled assets are committed alongside them.
-
-**Consequences:**
-- Module fails silently (mount point div renders, but no JavaScript executes)
-- Users file bug reports about "blank Kanban board"
-- Users with Node.js may build locally, creating version drift between their build and the intended bundle
-- CI/CD pipelines that do not include Node.js will not produce working deployments
-
-**Prevention:**
-- Commit the compiled production bundle to the repository alongside source files
-- Module directory structure:
-  ```
-  modules/group_ai_pm/
-    js/
-      src/                    # Vue source (for development)
-        App.vue
-        components/
-        stores/
-      dist/                   # Compiled bundle (committed)
-        kanban.min.js
-        kanban.min.css
-      package.json            # For developers only
-      vite.config.js          # Build configuration
-    css/                      # Drupal CSS (non-Vue styles)
-  ```
-- Reference only `js/dist/kanban.min.js` in `libraries.yml`, never source files
-- Add `js/node_modules/` to `.gitignore` but NOT `js/dist/`
-- Include a `js/BUILD.md` documenting how developers rebuild the bundle (for contributors, not end users)
-- Use Vite in library mode to produce a single UMD bundle that does not require ES module support:
-  ```javascript
-  // vite.config.js
-  export default {
-    build: {
-      lib: {
-        entry: 'src/main.js',
-        name: 'GroupAiPmKanban',
-        fileName: 'kanban',
-        formats: ['umd']
-      },
-      rollupOptions: {
-        // Do NOT externalize Vue -- bundle it in the UMD output
-        // Drupal does not provide Vue as a global
-      },
-      outDir: 'dist'
-    }
-  };
-  ```
-
-**Detection:**
-- Blank mount point div with no JavaScript errors (script tag not even present)
-- `libraries.yml` referencing files that do not exist in the installed module
-- Users reporting the module works in development but not production
-
-**Phase to address:** Vue Infrastructure (Phase 1). Build tooling and committed bundle pattern must be established before any Vue components are built.
-
----
-
-### Pitfall 5: Using `_csrf_token` (Query String) Instead of `_csrf_request_header_token` (Header) for REST Routes
-
-**What goes wrong:**
-The REST route is defined with `_csrf_token: 'TRUE'` (the query-string variant). Drupal automatically appends a CSRF token to URLs generated via `Url::fromRoute()` in PHP. But the Vue app constructs its own URLs in JavaScript and never includes the query-string token. Every PATCH/POST/DELETE request returns 403. The developer adds the `X-CSRF-Token` header (fetched from `/session/token`), but the route validator ignores the header because it is checking for a query string parameter.
-
-**Why it happens:**
-Drupal has TWO different CSRF token mechanisms:
-1. `_csrf_token: 'TRUE'` -- validates a `token` query parameter in the URL. Used for action links (like "Complete Project" in the existing module). Token is appended automatically by Drupal's URL generation.
-2. `_csrf_request_header_token: 'TRUE'` -- validates the `X-CSRF-Token` HTTP header. Used for JavaScript-driven REST calls where URLs are constructed client-side.
-
-These are different route access checkers with different token sources. Using the wrong one for your use case means CSRF protection either blocks legitimate requests or provides no protection.
-
-The existing `group_ai_pm.project.complete` route correctly uses `_csrf_token: 'TRUE'` because it is a link-based action. New REST API routes for Vue.js MUST use `_csrf_request_header_token: 'TRUE'`.
-
-**Consequences:**
-- All JavaScript-initiated mutation requests return 403
-- Developers add the X-CSRF-Token header but it is still rejected because the route checker is looking for a query parameter
-- Falling back to no CSRF protection (`_csrf_token` removed) creates a real CSRF vulnerability
-
-**Prevention:**
-- Use `_csrf_request_header_token: 'TRUE'` for ALL routes called by JavaScript fetch/XHR
-- Use `_csrf_token: 'TRUE'` ONLY for server-rendered link-based actions (form actions, action links)
-- ALWAYS pair `_csrf_request_header_token` with a permission requirement (it auto-passes for anonymous)
-- Document the distinction in code comments so future contributors do not mix them up
-
-**Detection:**
-- 403 on JavaScript requests despite including X-CSRF-Token header
-- Token present in URL query string on PHP-rendered links (correct for `_csrf_token`)
-- No token required for GET requests (both variants skip safe methods)
-
-**Phase to address:** API Layer (Phase 1). Route requirement must be correct from the first endpoint definition.
-
----
-
-### Pitfall 6: Vue Bundle Size Bloats Admin Page Load Time
-
-**What goes wrong:**
-The Vue.js Kanban app, including Vue 3 runtime, vue-dnd-kit, and application code, produces a 200-400KB JavaScript bundle. This loads on every admin page where the Kanban board library is attached. Drupal admin pages already load jQuery, Drupal core JS, toolbar JS, and the admin theme's CSS/JS. The additional Vue bundle pushes total page weight over 1MB, causing noticeable load delays on slower connections and in regions with high latency to the server.
-
-**Why it happens:**
-Vue 3 production runtime is ~50KB gzipped. vue-dnd-kit adds ~15-30KB. Application code, CSS, and any utility libraries (date formatting, fuzzy search for command palette) add more. Unlike a SPA where this is loaded once, Drupal admin pages are full page loads -- every navigation to the board page re-downloads the bundle unless aggressively cached. If the library is attached globally or to all admin pages (instead of just the board page), it loads unnecessarily everywhere.
-
-**Consequences:**
-- Board page takes 2-4 seconds to become interactive on first visit
-- Admin users on slow connections experience degraded UX across the admin (if loaded globally)
-- Google Lighthouse admin audits show poor performance scores
-- Perception of "heavy module" reduces adoption
-
-**Prevention:**
-- Attach the Vue library ONLY to the board route controller's render array, never globally:
+- ALWAYS define composite indexes in `hook_schema()` for time-series data:
   ```php
-  public function board(ProjectInterface $project): array {
-    return [
-      '#theme' => 'kanban_board',
-      '#project' => $project,
-      '#attached' => [
-        'library' => ['group_ai_pm/kanban_board'],
-        'drupalSettings' => [
-          'groupAiPm' => [
-            'projectId' => $project->id(),
-          ],
-        ],
+  function group_ai_pm_schema() {
+    $schema['group_ai_pm_task_history'] = [
+      'fields' => [
+        'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+        'task_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+        'field_name' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+        'old_value' => ['type' => 'varchar', 'length' => 255, 'not null' => FALSE],
+        'new_value' => ['type' => 'varchar', 'length' => 255, 'not null' => FALSE],
+        'uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+        'timestamp' => ['type' => 'int', 'not null' => TRUE],
+      ],
+      'primary key' => ['id'],
+      'indexes' => [
+        'task_timestamp' => ['task_id', 'timestamp'],
+        'field_timestamp' => ['field_name', 'timestamp'],
+        'uid_timestamp' => ['uid', 'timestamp'],
       ],
     ];
+    return $schema;
   }
   ```
-- Use Vite's tree-shaking: import only what is used from vue-dnd-kit, not the entire library
-- Externalize Vue 3 ONLY if a shared Vue library module is installed (otherwise bundle it -- double-loading is worse than a larger bundle)
-- Enable Drupal's JS aggregation (`/admin/config/development/performance`) for production
-- Consider code splitting: load the command palette and detail panel lazily (dynamic import) since they are not needed on initial render
-- Target budget: <100KB gzipped for the full Kanban bundle (Vue runtime + DnD + app code)
+- Design indexes based on your known query patterns, not just individual columns
+- Test with realistic data volumes BEFORE shipping. Insert 10,000 rows and run your dashboard queries with `EXPLAIN`
+- Consider partitioning by time if data volume exceeds 1M rows (out of scope for v5.0 but plan for it)
+- Add cache tags to analytics render arrays so computed aggregates are cached until the underlying data changes
 
 **Detection:**
-- Chrome DevTools Network tab: filter by JS, sort by size, look for the Kanban bundle
-- Lighthouse Performance audit on the board page
-- Vue library appearing in `drupalSettings.ajaxPageState.libraries` on non-board pages (means it is loading too broadly)
+- Dashboard load time increases steadily over weeks/months
+- `EXPLAIN SELECT ...` shows "type: ALL" (full table scan) instead of "type: ref" (index lookup)
+- MySQL slow query log captures analytics queries
+- `drush sqlq "SHOW INDEX FROM group_ai_pm_task_history"` shows only primary key
 
-**Phase to address:** Vue Infrastructure (Phase 1) for library scoping; Polish (Phase 3) for optimization.
+**Phase to address:** Analytics phase. Schema design must include indexes from day one. Adding indexes via `hook_update_N()` to a large table can lock the table for minutes.
+
+---
+
+### Pitfall 6: Adding Base Fields to Existing Entity Without hook_update_N() -- Existing Sites Break on Module Update
+
+**What goes wrong:**
+The analytics feature requires a new base field on the Task entity (e.g., `ai_summary` to store AI-generated task summaries). The developer adds the field to `baseFieldDefinitions()` and clears cache. New installations work fine because the entity schema is created fresh. Existing installations that already have the `group_ai_pm_task` table crash with a database error: "Unknown column 'ai_summary' in field list" because the physical column does not exist in the table.
+
+**Why it happens:**
+Drupal's entity system creates database columns from `baseFieldDefinitions()` during module installation. After installation, changes to `baseFieldDefinitions()` are NOT automatically applied to the database schema. You must write a `hook_update_N()` function that calls `\Drupal::entityDefinitionUpdateManager()->installFieldStorageDefinition()` to add the column.
+
+This is the most common mistake when extending existing entity types. It works in development (where you reinstall frequently) and breaks in production (where the module is updated, not reinstalled).
+
+**Consequences:**
+- Existing sites get fatal errors on ANY page that loads Task entities
+- The module update path is broken -- cannot run `drush updb` without manually fixing the schema
+- If the field is used in entity queries, the query itself fails before any PHP code runs
+- Reverting the code change does not fix the problem if any data migration was attempted
+
+**Prevention:**
+- ALWAYS pair base field additions with a `hook_update_N()`:
+  ```php
+  /**
+   * Add ai_summary field to Task entity.
+   */
+  function group_ai_pm_update_10001() {
+    $field_storage_definition = BaseFieldDefinition::create('text_long')
+      ->setLabel(t('AI Summary'))
+      ->setDescription(t('AI-generated task summary.'));
+
+    \Drupal::entityDefinitionUpdateManager()
+      ->installFieldStorageDefinition(
+        'ai_summary',
+        'task',
+        'group_ai_pm',
+        $field_storage_definition
+      );
+  }
+  ```
+- NEVER assume `baseFieldDefinitions()` changes are applied automatically
+- The field definition in `hook_update_N()` must be self-contained (repeat all settings). Do NOT call the entity class's `baseFieldDefinitions()` from the update hook -- the method signature may change between versions
+- Test the update path: install the module at the OLD version, then apply the update with `drush updb`
+- For the Drush skill: this is a prime runtime assertion -- `drush updb --no-cache-clear && drush cr` should succeed without errors
+- The entities-fields skill should document this pattern explicitly (currently missing)
+
+**Detection:**
+- `EntityStorageException` or PDOException on entity load after module update
+- `drush entity:updates` shows pending entity definition updates
+- `drush updb` lists no pending updates (because the developer forgot to write one)
+- Works on fresh install, fails on updated site
+
+**Phase to address:** Skill Gap Fixes phase (entities-fields) AND any phase that adds new base fields. This applies to AI Summary field, analytics tracking fields, or any entity schema extension.
 
 ---
 
 ## Moderate Pitfalls
 
-### Pitfall 7: drupalSettings Data Not Available When Vue App Initializes
+### Pitfall 7: AI Module Provider Configuration Not Validated Before Queue Processing -- Silent Empty Responses
 
 **What goes wrong:**
-The Vue app reads `drupalSettings.groupAiPm.projectId` during initialization, but the value is `undefined`. The app sends API requests without a project ID, gets 404 or returns all tasks across all projects.
+The module queues 50 tasks for AI summary generation. The QueueWorker calls `\Drupal::service('ai.provider')` to get an AI provider, makes the API call, and receives an empty response. No exception is thrown. The AI provider has no API key configured, or the configured provider does not support the requested operation type. The queue worker logs "AI summary generated" for each item, but the summaries are all empty strings.
 
 **Why it happens:**
-In Drupal, `drupalSettings` is populated from render array `#attached` settings and injected into the page as a `<script>` tag. If the Vue library loads BEFORE the settings script (wrong library weight or async loading), `drupalSettings` is not yet defined. Additionally, if the controller forgets to attach settings to the render array, they simply are not present -- no error, just missing data.
-
-This is especially tricky with Drupal's library dependency system. The Vue app library must declare a dependency on `core/drupalSettings`:
-```yaml
-kanban_board:
-  js:
-    js/dist/kanban.min.js: { minified: true }
-  dependencies:
-    - core/drupalSettings
-    - core/once
-```
-
-Without the `core/drupalSettings` dependency, Drupal may load the kanban JS before the settings script.
+The Drupal AI module's provider system uses a layered architecture: the AI module provides a `ProviderInterface`, individual provider modules (OpenAI, Anthropic, Azure) implement it, and the Key module stores credentials. If no provider is configured, the `ai.provider` service may return a null provider or a provider that returns empty responses rather than throwing an exception. The `isUsable()` method on providers should be checked, but it is not enforced at the framework level.
 
 **Prevention:**
-- Always declare `core/drupalSettings` as a library dependency
-- Always attach settings in the controller's render array via `#attached.drupalSettings`
-- In JavaScript, validate settings exist before using them:
-  ```javascript
-  const projectId = drupalSettings?.groupAiPm?.projectId;
-  if (!projectId) {
-    console.error('GroupAiPm: Missing project ID in drupalSettings');
+- Validate provider configuration BEFORE queuing items, not during processing:
+  ```php
+  // In the batch submission handler, before queuing:
+  $provider = \Drupal::service('ai.provider');
+  if (!$provider || !$provider->isUsable('chat')) {
+    \Drupal::messenger()->addError(t('No AI provider is configured. Please configure an AI provider before running batch AI operations.'));
     return;
   }
   ```
-- Pass ALL configuration through drupalSettings: API base URL, project ID, user permissions, CSRF token URL -- never hardcode paths
-
-**Phase to address:** Vue Infrastructure (Phase 1).
-
----
-
-### Pitfall 8: Local Task Tab Route Does Not Match Entity Base Route -- Tab Disappears
-
-**What goes wrong:**
-A "Board" tab is added to the project entity page (alongside View/Edit/Delete), but it does not appear. The route exists and the page loads at the direct URL, but the tab is missing from the project entity page.
-
-**Why it happens:**
-Drupal local tasks require a `base_route` property that matches the base route of the tab group. For entity pages, the base route is typically `entity.{entity_type}.canonical`. The "Board" tab must declare:
-```yaml
-group_ai_pm.project.board:
-  route_name: group_ai_pm.project.board
-  title: 'Board'
-  base_route: entity.project.canonical
-  weight: 5
-```
-
-Common mistakes:
-1. Setting `base_route` to the board route itself (creates a standalone tab group, not part of entity tabs)
-2. Using a different route pattern that does not share the same route parameters (the `{project}` parameter must match the entity route's `{project}` parameter exactly)
-3. Defining the board route with a path like `/admin/content/project-board/{project}` that does not share the entity route prefix `/admin/content/project/{project}/board` -- the parameter name must match
-
-**Prevention:**
-- Board route path MUST follow the entity canonical path pattern:
-  ```yaml
-  # In routing.yml
-  group_ai_pm.project.board:
-    path: '/admin/content/project/{project}/board'
-    defaults:
-      _controller: '\Drupal\group_ai_pm\Controller\BoardController::board'
-      _title: 'Board'
-    requirements:
-      _permission: 'access group_ai_pm dashboard'
-    options:
-      _admin_route: TRUE
-      parameters:
-        project:
-          type: entity:project
-  ```
-- The `{project}` parameter name must match what the entity routing uses
-- Add `parameters.project.type: entity:project` so Drupal upcasts the parameter to a Project entity
-- Declare `_admin_route: TRUE` so the route uses the admin theme (where Claro styles apply)
-
-**Detection:**
-- Board page loads at direct URL but tab does not appear on entity page
-- Other entity tabs (View/Edit/Delete) appear normally
-- `drush router:debug group_ai_pm` shows the route exists but with wrong parameter names
-
-**Phase to address:** Board Route (Phase 1, alongside API layer).
-
----
-
-### Pitfall 9: Optimistic UI Without Proper Rollback Creates Ghost State
-
-**What goes wrong:**
-User drags a task card from "To Do" to "In Progress." The UI updates immediately (optimistic). The server request fails (network error, validation error, concurrent edit conflict). The card stays in "In Progress" in the UI but remains "To Do" in the database. Subsequent page loads show the card back in "To Do," confusing the user about whether their action was saved.
-
-**Why it happens:**
-Optimistic updates require three components working together: (1) immediate UI update, (2) server sync, (3) rollback on failure. Most implementations nail the first two but fail on the third. The rollback must:
-- Store the previous state before the optimistic update
-- Detect failure (network error, non-2xx response, timeout)
-- Restore the previous state in the UI
-- Show a user-visible error message
-
-Without all three, the UI and server diverge silently.
-
-**Prevention:**
-- Implement a proper optimistic update pattern in the Pinia store:
-  ```javascript
-  async function moveTask(taskId, newStatus) {
-    const previousStatus = tasks.value.find(t => t.id === taskId).status;
-    // Optimistic update
-    tasks.value.find(t => t.id === taskId).status = newStatus;
-    try {
-      await apiService.patchTask(taskId, { status: newStatus });
-    } catch (error) {
-      // Rollback
-      tasks.value.find(t => t.id === taskId).status = previousStatus;
-      showErrorMessage('Failed to update task status. Please try again.');
-    }
+- In the QueueWorker, validate the response is not empty before saving:
+  ```php
+  $response = $provider->chat($messages, $model, $options);
+  if (empty($response) || empty($response->getNormalized())) {
+    throw new \Exception('Empty AI response for task ' . $data->task_id);
   }
   ```
-- Set a reasonable timeout (5 seconds) on mutation requests -- do not let them hang indefinitely
-- On rollback, animate the card moving back to its original column (visual feedback that the action failed)
-- Consider a brief "saving..." indicator on the card during the server sync window
-- After rollback, log the error to Drupal watchdog via a lightweight error endpoint (helps with debugging)
+- Add a settings form check that validates AI provider configuration and displays a status message on the dashboard if AI features are available/unavailable
+- Set a reasonable timeout on AI provider calls (30-60 seconds) to prevent queue workers from hanging indefinitely
 
-**Detection:**
-- Drag a card, then immediately reload the page -- if the card is in a different column, rollback failed
-- Disconnect from the network, drag a card -- if no error appears and the card stays, rollback is missing
-- Check browser DevTools Console for unhandled promise rejections on PATCH failures
-
-**Phase to address:** Interactions (Phase 2). Basic drag-and-drop in Phase 1 can use non-optimistic updates; optimistic pattern in Phase 2.
+**Phase to address:** AI Integration phase. Provider validation must be the first thing implemented before any AI operation.
 
 ---
 
-### Pitfall 10: Claro Admin Theme CSS Conflicts with Vue Component Styles
+### Pitfall 8: Drush Skill and Batch-Queue-Cron Skill Teach Conflicting Queue Patterns
 
 **What goes wrong:**
-Vue component styles (card layouts, column widths, button styles, typography) render correctly in a standalone development environment but break in Drupal. Cards have wrong padding, buttons inherit Claro's button styles, dropdowns use Claro's select styling, and the overall layout looks off.
+The Drush skill teaches programmatic queue processing via `drush queue:run`, where the developer writes a Drush command that claims and processes items manually. The batch-queue-cron skill teaches the QueueWorker plugin pattern where cron processes items automatically. Both are valid, but if the eval prompt asks for "queue processing" without specifying which pattern, Haiku mixes them: it creates a QueueWorker plugin AND a Drush command that both try to process the same queue, leading to double-processing and race conditions.
 
 **Why it happens:**
-Drupal's Claro admin theme applies global CSS rules to common elements: `button`, `select`, `input`, `table`, `a`, `.messages`, etc. These are not namespaced -- they apply to ALL elements under the admin theme. Vue components that use these base HTML elements inherit Claro's styles by default. This causes:
-- Buttons getting Claro's blue/white button styling instead of the Kanban design
-- Select dropdowns getting Claro's styled select appearance
-- Links getting Claro's link colors
-- Tables inside task details getting Claro's table borders and padding
+Both skills document queue processing but from different angles. The batch-queue-cron skill shows the full QueueWorker plugin lifecycle (cron-driven). A Drush skill would naturally show `drush queue:run` as the Drush way to process queues. Without explicit disambiguation, Haiku sees two valid patterns and combines them, not realizing they are alternatives, not complements.
 
 **Prevention:**
-- Namespace all Kanban CSS under a unique wrapper class:
-  ```css
-  .kanban-board { /* all styles scoped here */ }
-  .kanban-board .task-card { /* specific to kanban */ }
-  ```
-- Use Vue's `<style scoped>` in single-file components -- this adds data attributes for CSS scoping
-- Override specific Claro styles that leak into the Kanban board:
-  ```css
-  .kanban-board button {
-    all: unset; /* Reset Claro button styles */
-    /* Then apply kanban-specific styles */
+- The Drush skill must explicitly state: "drush queue:run processes items using the existing QueueWorker plugin. Do NOT create a separate Drush command that duplicates the QueueWorker's processItem() logic. Use `drush queue:run queue_name` to trigger the same QueueWorker that cron uses."
+- Cross-reference between the two skills:
+  - batch-queue-cron: "To process queues manually via CLI, use `drush queue:run queue_name` (see drupal-drush skill). Do NOT write a separate Drush command for queue processing."
+  - drupal-drush: "To process queue items, prefer `drush queue:run` which uses the existing QueueWorker plugin. Only create a custom Drush command for queue processing if you need behavior that QueueWorker does not support (e.g., processing with different options, processing from a non-cron context with custom filtering)."
+- Eval assertions should check: "If a QueueWorker plugin exists for queue X, there should NOT be a Drush command that also processes queue X items manually"
+
+**Detection:**
+- Both a QueueWorker plugin AND a Drush command reference the same queue name
+- Items are processed twice (duplicate operations, double notifications)
+- Race condition between cron and manual `drush queue:run`
+
+**Phase to address:** Drush Skill phase AND Skill Gap Fixes phase (batch-queue-cron cross-reference).
+
+---
+
+### Pitfall 9: Module Complexity Causes Cascading Test Failures When Adding New Features
+
+**What goes wrong:**
+The module now has 8 test classes, 2 entity types, 10+ controllers, and a Vue frontend. Adding a new AI controller for natural language task creation requires modifying the Task entity (new field), adding routes, and adding a service. The new field addition breaks 3 existing kernel tests (`EntityCrudTest`, `RestApiTest`, `AccessControlTest`) because they do not install the schema for the new field's dependency module (e.g., `drupal:text` for `text_long`). The developer runs the new AI test, it passes, and ships. Later, the CI pipeline runs all tests and 3 old tests fail.
+
+**Why it happens:**
+Drupal kernel tests specify `$modules` explicitly. When you add a new base field to an entity that requires a module not in an existing test's `$modules` array, the entity schema installation in `setUp()` fails silently or throws an error. The test was passing before because the field did not exist. Now it fails because the entity definition has changed.
+
+This is a specific instance of the general problem: in a module with 8 tests and 39 PHP files, ANY change to shared infrastructure (entities, services, routes) can break tests that the developer did not think to check.
+
+**Prevention:**
+- ALWAYS run the full test suite after ANY entity change: `ddev exec phpunit modules/custom/group_ai_pm/tests/`
+- When adding a base field, check ALL test classes for `installEntitySchema('task')` or `installEntitySchema('project')` -- each one needs the new dependency module added to `$modules`
+- Create a shared test trait for entity setup that ALL test classes use, so dependency changes propagate automatically:
+  ```php
+  trait GroupAiPmTestTrait {
+    protected static $groupAiPmModules = [
+      'group_ai_pm', 'system', 'user', 'options', 'text',
+      'datetime', 'field', 'file',
+    ];
   }
   ```
-- Test ALL components inside the Claro admin theme during development, never in a standalone HTML file
-- Declare the library CSS with `theme` category (highest weight, loads last, overrides other CSS):
-  ```yaml
-  kanban_board:
-    css:
-      theme:
-        css/kanban-board.css: {}
-  ```
-- Do NOT use `!important` to override Claro -- it creates a specificity war that is unmaintainable
+- Add a CI-equivalent runtime assertion to the eval pipeline: "All existing tests still pass after new code is added" (`ddev exec phpunit modules/custom/group_ai_pm/tests/ --no-coverage`)
+- For the eval-author agent: automatically add a "regression check" assertion that runs the full test suite, not just new tests
 
 **Detection:**
-- Visual comparison: component in Storybook/standalone vs inside Drupal admin
-- Claro CSS rules appearing in DevTools Element Inspector on Kanban elements
-- Buttons, inputs, and links looking different from the intended design
+- New test passes, old tests fail
+- `PHPUnit` output shows errors in tests that were not modified
+- Errors mention missing tables, unknown columns, or unresolvable services
+- `$modules` array in failing test does not include a module that a new field depends on
 
-**Phase to address:** Vue Infrastructure (Phase 1, CSS strategy) and Board UI (Phase 1, card/column design).
+**Phase to address:** ALL phases that modify entities or services. But particularly the Skill Gap Fixes phase (entities-fields `bundle_of`) and AI Integration phase (new entity fields).
 
 ---
 
-### Pitfall 11: Haiku Code Gen Builds REST Routes But Does Not Wire drupalSettings or CSRF Token Passing
+### Pitfall 10: AI Function Call Plugin Uses Wrong Annotation Namespace After AI Agents Module Update
 
 **What goes wrong:**
-In the eval pipeline, Haiku generates a controller that returns `JsonResponse`, defines the route in `routing.yml`, and creates a Vue component that calls the endpoint. But the controller does not attach `drupalSettings` with the project ID. The Vue component hardcodes the project ID or omits it entirely. The CSRF token is never fetched -- the Vue app makes mutations without it. The board renders (GET works without CSRF) but every interaction fails.
+The existing `group_ai_pm_ai` submodule has two `AiFunctionCall` plugins using the `@AiFunctionCall` annotation. The AI Agents module updates from 1.2.x to 1.3.x, changing the plugin annotation namespace or switching to PHP attributes. The existing plugins stop being discovered. The AI chatbot loses the ability to create projects or query tasks.
 
 **Why it happens:**
-This is the Haiku "declaration-usage gap" pattern documented in v3.0 eval Phase 16 results. Haiku reliably creates the infrastructure pieces (route, controller, Vue component) but fails to wire them together with data flow. Specifically:
-- Creates `libraries.yml` entry but does not add `core/drupalSettings` dependency
-- Creates controller but does not attach `drupalSettings` to the render array
-- Creates Vue component but does not read from `drupalSettings`
-- Implements fetch/axios calls but does not include CSRF token headers
+The Drupal AI ecosystem is under active development. The `ai_agents` module's plugin system is not yet stable. Between minor versions, plugin discovery mechanisms can change. The `@AiFunctionCall` annotation used in the existing code may not match the current API in the pinned version (1.2.3) let alone future versions.
 
-This is the same pattern that caused `#attached` library and `#theme` to never be wired to output in Phase 16 (theming pitfall).
-
-**Consequences:**
-- Without-plugin code gen produces REST infrastructure that partially works (GET only)
-- With-plugin code gen should perform better IF the skill files explicitly document the wiring pattern (drupalSettings flow, CSRF token flow) as a CRITICAL pattern
-- If skills only document individual pieces (how to define routes, how to use drupalSettings), Haiku still will not wire them together
+This is compounded by the fact that the AI module itself (drupal/ai 1.2.11) has different API conventions than the AI Agents module (drupal/ai_agents 1.2.3). Mixing them up leads to plugins that the wrong module tries to discover.
 
 **Prevention:**
-- Skills (if created for v4.0 Vue/REST patterns) MUST document the complete data flow as a single connected pattern, not separate pieces
-- Include a CRITICAL NEVER callout: "NEVER create a REST route for JavaScript without ALL of: (1) _csrf_request_header_token in route requirements, (2) drupalSettings attached to render array with endpoint URL and config, (3) core/drupalSettings in library dependencies, (4) JavaScript that reads drupalSettings and fetches CSRF token before mutations"
-- Eval assertions should test the wiring, not just the existence of files:
-  - Static: `libraries.yml` contains `core/drupalSettings` dependency
-  - Static: Controller `#attached.drupalSettings` contains project ID
-  - Static: JavaScript fetches from `/session/token` before PATCH
-  - Runtime: `drush eval` verifies route accepts requests with X-CSRF-Token header
+- Pin exact versions in `composer.json` and document them: `"drupal/ai": "1.2.11"`, `"drupal/ai_agents": "1.2.3"`
+- Before any AI integration phase, verify the current plugin discovery mechanism:
+  ```bash
+  ddev drush eval "print_r(array_keys(\Drupal::service('plugin.manager.ai_function_call')->getDefinitions()));"
+  ```
+- Test plugin discovery as a runtime assertion in every AI eval
+- When adding NEW AI function call plugins, follow the exact same pattern as the existing working plugins (CreateProjectTool, QueryProjectsTool) -- do not modernize the annotation style unless explicitly updating all existing plugins simultaneously
+- Consider adding the AI integration as a soft dependency (check `\Drupal::moduleHandler()->moduleExists('ai_agents')` before registering tools)
 
 **Detection:**
-- JavaScript console shows `drupalSettings.groupAiPm is undefined`
-- Network tab shows PATCH requests without X-CSRF-Token header
-- Board renders tasks but all interactions fail
-- GET requests succeed but POST/PATCH/DELETE return 403
+- AI chatbot commands stop working
+- `drush eval "plugin.manager.ai_function_call->getDefinitions()"` returns empty or missing expected plugins
+- PHP warnings about "unknown annotation" in the plugin directory
+- Module installs fine but AI features silently do nothing
 
-**Phase to address:** ALL phases. This is a cross-cutting concern for eval design. Every eval assertion set must include wiring checks, not just existence checks.
+**Phase to address:** AI Integration phase. Verify existing plugin discovery works before adding new plugins.
+
+---
+
+### Pitfall 11: Eval-Author Agent Generates Assertions That Are Too Specific to One Valid Implementation
+
+**What goes wrong:**
+The eval-author generates an assertion: "TaskApiController::kanban() method calls `$this->entityTypeManager->getStorage('task')->loadByProperties(['project' => $project->id()])` on line 45." This is correct for one implementation, but equally valid implementations use entity queries (`$this->taskStorage->getQuery()->condition('project', $project->id())->execute()`). The without-skill run uses entity queries and the assertion fails. The delta appears to be +1 because of implementation style, not skill quality.
+
+**Why it happens:**
+This is the "rigid step-checking" anti-pattern identified by Anthropic's eval design guide. The eval-author, having generated or observed one implementation, locks onto its specific API calls as the "correct" pattern. But Drupal provides multiple valid ways to achieve the same result. Assertions must test OUTCOMES (are tasks loaded and serialized correctly?) not IMPLEMENTATIONS (which API was called?).
+
+v4.0 Phase 18 assertions successfully avoided this by testing for patterns like "uses CacheableJsonResponse" (there is only one correct class for cacheable JSON responses) rather than "calls addCacheableDependency on line 52."
+
+**Prevention:**
+- Train the eval-author with examples of good vs bad assertions:
+  - BAD: "Uses loadByProperties() to load tasks" (implementation-specific)
+  - GOOD: "Uses CacheableJsonResponse instead of JsonResponse for GET endpoints" (there is one correct choice)
+  - BAD: "Calls $entity->access('update') on line 38" (line-specific)
+  - GOOD: "Calls $entity->access('view') or $entity->access('update') on each entity, NOT relying solely on route-level permission" (pattern-level)
+- Assertions should test for CLASSES USED, PATTERNS FOLLOWED, and ANTI-PATTERNS AVOIDED rather than specific method calls or line numbers
+- Include negative assertions: "Does NOT use `\Drupal::service()` static calls in controllers" is more robust than "Uses dependency injection via create()" because there are many ways to implement DI but only one wrong pattern to avoid
+- Runtime assertions sidestep this entirely: "GET /api/kanban/project/1 returns JSON with status 200" tests outcome regardless of implementation
+
+**Detection:**
+- Delta appears on assertion-by-assertion analysis but both implementations are actually correct
+- Manual review of failing assertions shows the "wrong" code is functionally equivalent
+- Assertions reference specific line numbers or exact method signatures
+
+**Phase to address:** Eval-Author Agent phase. Build assertion review into the pipeline.
 
 ---
 
 ## Minor Pitfalls
 
-### Pitfall 12: Keyboard Shortcuts Conflict with Browser and Drupal Defaults
+### Pitfall 12: Drush Command Namespace Collision with Existing Core/Contrib Commands
 
 **What goes wrong:**
-Custom keyboard shortcuts (Ctrl+K for command palette, S for status change, G+P for go to projects) conflict with browser shortcuts or Drupal admin toolbar shortcuts. Ctrl+K opens the browser's address bar in some browsers. Single-key shortcuts fire while typing in form fields.
+The Drush skill teaches creating a command named `project:list` or `task:status`. These names collide with potential contrib module commands or future Drupal core commands. When two commands share a name, Drush behavior is undefined -- it may pick one arbitrarily or throw an ambiguity error.
 
 **Prevention:**
-- NEVER bind single-key shortcuts globally -- only when a board element has focus and no text input is active:
-  ```javascript
-  function handleKeydown(event) {
-    // Skip if user is typing in an input
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
-    if (event.target.isContentEditable) return;
-    // Now handle board shortcuts
+- Prefix ALL custom Drush commands with the module name: `gapm:project:list`, `gapm:task:create`
+- The Drush skill should include: "ALWAYS prefix custom command names with your module's short name to avoid collisions. Use `module:action:target` format."
+- Test with `drush list --filter=gapm` to verify namespace isolation
+
+**Phase to address:** Drush Skill phase.
+
+---
+
+### Pitfall 13: Analytics hook_schema() Defined but hook_update_N() Missing -- Table Not Created on Existing Installs
+
+**What goes wrong:**
+The analytics table is added to `hook_schema()` for new installations. But existing installations that update the module do not trigger `hook_schema()` (it only runs on fresh install). The analytics dashboard shows a "Table not found" error.
+
+**Prevention:**
+- ALWAYS pair new tables with `hook_update_N()`:
+  ```php
+  function group_ai_pm_update_10002() {
+    $schema = group_ai_pm_schema();
+    \Drupal::database()->schema()->createTable(
+      'group_ai_pm_task_history',
+      $schema['group_ai_pm_task_history']
+    );
   }
   ```
-- Use `event.preventDefault()` for shortcuts that conflict with browser defaults, but only when the Kanban board has focus context
-- Test shortcuts in Claro theme specifically (toolbar may have its own keyboard handlers)
-- Provide a keyboard shortcut reference (? key to show overlay) so users can discover shortcuts
+- Eval pipeline: test on BOTH fresh install AND update path
+- The database-api skill should document this pattern (currently missing)
 
-**Phase to address:** Interactions (Phase 2).
+**Phase to address:** Analytics phase.
 
 ---
 
-### Pitfall 13: Entity Access Checks Missing on REST Endpoints -- Users See Tasks From Other Projects
+### Pitfall 14: AI Timeout Exceeds PHP max_execution_time -- Fatal Error During Batch Processing
 
 **What goes wrong:**
-The custom REST controller loads tasks by project ID but does not check whether the current user has access to view those tasks or that project. Any authenticated user who guesses a project ID can see its tasks via the REST API, even if they are not a member of the associated group.
+AI API calls to GPT-4 or Claude take 10-30 seconds per request. The Batch API runs operations within a PHP request. If `max_execution_time` is 30 seconds (common default), processing 3 AI calls in one batch request triggers a fatal timeout. The batch progress bar freezes at 15% and the operation cannot be resumed.
 
 **Prevention:**
-- Run entity access checks on every loaded entity:
+- Use Queue API (not Batch API) for AI operations. Queue workers run in cron context where timeouts are configured differently
+- If Batch API is required for UX (progress bar), process only ONE item per batch operation pass and set a generous request timeout
+- Set AI provider timeouts lower than PHP timeout: if `max_execution_time` is 30s, set AI timeout to 20s so the PHP error handler can catch timeouts gracefully
+- The batch-queue-cron skill should add: "For operations involving external API calls (especially AI), prefer Queue API over Batch API because queue items can be retried independently and cron timeouts are separately configurable"
+
+**Detection:**
+- Batch progress bar freezes; page eventually shows a server error
+- PHP error log shows "Maximum execution time of 30 seconds exceeded"
+- AI operations work individually but fail in batch
+
+**Phase to address:** AI Integration phase (batch operations).
+
+---
+
+### Pitfall 15: forms-api Skill Describes AJAX But Has No #ajax Content -- Haiku Generates Broken AJAX Forms
+
+**What goes wrong:**
+The forms-api skill description says "Covers form elements, validation, AJAX callbacks" but the skill body has zero content about `#ajax` properties, `AjaxResponse`, or `ReplaceCommand`. Haiku reads the skill description, sees "AJAX callbacks" mentioned, and generates AJAX form code based on training data. The training data patterns may be outdated or incomplete. The generated AJAX forms either do not trigger callbacks or produce "An AJAX error occurred" messages.
+
+**Why it happens:**
+The forms-api skill was written from Chapters 2 of the Sipos book, which covers basic Form API. AJAX forms are covered in a different part of the book (Chapter 3 sidebar or Chapter 14). The skill description overestimates its scope. This was identified as a gap in v4.0 Phase 20 results but not yet fixed.
+
+**Prevention:**
+- Add concrete `#ajax` patterns to the forms-api skill body:
   ```php
-  $tasks = $this->entityTypeManager->getStorage('task')->loadMultiple($task_ids);
-  $accessible_tasks = array_filter($tasks, function ($task) {
-    return $task->access('view');
-  });
+  $form['status'] = [
+    '#type' => 'select',
+    '#title' => $this->t('Status'),
+    '#options' => $options,
+    '#ajax' => [
+      'callback' => '::statusCallback',
+      'wrapper' => 'status-result-wrapper',
+      'effect' => 'fade',
+    ],
+  ];
   ```
-- Check project access before returning any tasks:
+- Document the callback signature: `public function statusCallback(array &$form, FormStateInterface $form_state)` must return a render array (the replacement content), NOT an AjaxResponse (unless you need multiple commands)
+- Document the `wrapper` pattern: the `#ajax.wrapper` value MUST match the `#prefix`/`#suffix` container ID of the element to replace
+- Include an AjaxResponse pattern for multi-command callbacks:
   ```php
-  if (!$project->access('view')) {
-    throw new AccessDeniedHttpException();
-  }
+  $response = new AjaxResponse();
+  $response->addCommand(new ReplaceCommand('#wrapper', $rendered));
+  $response->addCommand(new MessageCommand($this->t('Status updated.')));
+  return $response;
   ```
-- For PATCH operations, check `update` access on the specific entity
-- For POST operations, check `create` access on the entity type within the group context
-- NEVER rely on route-level permission alone -- it checks "can access the dashboard feature" but not "can access THIS project's tasks"
 
-**Phase to address:** API Layer (Phase 1).
-
----
-
-### Pitfall 14: Drupal AJAX Commands Used Alongside Vue -- Two Rendering Systems Fight
-
-**What goes wrong:**
-The module uses Drupal's AJAX framework (`AjaxResponse`, `ReplaceCommand`, `OpenModalDialogCommand`) for list view enhancements while using Vue.js for the Kanban board. When both are on the same page (or when navigating between them), they interfere. Drupal AJAX replaces HTML that Vue is managing, or Vue's state management conflicts with Drupal's AJAX state tracking.
-
-**Prevention:**
-- Draw a clear boundary: Vue owns the Kanban board route, Drupal AJAX owns the entity list/form routes. NEVER mix them on the same page.
-- The Kanban board page should have ZERO Drupal AJAX forms or AJAX-enabled elements inside the Vue-managed DOM
-- The entity list builder page should use PURE Drupal AJAX for status toggles, without loading Vue
-- If a modal is needed from the board (e.g., confirming deletion), use a Vue modal component, NOT `OpenModalDialogCommand`
-- Share state via REST API, not DOM manipulation -- if a Drupal AJAX action changes a task status, Vue should re-fetch on focus return
-
-**Phase to address:** Architecture decision (Phase 1). Boundary between Vue and Drupal AJAX must be defined before either is implemented.
-
----
-
-### Pitfall 15: `_format: json` Missing From Route -- Content Negotiation Defaults to HTML
-
-**What goes wrong:**
-Custom REST routes work in manual testing (because the developer includes `?_format=json` in the URL) but fail in the Vue app (because the app constructs URLs without `?_format=json`). The server returns HTML responses that the Vue app cannot parse.
-
-**Prevention:**
-- Add `_format: json` as a route requirement (not just a query parameter):
-  ```yaml
-  group_ai_pm.api.task_update:
-    path: '/api/group-ai-pm/task/{task}'
-    defaults:
-      _controller: '\Drupal\group_ai_pm\Controller\TaskApiController::update'
-    requirements:
-      _permission: 'access group_ai_pm dashboard'
-      _csrf_request_header_token: 'TRUE'
-      _format: json
-      _method: PATCH
-  ```
-- When `_format` is a route requirement, Drupal automatically uses the JSON exception subscriber for error responses
-- The Vue API service should still include `?_format=json` in URLs as a safety measure
-- Set Content-Type headers on JavaScript requests: `'Content-Type': 'application/json'`
-
-**Phase to address:** API Layer (Phase 1).
+**Phase to address:** Skill Gap Fixes phase (forms-api #ajax).
 
 ---
 
@@ -615,34 +537,37 @@ Custom REST routes work in manual testing (because the developer includes `?_for
 
 | Phase Topic | Likely Pitfall | Mitigation |
 |-------------|---------------|------------|
-| API Layer (REST endpoints) | CSRF token mechanism confusion (#1, #5) | Use `_csrf_request_header_token` for all JS-called routes, `_csrf_token` for link-based actions only |
-| API Layer (REST endpoints) | JSON error responses (#3, #15) | Add `_format: json` to ALL API route requirements |
-| API Layer (REST endpoints) | Missing entity access checks (#13) | Check `$entity->access()` for every loaded entity, not just route permission |
-| Vue Infrastructure | Double initialization (#2) | Use `once()` guard in Drupal behavior, implement `detach` for cleanup |
-| Vue Infrastructure | drupalSettings not available (#7) | Declare `core/drupalSettings` dependency, attach settings in controller |
-| Vue Infrastructure | Bundle not committed (#4) | Use Vite library mode, commit dist/ folder |
-| Vue Infrastructure | Bundle size (#6) | Attach library only on board route, tree-shake imports, target <100KB gzipped |
-| Board UI | Claro CSS conflicts (#10) | Namespace all styles, use scoped CSS, test in Claro theme |
-| Board UI | Local task tab not appearing (#8) | Match base_route and parameter names exactly with entity canonical route |
-| Interactions (DnD) | Optimistic update without rollback (#9) | Implement full rollback pattern with user-visible error messaging |
-| Keyboard shortcuts | Browser/Drupal conflicts (#12) | Guard against text input focus, test in Claro with toolbar |
-| AJAX list enhancements | Vue and AJAX systems conflict (#14) | Hard boundary: Vue on board page, Drupal AJAX on list pages, never mixed |
-| Eval design | Haiku declaration-usage gap (#11) | Eval assertions must test WIRING (settings attached, CSRF fetched), not just file existence |
+| Drush Skill creation | Wrong directory structure and deprecated patterns (#1) | Verify against Drush 13.x official docs; test discovery as runtime assertion |
+| Drush Skill creation | Namespace collision with core commands (#12) | Prefix all commands with module short name |
+| Drush Skill creation | Conflicting queue patterns with batch-queue-cron (#8) | Explicit cross-reference disambiguation in both skills |
+| Eval-Author Agent | Tautological assertions measuring file existence (#2) | Require 60% differentiating assertions; provide v4.0 Phase 18 as gold standard examples |
+| Eval-Author Agent | No runtime assertions generated (#4) | Inject mandatory runtime assertion template; auto-prepend baseline checks |
+| Eval-Author Agent | Over-specific implementation assertions (#11) | Test patterns and anti-patterns, not specific method calls or line numbers |
+| Skill Gap Fixes (entities-fields) | Missing hook_update_N() for new base fields (#6) | Pair every baseFieldDefinitions change with update hook |
+| Skill Gap Fixes (forms-api) | #ajax content missing from skill body (#15) | Add concrete #ajax patterns with callback, wrapper, and AjaxResponse examples |
+| Skill Gap Fixes (caching) | lazy_builder content incomplete | Add TrustedCallbackInterface pattern with scalar-only arguments rule |
+| AI Integration (NL task creation) | Provider not configured, silent empty responses (#7) | Validate provider before queuing; check response non-empty |
+| AI Integration (batch operations) | Rate limit exceptions swallowed (#3) | Three-catch pattern with RequeueException for transient failures |
+| AI Integration (batch operations) | PHP timeout during batch AI calls (#14) | Use Queue API for AI, not Batch API; set AI timeout < PHP timeout |
+| AI Integration (function call plugins) | Annotation namespace breaks on module update (#10) | Pin versions; verify plugin discovery; follow existing plugin patterns exactly |
+| Analytics schema | Missing indexes on query columns (#5) | Design composite indexes based on query patterns before table creation |
+| Analytics schema | hook_schema() without hook_update_N() (#13) | Always pair new table creation with update hook for existing installs |
+| All entity-modifying phases | Cascading test failures (#9) | Run full test suite after entity changes; use shared test trait for $modules |
 
 ## "Looks Done But Isn't" Checklist
 
 Things that appear complete but are missing critical pieces.
 
-- [ ] **REST endpoint works:** Check that mutation requests include X-CSRF-Token header AND `?_format=json` -- not just that GET returns data
-- [ ] **Vue app mounts:** Check that `once()` guard prevents double mounting after AJAX/BigPipe -- not just that it works on fresh page load
-- [ ] **Board tab appears:** Check that the tab appears on the entity page -- not just that the route loads at a direct URL
-- [ ] **Drag-and-drop works:** Check that failure rolls back the card AND shows an error -- not just that successful drags update status
-- [ ] **Library loads:** Check that the Vue bundle loads ONLY on board pages -- not on every admin page
-- [ ] **Settings passed:** Check that drupalSettings contains project ID, base URL, and permissions -- not just that the controller returns JSON
-- [ ] **Keyboard shortcuts work:** Check shortcuts while Drupal toolbar is visible and while a text input is focused -- not just in isolation
-- [ ] **CSS looks correct:** Check component rendering inside Claro admin theme -- not in a standalone HTML file
-- [ ] **Production bundle exists:** Check that `js/dist/` contains compiled files AND is referenced in libraries.yml -- not that source files exist
-- [ ] **Access control applies:** Check that REST endpoints respect entity-level access, not just route-level permission
+- [ ] **Drush command created:** Check that `drush list | grep module_name` shows the command -- not just that the file exists at the correct path
+- [ ] **Eval assertions designed:** Check that at least 60% test non-obvious skill patterns -- not just file existence and class names
+- [ ] **Eval has runtime checks:** Check that the eval includes `drush en` + at least 2 drush-based runtime assertions -- not just static file pattern matching
+- [ ] **AI queue worker handles errors:** Check for THREE catch blocks (SuspendQueueException, AiRateLimitException/AiQuotaException, generic Exception) -- not just the standard two-catch pattern
+- [ ] **AI provider validated:** Check that provider configuration is validated BEFORE items are queued -- not just during processing
+- [ ] **New entity field added:** Check that a `hook_update_N()` exists alongside the `baseFieldDefinitions()` change -- not just that the field works on fresh install
+- [ ] **Analytics table created:** Check that `hook_schema()` AND `hook_update_N()` both define the table -- not just one or the other
+- [ ] **Analytics indexes exist:** Check that composite indexes cover the actual query patterns (task_id + timestamp, not just task_id alone)
+- [ ] **Skills cross-reference correctly:** Check that the Drush skill and batch-queue-cron skill do not teach conflicting queue processing patterns
+- [ ] **Existing tests still pass:** Check that `phpunit modules/custom/group_ai_pm/tests/` passes AFTER changes -- not just the new test in isolation
 
 ## Recovery Strategies
 
@@ -650,46 +575,48 @@ When pitfalls occur despite prevention, how to recover.
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| CSRF token not fetched (#1) | LOW | Add token fetch to app initialization. Single code change. |
-| Vue double mounting (#2) | LOW | Wrap in once() guard. Add detach handler. Quick fix. |
-| HTML error responses (#3) | LOW | Add `_format: json` to route requirements. No API changes. |
-| Bundle not committed (#4) | LOW | Run build, commit dist/, update .gitignore. No code changes. |
-| Wrong CSRF mechanism (#5) | LOW | Change route requirement from `_csrf_token` to `_csrf_request_header_token`. |
-| Bundle too large (#6) | MEDIUM | Tree-shaking, code splitting, lazy loading. Requires refactoring imports. |
-| drupalSettings missing (#7) | LOW | Add dependency to libraries.yml, attach settings in controller. |
-| Local task tab missing (#8) | LOW | Fix route path and base_route parameter matching. |
-| Optimistic rollback missing (#9) | MEDIUM | Implement rollback pattern in store. Requires state management refactor. |
-| Claro CSS conflicts (#10) | MEDIUM | Add CSS scoping/resets. May require reworking many component styles. |
-| Haiku wiring gap (#11) | HIGH | Skill content must be rewritten to show connected patterns. Eval re-run needed. |
-| Keyboard conflicts (#12) | LOW | Add input-focus guards. Quick conditional checks. |
-| Missing access checks (#13) | MEDIUM | Add access checks to all endpoints. Must audit every controller method. |
-| Vue/AJAX conflict (#14) | HIGH | Architectural separation. May require rewriting pages that mix both. |
-| JSON format missing (#15) | LOW | Add `_format: json` to routes. No API changes needed. |
+| Drush wrong directory (#1) | LOW | Move file from `src/Commands/` to `src/Drush/Commands/`, update namespace. 5-minute fix. |
+| Tautological assertions (#2) | HIGH | Must redesign eval assertions from scratch, re-run both variants, re-grade. Full eval cycle wasted. |
+| Rate limit exceptions swallowed (#3) | MEDIUM | Add catch block, but already-lost queue items cannot be recovered. Must re-queue. |
+| No runtime assertions (#4) | HIGH | Add runtime assertions and re-run evals. All previous eval results are unreliable -- may need to re-run everything. |
+| Missing indexes (#5) | MEDIUM | `hook_update_N()` to add indexes. `ALTER TABLE ADD INDEX` on large table locks it for seconds to minutes. |
+| Missing hook_update_N() (#6) | MEDIUM | Write update hook, but existing installs may need manual database repair if schema is corrupted. |
+| AI provider not validated (#7) | LOW | Add validation check. Queue items with empty results need manual re-processing. |
+| Conflicting queue patterns (#8) | LOW | Remove duplicate Drush command. Clarify skill cross-references. |
+| Cascading test failures (#9) | MEDIUM | Update `$modules` in all affected tests. May require debugging multiple test classes. |
+| AI plugin annotation break (#10) | MEDIUM | Update annotations/attributes. Requires understanding new API version's discovery mechanism. |
+| Over-specific assertions (#11) | MEDIUM | Rewrite assertions to test patterns not implementations. Partial re-run may suffice. |
+| Drush namespace collision (#12) | LOW | Rename command. Quick fix. |
+| Missing update hook for table (#13) | LOW | Write `hook_update_N()` with `createTable()`. Quick fix. |
+| PHP timeout in batch (#14) | MEDIUM | Refactor from Batch to Queue API. Architecture change. |
+| Missing #ajax in skill (#15) | LOW | Add content to skill body. Re-run eval if delta was affected. |
 
 ## Sources
 
-- [Drupal CSRF Access Checking Documentation](https://www.drupal.org/docs/8/api/routing-system/access-checking-on-routes/csrf-access-checking) -- `_csrf_token` vs `_csrf_request_header_token` distinction (HIGH confidence)
-- [Drupal REST Request Fundamentals](https://www.drupal.org/docs/8/core/modules/rest/getting-started-rest-configuration-rest-request-fundamentals) -- X-CSRF-Token header requirement, /session/token endpoint (HIGH confidence)
-- [CSRF Token Route Protection Change Record](https://www.drupal.org/node/2772399) -- Token system moved out of REST module to core (HIGH confidence)
-- [X-CSRF-Token 403 Error Issue](https://www.drupal.org/project/drupal/issues/3458218) -- Common error patterns (HIGH confidence)
-- [REST 403 Responses Unhelpful Issue](https://www.drupal.org/project/drupal/issues/2808233) -- JSON error body missing without `_format` (HIGH confidence)
-- [Drupal Asset Libraries Documentation](https://www.drupal.org/docs/develop/creating-modules/adding-assets-css-js-to-a-drupal-module-via-librariesyml) -- libraries.yml, drupalSettings, dependencies (HIGH confidence)
-- [Drupal JavaScript API Overview](https://www.drupal.org/docs/drupal-apis/javascript-api/javascript-api-overview) -- Drupal.behaviors, once(), attachBehaviors lifecycle (HIGH confidence)
-- [Drupal Behaviors Double-Attachment Issue](https://www.drupal.org/project/drupal/issues/3377788) -- BigPipe and behaviors firing twice (HIGH confidence)
-- [Vue.js + Drupal Integration Guide (Five Jars)](https://fivejars.com/blog/how-integrate-vuejs-applications-drupal) -- Library architecture, build targets, mounting patterns (MEDIUM confidence)
-- [Building JS for Drupal Contrib Modules (TrueSummit)](https://truesummit.dev/blog/building-js-drupal-contrib-modules) -- Committing compiled bundles, CI/CD pattern (MEDIUM confidence)
-- [Vue.js Library Drupal Module](https://www.drupal.org/project/vuejs) -- Vue 3 as Drupal library (MEDIUM confidence)
-- [Drupal Local Tasks Documentation](https://www.drupal.org/docs/drupal-apis/menu-api/providing-module-defined-local-tasks) -- base_route, route parameters, tab grouping (HIGH confidence)
-- [Vue.js Performance Best Practices](https://vuejs.org/guide/best-practices/performance) -- Tree-shaking, code splitting, bundle optimization (HIGH confidence)
-- [Vue.js Production Deployment](https://vuejs.org/guide/best-practices/production-deployment.html) -- Production build configuration (HIGH confidence)
-- [Drupal @drupal/once NPM Package](https://www.npmjs.com/package/@drupal/once) -- once() API for preventing double initialization (HIGH confidence)
-- [Claro Theme CSS Variables Issue](https://www.drupal.org/project/drupal/issues/3554220) -- Claro library dependency chain (MEDIUM confidence)
-- [Drupal Passing Data PHP to JavaScript](https://gorannikolovski.com/snippet/passing-data-from-php-to-javascript-in-drupal) -- drupalSettings patterns (MEDIUM confidence)
-- [Drupal HTMX Replacement Proposal](https://www.drupal.org/project/drupal/issues/3404409) -- Context on Drupal AJAX framework complexity (LOW confidence -- proposal, not implemented)
-- v3.0 Eval Phase 16 Results -- Haiku "declaration-usage gap" pattern empirically validated (HIGH confidence, project-specific)
-- v3.0 Eval Phase 15 Results -- CSRF_token CRITICAL callout effectiveness empirically validated (HIGH confidence, project-specific)
-- Existing group_ai_pm module source -- Current route definitions, libraries.yml, entity structure (HIGH confidence, first-party)
+- [Drush 13.x Command Authoring](https://www.drush.org/13.x/commands/) -- PHP attributes, directory structure, AsCommand, deprecated patterns (HIGH confidence)
+- [Drush 13.x Dependency Injection](https://www.drush.org/13.x/dependency-injection/) -- AutowireTrait, constructor injection, #[Autowire] attribute (HIGH confidence)
+- [Drush AutowireTrait Source](https://github.com/drush-ops/drush/blob/13.x/src/Commands/AutowireTrait.php) -- Trait implementation details (HIGH confidence)
+- [Drush 12 Autodiscovery Issue](https://www.drupal.org/project/single_content_sync/issues/3415040) -- Discovery requirements for Drush 12+ (HIGH confidence)
+- [Drupalize.Me Drush Command Tutorials Updated](https://drupalize.me/blog/drush-custom-command-tutorials-updated) -- Migration guidance from annotations to attributes (MEDIUM confidence)
+- [Drupal AI Module](https://www.drupal.org/project/ai) -- AI provider architecture (MEDIUM confidence)
+- [Drupal AI Rate Limits Issue](https://www.drupal.org/project/ai/issues/3492086) -- Rate limiting discussion for AI interactions (MEDIUM confidence)
+- [Drupal AI Better Error Handling Issue](https://www.drupal.org/project/ai/issues/3499597) -- AiRateLimitException, AiQuotaException error handling (MEDIUM confidence)
+- [Azure AI Provider Rate Limit Bug](https://www.drupal.org/project/ai_provider_azure/issues/3557858) -- AiRateLimitException not thrown correctly (MEDIUM confidence)
+- [Drupal AI Custom Timeout Issue](https://www.drupal.org/project/ai/issues/3479159) -- Timeout configuration for AI providers (MEDIUM confidence)
+- [Drupal AI Provider Development Guide](https://project.pages.drupalcode.org/ai/1.1.x/developers/writing_an_ai_provider/) -- Provider interface, exception types (MEDIUM confidence)
+- [Drupal Update API Documentation](https://www.drupal.org/docs/drupal-apis/update-api/updating-database-schema-andor-data-in-drupal) -- hook_update_N(), entity schema updates (HIGH confidence)
+- [Drupal Entity Schema Update Change Record](https://www.drupal.org/node/2554097) -- installFieldStorageDefinition() API (HIGH confidence)
+- [Drupal Entity Schema Index Issue](https://www.drupal.org/project/drupal/issues/3005447) -- Indexes not auto-applied on entity schema update (HIGH confidence)
+- [Anthropic: Demystifying Evals for AI Agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents) -- Eval design best practices, assertion quality, rigid step-checking anti-pattern (HIGH confidence)
+- [Hamel Husain: Your AI Product Needs Evals](https://hamel.dev/blog/posts/evals/) -- Eval methodology, common mistakes (MEDIUM confidence)
+- [Red Hat Research: LLMs for Unit Test Generation](https://research.redhat.com/blog/2025/04/21/choosing-llms-to-generate-high-quality-unit-tests-for-code/) -- Initial assertion correctness rates (53-75%), iterative refinement (MEDIUM confidence)
+- [Drupal Database Optimization](https://www.cmsdrupal.com/blog/5-easy-tips-optimize-your-drupal-database-and-speed-your-sql-queries-part-1) -- Index design, query optimization (MEDIUM confidence)
+- [DrupalZone: Indexing Database Tables](https://drupalzone.com/tutorial/performance-optimization/17-indexing-database-tables) -- Custom table index patterns (MEDIUM confidence)
+- v2.0-v4.0 Eval Results -- Empirical assertion quality data, tautological assertion patterns, delta measurements (HIGH confidence, project-specific)
+- v4.0 Phase 18 Evals -- Gold standard assertion design with 17 assertions producing +23.3% delta (HIGH confidence, project-specific)
+- v4.0 Phase 20 Results -- forms-api #ajax gap identified, skill propagation patterns (HIGH confidence, project-specific)
+- Existing group_ai_pm module source -- Current module structure, entity definitions, queue workers, AI plugins (HIGH confidence, first-party)
 
 ---
-*Pitfalls research for: v4.0 Vue.js Kanban UX Overhaul -- adding Vue.js, AJAX, and rich frontend UX to existing Drupal 10 module*
-*Researched: 2026-03-08*
+*Pitfalls research for: v5.0 AI Integration, Drush Skill, Eval Tooling & Analytics -- adding AI operations, CLI skill, automated eval design, analytics schema, and skill improvements to existing Drupal 10 module and skill collection*
+*Researched: 2026-03-09*

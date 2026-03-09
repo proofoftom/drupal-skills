@@ -1,427 +1,420 @@
-# Feature Landscape: v4.0 Vue.js Kanban UX Overhaul
+# Feature Research: v5.0 AI Integration, Eval Tooling, & Analytics
 
-**Domain:** Linear-quality project management UX for an existing Drupal 10 module (group_ai_pm)
-**Researched:** 2026-03-08
-**Confidence:** MEDIUM-HIGH (Linear UX patterns well-documented; Vue 3 + Drupal integration patterns verified; Drupal AJAX/REST APIs documented in core; some integration specifics are novel)
+**Domain:** AI-powered project management features, developer tooling (Drush skill, eval-author agent), skill gap fixes, and task analytics for an existing Drupal 10 module and Claude skill collection
+**Researched:** 2026-03-09
+**Confidence:** MEDIUM (Drush patterns well-documented via official docs; AI integration patterns proven in existing module; eval-author agent is novel -- no direct precedent; analytics schema is standard database patterns)
 
 ## Scope
 
-This research covers ONLY new features for v4.0. The existing module (from v3.0) already has:
-- Project and Task content entities with full CRUD
-- Task fields: title, description, status (todo/in_progress/review/done), priority (low/medium/high/critical), due_date, assignee, project reference
-- Project fields: title, description, status (planning/active/review/completed), owner
-- Dashboard at /admin/content/project-dashboard (static HTML table showing project count + recent projects)
-- Entity list builders (ProjectListBuilder, TaskListBuilder), Views integration
-- Group integration, Settings form, permissions system
-- AI tools sub-module (optional, CreateProjectTool, QueryProjectsTool)
-- CSS libraries: task_cards, project_summaries
-- Local task tabs: View/Edit/Delete on both entity types
-- Menu links under /admin/content/ for Projects, Tasks, Dashboard
-- Action route: /admin/content/project/{project}/complete (CSRF-protected)
-- ProjectStatusBlock showing project counts by status
-
-v4.0 transforms this from "functional admin CRUD" to "interactive PM tool."
+This research covers ONLY new v5.0 features. The existing project already has:
+- 14 Drupal skills with headless eval pipeline (9/13 positive delta)
+- group_ai_pm module: Project/Task CRUD, Vue Kanban board with DnD, REST API (GET/PATCH/POST/DELETE), AJAX TaskStatusForm, dashboard, assignee autocomplete, toast notifications, filters, context menus, display options
+- Eval pipeline: setup-fresh-drupal10.sh, headless `claude -p` code gen, eval-grader agent (Sonnet), eval-browser agent for E2E
+- Three-tier assertions: static (evals.json), runtime (drush-based), browser (agent-browser)
+- AI sub-module (group_ai_pm_ai) with CreateProjectTool and QueryProjectsTool AiFunctionCall plugins
+- Existing batch-queue-cron skill covering QueueWorker, Batch API, hook_cron, Lock API
 
 ---
 
 ## Table Stakes
 
-Features users expect from any Kanban-based project management interface. Without these, the board feels broken or unfinished.
+Features that are expected given the milestone's stated goals. Missing these would mean the milestone failed to deliver.
+
+### A. Drush Skill (drupal-drush)
 
 | Feature | Why Expected | Complexity | Depends On |
 |---------|--------------|------------|------------|
-| **Kanban board view per project** | The defining feature. Tasks displayed as cards in columns mapped to the existing 4 status values (To Do, In Progress, Review, Done). Every PM tool with "Kanban" in its description has this. Burndown, Views Kanban, OpenLucius -- all Drupal PM contrib modules center on this view. | HIGH | Vue 3 app mount point, REST endpoints for task data |
-| **Drag-and-drop between columns** | Moving a card from "To Do" to "In Progress" is the core Kanban interaction. Without it, users must open full edit forms to change status -- defeating the purpose. OpenLucius Kanban and Views Kanban both implement DnD. The bar is set. | HIGH | Kanban board rendered, PATCH endpoint for task status updates, vuedraggable or vue-dnd-kit |
-| **Task cards with visible metadata** | Cards must show title, priority badge, assignee name, and due date at a glance. Linear shows properties "as space allows" on cards, with descriptions explicitly hidden. Users scan boards visually; hidden metadata forces clicking each card. | MEDIUM | Existing task entity fields (all present), Vue card component, CSS |
-| **Priority visual indicators** | Color-coded badges or icons for Low/Medium/High/Critical. Linear uses exactly four fixed priority levels -- the existing Task.priority field already has exactly these four values. Users need instant priority scanning without reading text. | LOW | Existing priority field values, CSS class mapping |
-| **Status-colored column headers** | Each column needs a distinct visual identity. Users orient by color when scanning boards with many cards. Linear uses subtle color in column headers; Kanban best practices emphasize "consistent column colors reduce cognitive load." | LOW | CSS theming on 4 column headers |
-| **REST/JSON endpoints for Vue** | Vue app needs to read tasks filtered by project and update task status. Minimum viable: GET tasks by project ID, PATCH task status/priority/assignee. Must handle Drupal's X-CSRF-Token header for write operations. Custom REST controllers (not JSON:API) for tailored response shapes. | HIGH | Custom controller classes, Drupal serialization, CSRF token route |
-| **Task quick-create from board** | "+" button at column header to create a task with that column's status pre-filled. Linear has "C" shortcut. Users expect to add tasks without leaving the board. Minimum: title-only inline form that creates task via POST endpoint. | MEDIUM | POST endpoint for task creation, inline form component |
-| **Loading and empty states** | Skeleton loaders while fetching, "No tasks yet" for empty columns, error states for failed requests. Without these, the board looks broken during load (common with 50+ tasks) and confusing when a project has no tasks. | LOW | Vue component conditional rendering |
-| **Board route with local task tab** | A "Board" local task tab on the project entity canonical page (alongside existing View/Edit/Delete tabs). Route: /admin/content/project/{project}/board. Users navigate to a project and expect the board within Drupal's standard tab navigation. | MEDIUM | New route in routing.yml, new entry in links.task.yml, controller that renders Vue mount div |
-| **Responsive column layout** | Columns must scroll vertically when full. Board must render 4 columns side-by-side on standard desktop widths (1200px+). Cards must not overflow columns. On narrower screens, horizontal scroll rather than breaking layout. | MEDIUM | CSS flexbox/grid, overflow-y: auto on columns |
-| **Keyboard alternative to drag-and-drop** | WCAG 2.2 SC 2.5.7 (Dragging Movements) requires that any drag functionality also work without dragging. Provide a "Move" button or keyboard shortcut that opens a status selection menu. Not optional -- it is an accessibility requirement. | MEDIUM | Status change menu/dialog per card, keyboard event handlers |
+| **Custom Drush command patterns** | Developers using Claude for Drupal ask "create a Drush command" regularly. Without this skill, Claude generates outdated annotation patterns or misplaces command files. Drush 13+ requires `src/Drush/Commands/` directory (not `src/Command/`), `#[AsCommand]` attributes (not `@command` annotations), and `AutowireTrait` for DI (not `drush.services.yml`). | MEDIUM | None -- standalone new skill |
+| **Drush command lifecycle** | A Drush skill must cover the full command lifecycle: `configure()` for arguments/options, `interact()` for prompts, `execute()` for logic. Without lifecycle coverage, Claude generates commands that silently ignore options or fail on missing arguments. | LOW | Part of Drush command patterns |
+| **Service injection via AutowireTrait** | Drush 13+ uses constructor autowiring, Drush 14+ requires it. The deprecated `drush.services.yml` approach is the #1 error Claude makes with Drush commands (training data is stale). The skill must teach AutowireTrait as the only correct pattern. | LOW | Part of Drush command patterns |
+| **File placement and discovery** | Drush 12+ requires commands in `src/Drush/Commands/` with `*Commands` suffix. Wrong placement = commands not discovered. This is a concrete, testable wrong-way pattern. | LOW | Part of Drush command patterns |
+| **Drush-based testing patterns** | The eval pipeline already uses `drush php-eval` for runtime assertions. The skill should teach DrushTestTrait for PHPUnit integration and `$this->drush()` assertion patterns. Enables smarter runtime assertion design in the eval-author agent. | MEDIUM | drupal-testing skill reference |
+| **Common drush commands for development** | `drush cr`, `drush en`, `drush php-eval`, `drush config:get`, `drush user:info`, `drush queue:run`. Not about creating commands -- about USING drush for verification and debugging. Directly feeds eval runtime assertions. | LOW | None |
+
+### B. Eval-Author Agent
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| **Static assertion generation** | Given a phase prompt and skill files, the agent must produce static assertions targeting non-obvious SKILL.md patterns (the proven differentiating strategy from v2-v4). Must follow the existing evals.json format exactly. | HIGH | Understanding of all 14 skills, existing eval format |
+| **Runtime assertion generation** | Generate `drush php-eval` and `drush en` based runtime assertions that test functional correctness -- DI resolution, entity installation, permission loading, config storage. Must produce executable shell commands. | HIGH | Drush skill (for smarter drush commands), existing runtime assertion format |
+| **Three-tier coverage analysis** | Analyze which skill patterns a given phase prompt exercises and flag gaps: "This prompt tests caching but not the CacheableJsonResponse pattern." Ensures no critical skill pattern goes untested. | MEDIUM | All 14 skill files as input context |
+| **Difficulty calibration via past results** | Use v2-v4 eval results to calibrate assertion difficulty. Assertions that both with/without always pass are too easy. Assertions that neither passes are too hard or testing the wrong thing. Target the "with-passes, without-fails" sweet spot. | MEDIUM | Historical eval results from eval/results/ and eval/v3/ and eval/v4/ |
+| **Output format compliance** | Must produce valid JSON matching existing evals.json schema. Must produce runtime assertions as executable bash commands. Grading pipeline breaks on malformed output. | LOW | Existing eval format as specification |
+
+### C. Skill Gap Fixes
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| **entities-fields: bundle_of coverage** | Identified gap: SKILL.md mentions bundles in the decision tree but has no code example for `bundle_of` on the config entity side. Haiku gets this wrong consistently. | LOW | drupal-entities-fields skill |
+| **caching: lazy_builder hardening** | Existing skill covers lazy_builder but the pattern has proven weak in evals -- Haiku misuses arguments (passes objects instead of scalars). Needs a stronger WRONG/RIGHT callout with scalar-only rule. | LOW | drupal-caching skill |
+| **forms-api: #ajax content** | Identified in v4.0 phase 20 results: skill description mentions AJAX but body has NO `#ajax` code examples. Phase 20 delta was only MOD because Haiku had to figure out `#ajax` patterns without skill guidance. | MEDIUM | drupal-forms-api skill |
 
 ---
 
 ## Differentiators
 
-Features that elevate the module from "basic Kanban" to "Linear-quality." Not expected in a Drupal module, but create real delight and efficiency.
+Features that elevate the project beyond "functional" to "impressive." Not required for milestone completion, but add substantial value.
+
+### D. AI-Powered Task Creation from Natural Language
 
 | Feature | Value Proposition | Complexity | Depends On |
 |---------|-------------------|------------|------------|
-| **Keyboard shortcuts** | Linear's defining UX pattern. Single-key shortcuts: S for status, P for priority, A for assign, C for create. Arrow keys to navigate between cards. Linear "was designed so you can take actions in multiple ways" -- keyboard is the fastest. No Drupal PM module does this. | MEDIUM | Keybinding system (Vue composable), focus management, action dispatch |
-| **Command palette (Ctrl+K)** | Universal search + action launcher. Type to find tasks, change status, assign users, navigate between projects. Linear's "most beloved feature" -- replaces menus with intent-based navigation. Linear docs: "searching for the action in the command line makes it easy to figure out how to do anything." | HIGH | Vue overlay component, fuzzy search over task titles, action registration system |
-| **Inline title editing** | Click a card title to edit in-place. Linear allows clicking any field to edit inline. Removes the "open form, edit field, save, navigate back" friction. Double-click or Enter key to activate. Escape to cancel. | MEDIUM | Contenteditable or input-swap pattern, PATCH endpoint for title field |
-| **Context menu on right-click** | Right-click a card: Edit, Change Status (submenu), Change Priority (submenu), Assign (submenu), Delete. Linear provides contextual menus as a primary interaction pattern alongside keyboard and buttons. | MEDIUM | Vue context menu component, submenu rendering, action dispatch to API |
-| **Smooth drag animations** | CSS transitions during drag: card lifts with shadow, destination column highlights, card settles with easing on drop. Transforms mechanical DnD into satisfying interaction. vuedraggable/SortableJS supports animation config natively. | LOW-MEDIUM | DnD library animation options, CSS transitions |
-| **Optimistic UI updates** | When dragging a card to a new column, update UI immediately and sync to server in background. Revert on failure with error toast. Linear feels instant because it never blocks on network. Critical for perceived performance. | MEDIUM | Vue reactive state, async PATCH with rollback, toast notification component |
-| **Task detail slide-over panel** | Click a card to open a right-side panel (board still visible on left) showing full task details. Inline editing of title, status, priority, assignee within the panel. "Edit full page" link to Drupal entity form. Linear uses this pattern; it keeps board context visible. | HIGH | Vue panel/drawer component, full task data endpoint, inline editing components |
-| **Filter bar** | Filter board by assignee, priority, or due date range. Active filters display as dismissible pills above the board. Linear's filters are "extremely intuitive." URL query param persistence so filters survive page refresh. | MEDIUM | Vue filter component, client-side filtering (tasks already loaded), URL state sync |
-| **Due date visual warnings** | Cards with past-due dates get red border/highlight. Cards due today get yellow/amber. Cards due within 3 days get subtle indicator. Users scan for urgency without reading date text. | LOW | Date comparison logic in Vue computed property, CSS conditional classes |
-| **Assignee avatars** | Small circular avatar (Drupal user picture) or colored initials fallback on each card. Linear shows assignees as avatars, not text labels. Increases visual density and scannability. | LOW | User picture URL in API response, initials-generation utility, CSS for circular avatars |
-| **Task count badges per column** | Number showing task count in each column header (e.g., "In Progress (7)"). Linear shows these. Helps assess workload distribution and spot bottlenecks at a glance. | LOW | Computed property from reactive task arrays |
-| **Board display options** | Toggle which properties show on cards: show/hide priority, assignee, due date. Compact vs expanded card layout. Linear lets users "customize card density." Stored in localStorage per-user. | MEDIUM | Vue settings dropdown, localStorage persistence, card component conditional slots |
-| **Full keyboard navigation** | Arrow keys move focus between cards (up/down within column, left/right between columns). Enter opens detail panel. Tab to filter bar. Escape closes panels. ARIA attributes on cards for screen reader announcements. | MEDIUM | Focus management system, aria-activedescendant, keyboard event composition |
-| **AJAX status toggles on entity list pages** | On /admin/content/task (existing TaskListBuilder), add a status dropdown per row that updates via Drupal AJAX without page reload. Pure Drupal AJAX -- no Vue dependency. Bridges the gap for users who prefer list view over board view. | MEDIUM | Drupal AJAX Form API (#ajax property), AjaxResponse with ReplaceCommand |
-| **Dashboard overhaul** | Replace current static HTML table (just shows project count + recent projects table) with: project summary cards showing task count by status as mini progress bars, recent activity, quick-action buttons ("New Project", "View Board"). | HIGH | New dashboard controller/template, aggregation queries, Vue or Twig components |
-| **Drag-and-drop progress indicator** | During drag, show a ghost/preview of the card with reduced opacity at the source position while the dragged card follows the cursor. Standard DnD UX pattern that provides spatial context. | LOW | DnD library ghost/clone options, CSS opacity |
+| **CreateTaskFromTextTool** | New AiFunctionCall plugin that parses natural language like "Create a high priority task to fix the login bug, assign to admin, due Friday" into structured Task entity creation. Existing CreateProjectTool provides the exact plugin pattern. The AI module handles intent parsing via LLM -- the tool just needs to expose the right argument schema. | MEDIUM | AI Agents module (already installed), existing AiFunctionCall pattern |
+| **Intent-to-field mapping** | AI extracts: title (free text), priority (inferred from "urgent"/"important"/"low"), assignee (user lookup by name), due_date (relative date parsing "Friday"/"next week"/"March 15"), status (defaults to 'todo' unless specified). The LLM does the NLP; the tool validates and creates. | MEDIUM | CreateTaskFromTextTool base, user entity lookup |
+| **Structured argument schema** | The tool's `getArguments()` defines the contract: title (required string), priority (enum), assignee_name (optional string for fuzzy user lookup), due_date (optional ISO date), status (enum with default), description (optional text). The AI provider maps natural language to these structured args. | LOW | AiFunctionCall plugin API |
+| **User lookup by name** | When AI extracts "assign to Jane", the tool must fuzzy-match against Drupal user display names. Use `user_load_by_name()` or entity query on `name` field. Return helpful error if no match or ambiguous match. | LOW | Drupal user entity storage |
+| **Confirmation and feedback** | Tool returns a structured summary: "Created task 'Fix login bug' (priority: high, assigned: admin, due: 2026-03-14)". The AI agent can present this to the user for confirmation or as a completion message. | LOW | Tool return value pattern |
+
+### E. AI-Suggested Task Assignments
+
+| Feature | Value Proposition | Complexity | Depends On |
+|---------|-------------------|------------|------------|
+| **SuggestAssigneeTool** | AiFunctionCall plugin that takes a task description and returns ranked user suggestions with reasoning. Uses LLM to analyze: user's current workload (task count by status), past assignment patterns (how often each user works on similar tasks), availability (ratio of done vs in_progress tasks). | HIGH | AI Agents module, task entity queries for workload data |
+| **Workload metrics query** | For each candidate user: count active tasks (in_progress + review), count completed tasks (done), calculate completion rate. Users with fewer active tasks and higher completion rates rank higher. Pure entity query -- no ML needed. | MEDIUM | Task entity storage, user entity references |
+| **Confidence scoring** | Each suggestion includes a confidence level: HIGH (clear best match -- low workload, many similar completed tasks), MEDIUM (reasonable match), LOW (fallback -- no clear signal). Confidence helps users decide whether to accept. | MEDIUM | Scoring algorithm based on workload metrics |
+| **User approval workflow** | Suggestions are presented, NOT auto-applied. The AI agent returns "I suggest assigning to @admin (confidence: HIGH, currently 2 active tasks, 15 completed)" and the user explicitly accepts or rejects. No autonomous entity mutation. | LOW | Tool return value is advisory only |
+
+### F. Batch AI Operations
+
+| Feature | Value Proposition | Complexity | Depends On |
+|---------|-------------------|------------|------------|
+| **BatchUpdateTasksTool** | AiFunctionCall plugin for bulk operations: "Set all todo tasks in Project Alpha to high priority" or "Assign all unassigned review tasks to admin." Parses intent, queries matching tasks, applies updates in a single tool call. | MEDIUM | AI Agents module, task entity queries |
+| **QueueWorker for AI batch processing** | For large batches (>50 tasks), use existing QueueWorker pattern to process updates asynchronously. The AI tool queues items, a cron-triggered `AiTaskBatchWorker` processes them. Leverages the proven batch-queue-cron skill. | MEDIUM | drupal-batch-queue-cron patterns (already in skill), Queue API |
+| **Progress feedback** | For synchronous small batches: return "Updated 12 tasks: set priority to high." For queued large batches: return "Queued 150 task updates. Processing via cron." The user always knows what happened and when to expect completion. | LOW | Tool return values, queue count |
+| **Error handling per item** | If some updates fail (access denied on specific tasks), the tool should report partial success: "Updated 10/12 tasks. 2 failed: Task 45 (access denied), Task 67 (invalid status)." Not all-or-nothing. | MEDIUM | Per-item try/catch in processing loop, SuspendQueueException pattern |
+| **Dry run mode** | Optional `dry_run` argument that queries matching tasks and returns what WOULD change without actually changing anything. "12 tasks would be updated: 8 todo -> in_progress, 4 in_progress -> review." Users can verify before committing. | LOW | Argument flag, conditional entity save |
+
+### G. Task History Analytics
+
+| Feature | Value Proposition | Complexity | Depends On |
+|---------|-------------------|------------|------------|
+| **Status change tracking table** | Custom database table (`group_ai_pm_task_history`) recording: task_id, old_status, new_status, changed_by (uid), changed_at (timestamp). Populated via `hook_entity_update()` on task entities. This is the foundation for all analytics. | MEDIUM | Custom install schema, hook_entity_update |
+| **Views integration for history** | Expose the history table to Views via `hook_views_data()`. Admins can create Views showing status transition history, filtered by date range, user, or project. No custom UI needed -- Views handles display. | MEDIUM | Custom database table, Views API knowledge from drupal-views-dev skill |
+| **Cycle time calculation** | Compute average time from 'todo' to 'done' per project. Derived from the history table: find earliest 'todo' entry and latest 'done' entry per task, compute delta. Surface as a REST endpoint or Views field. | MEDIUM | History table, date arithmetic |
+| **Status distribution over time** | Query the history table to show how many tasks were in each status on a given date. Enables "burndown-like" visualization without the complexity of actual burndown charts. | HIGH | History table, point-in-time reconstruction |
+| **Dashboard integration** | Add analytics summary to the existing dashboard: average cycle time, tasks completed this week, overdue count, bottleneck detection (which status column has the most tasks stuck). | MEDIUM | History table queries, dashboard controller enhancement |
 
 ---
 
 ## Anti-Features
 
-Features to explicitly NOT build. Each is tempting but adds complexity without proportional value in a Drupal admin module context.
+Features to explicitly NOT build. Each is tempting but adds disproportionate complexity or undermines the project's eval-driven methodology.
 
 | Anti-Feature | Why Tempting | Why Avoid | What to Do Instead |
 |--------------|-------------|-----------|-------------------|
-| **Swimlanes** | Linear has them. Groups cards into horizontal rows by assignee/priority/label within each column. | Doubles board complexity to a 2D grid. Requires sub-grouping API, complex layout calculations, more API calls. The existing 4-column layout with filter bar achieves the same insight (show one assignee at a time) with dramatically less complexity. | Use the filter bar to show one assignee or priority level at a time. Same information, 10x simpler UI. |
-| **Real-time WebSocket updates** | Linear and modern SaaS tools update boards live when teammates make changes. Feels collaborative. | Drupal has no native WebSocket infrastructure. Adding Mercure, Pusher, or Socket.IO adds deployment complexity (Redis, Node.js sidecar). The module targets small teams using Drupal admin where simultaneous board editing is rare. | Poll for changes every 30-60 seconds when the board tab is focused. Refresh on window focus. Pragmatic for the Drupal deployment context. |
-| **Gantt chart / timeline view** | Enterprise PM tools (Asana, Monday.com) have them. Linear recently added project timelines. | Massive frontend complexity: date-range rendering, dependency arrows, zoom controls, horizontal scrolling calendar. Not a Kanban feature and does not exercise Drupal skills being tested. | Show due dates on cards and in detail panel. Use Drupal Views for date-sorted task lists if timeline view is needed. |
-| **Custom workflow states** | Let admins define their own columns beyond the 4 fixed statuses. "Every team is different." | Requires: entity update hook to alter allowed_values list, migration logic for existing tasks, board column config UI, form for adding/removing/reordering states. The 4 statuses (todo/in_progress/review/done) match the universal Kanban model and the existing entity schema. | Keep the 4 fixed statuses. If an admin needs more, they can extend Task.status allowed_values via Drupal config and the board will render whatever values exist -- but we do not build a UI for managing them. |
-| **Sprint/cycle management** | Linear has Cycles. Jira has Sprints. Burndown module has sprint support. | Adds a new entity type (Sprint), date-range assignment logic, velocity calculations, burndown charts. Massive scope expansion for marginal value in a module whose primary goal is demonstrating Drupal skills. | Projects serve as the grouping mechanism. Due dates on tasks provide time-boxing. If sprints are needed later, it is a separate sub-module. |
-| **Multi-select bulk drag** | Select multiple cards (shift-click) and drag them all to another column simultaneously. | Complex DnD interaction: multi-item selection state, composite drag preview, batch PATCH endpoint, error handling for partial failures. Niche use case -- rarely more than 2-3 tasks need the same status change at once. | Provide bulk status change via command palette or a "select and act" pattern: checkbox select cards, then use keyboard shortcut or button to change status of all selected. |
-| **Manual card reordering within columns** | Drag cards up/down within a column to set display order. Linear supports this. | Requires a weight/order field on the Task entity (schema change), complex position calculation on drop (fractional indexing like Linear uses, or full rebalancing), migration for existing tasks. | Sort cards within columns deterministically: by priority (critical first) then by due date (soonest first) then by created date (newest first). Predictable ordering without manual arrangement. |
-| **Rich text editor in board cards** | CKEditor or ProseMirror for task descriptions inline on the board or in the detail panel. | CKEditor integration inside a Vue overlay is heavy (separate CKEditor Vue wrapper, toolbar configuration, paste handling). Description editing from the board is rare -- users typically write descriptions once when creating the task. | Show description as plain text in the detail panel. Provide a "Edit full page" link to the Drupal entity edit form where CKEditor is already configured on the description field. |
-| **File attachments on cards** | Drag files onto cards or upload from detail panel. | File upload requires Drupal's managed file entity system, file field on Task entity (schema change), upload progress UI, file display/download in Vue, storage considerations. Large scope for low Kanban value. | Link to the task edit form for file management. The board focuses on status flow, not document management. |
-| **Activity log per card** | Show who changed status/priority/assignee and when, as a timeline per task. | Requires entity change tracking via hook_entity_update (logging every field change to a dedicated table or custom entity), storage schema, timeline rendering component. Significant backend and frontend work. | Show "Last updated: [relative time]" on cards and in detail panel. Full entity revision history is available on the Drupal entity view page if revision support is added later. |
+| **General-purpose Drush command generation** | A Drush skill could try to teach every drush subcommand (site:install, config:export, etc.). | The skill is for AUTHORING custom commands, not documenting existing ones. Drush docs already cover usage. Bloating the skill with usage docs pushes it past the 500-line limit and dilutes the custom command patterns that actually differ between with/without skill. | Focus on custom command creation patterns only. Reference drush docs for existing commands. Include common commands for eval assertions in a concise reference section. |
+| **Real-time AI chat interface** | A conversational chatbot in the Kanban board for "talk to your project." | Requires WebSocket/polling infrastructure Drupal does not have. The AI Agents module already provides a chatbot interface at `/admin/config/ai/agents`. Building a second one inside the Kanban is duplicative. | Use the existing AI Agents chatbot interface. The new AiFunctionCall tools register with it automatically. |
+| **Autonomous AI actions** | AI that automatically assigns tasks or changes status without user approval. | Autonomous mutations without human-in-the-loop are dangerous for a project management tool. A misassignment or wrong status change could lose work visibility. Also impossible to eval meaningfully -- "did the AI make a good autonomous decision?" is subjective. | All AI tools return suggestions/results. Users explicitly confirm before entity mutation. SuggestAssigneeTool returns recommendations; the user clicks "Accept." |
+| **Machine learning model training** | Training a custom ML model on task history for predictions (completion time, assignment optimization). | Requires training infrastructure, labeled datasets, model versioning, and ongoing maintenance. Far exceeds module scope. The project is a Drupal module, not an ML platform. | Use LLM-based reasoning via AI Agents. The LLM analyzes workload data and task descriptions without custom model training. Simpler, cheaper, good enough. |
+| **Full burndown charts** | Sprint velocity, burndown curves, capacity planning visualizations. | Requires: Sprint entity type, story points, date-range assignment UI, chart rendering library (Chart.js/D3), calculation engine. Massive scope that does not test Drupal skills. The Burndown contrib module already exists for this. | Track status change history (simple table). Surface basic metrics (cycle time, throughput). Let Views handle display. If burndown is needed later, it builds on the history table as a separate sub-module. |
+| **Eval-author generating browser assertions** | The eval-author agent could also design browser-based E2E assertions (puppeteer-style). | Browser assertions are fragile, expensive to run, and produced zero discriminatory value in v2.0 backend evals. They were revived for v4.0 UX testing but are best designed manually by a human who understands the visual expectations. Automated browser assertion generation would produce flaky, over-specified tests. | Eval-author generates static and runtime assertions only. Browser assertions remain manually designed for phases that need UX verification. |
+| **Plugin-based analytics engine** | A pluggable analytics framework with custom metric plugins, configurable dashboards, and third-party integrations. | Over-architecture. The module needs 3-4 specific metrics (cycle time, throughput, bottleneck detection, status distribution). A plugin system for 3 metrics is overhead without benefit. | Hardcode the metrics as service methods. If someone needs custom metrics later, they can extend the service or add Views computed fields. |
+| **Multi-provider AI support** | Supporting OpenAI, Google, Anthropic, and local models for task creation/assignment. | The AI module already abstracts provider selection. The AiFunctionCall plugins are provider-agnostic -- they receive structured arguments regardless of which LLM parsed the natural language. Provider configuration is the AI module's job, not ours. | Register tools with the AI Agents framework. Let the AI module handle provider routing. |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[Foundation Layer: REST API]
-    Custom REST controller (GroupAiPmApiController)
-        |
-        +-- GET /api/group-ai-pm/project/{project}/tasks
-        |     Returns: JSON array of task objects for a project
-        |     Fields: id, title, status, priority, assignee (id+name+avatar_url),
-        |             due_date, description, created, changed, edit_url
-        |
-        +-- PATCH /api/group-ai-pm/task/{task}
-        |     Accepts: status, title, priority, assignee (partial updates)
-        |     Returns: Updated task object
-        |     Requires: X-CSRF-Token header
-        |
-        +-- POST /api/group-ai-pm/project/{project}/task
-        |     Accepts: title, status (optional, defaults to column)
-        |     Returns: Created task object
-        |     Requires: X-CSRF-Token header
-        |
-        +-- GET /api/group-ai-pm/projects/summary
-              Returns: Project list with task counts per status
-              Used by: Dashboard overhaul
+[Drush Skill]
+    |
+    +-- enables --> [Eval-Author Agent] (smarter runtime assertions)
+    |                   |
+    |                   +-- enables --> [All subsequent phase evals]
+    |                                     (automated 3-tier assertion design)
+    |
+    +-- enables --> [Runtime assertion quality] (drush php-eval patterns in skill)
 
-    CSRF token endpoint (core: /session/token)
-    Permission checks: reuse existing entity access handlers
+[Skill Gap Fixes]
+    |
+    +-- entities-fields: bundle_of --> [Future entity evals]
+    +-- caching: lazy_builder --> [Future caching evals]
+    +-- forms-api: #ajax --> [Phase evals with AJAX interactions]
 
-[Foundation Layer: Vue 3 App]
-    Vue 3 compiled bundle
-        |
-        +-- Drupal library entry in .libraries.yml
-        |     Dependencies: core/drupalSettings, core/drupal.ajax (for CSRF)
-        |
-        +-- drupalSettings data passing:
-        |     project_id, csrf_token, current_user, api_base_url,
-        |     status_labels, priority_labels
-        |
-        +-- Build config: Vite for dev, compiled JS committed for production
-        |     (Drupal modules ship pre-built assets, no Node.js required at install)
-        |
-        +-- DnD library: vuedraggable@next (Vue 3 wrapper for SortableJS)
-              Touch support built-in, animation config, group option for cross-list drag
+[AI Task Creation]
+    |
+    +-- requires --> [AI Agents module] (already installed)
+    +-- requires --> [CreateProjectTool pattern] (already exists as reference)
+    +-- enhances --> [Kanban board] (tasks created via AI appear on board)
 
-[Core Board Layer]
-    KanbanBoard.vue ----requires----> API Layer + Vue Foundation
-        |
-        +-- KanbanColumn.vue (one per status value, rendered from config)
-        |       |
-        |       +-- TaskCard.vue
-        |       |       +-- PriorityBadge.vue (color mapping: low=gray, med=blue, high=orange, critical=red)
-        |       |       +-- AssigneeAvatar.vue (user picture or initials)
-        |       |       +-- DueDateLabel.vue (with overdue/approaching warnings)
-        |       |       +-- QuickActions (keyboard shortcut targets)
-        |       |
-        |       +-- Column header: status label + task count + quick-create button
-        |       +-- QuickCreateForm.vue (inline title input)
-        |
-        +-- Drag-and-drop via vuedraggable
-        |       +-- Optimistic UI (move card in reactive state immediately)
-        |       +-- Background PATCH call
-        |       +-- Rollback on error + toast notification
-        |
-        +-- Loading/empty/error states
+[AI-Suggested Assignments]
+    |
+    +-- requires --> [Task entity with assignee field] (exists)
+    +-- requires --> [AI Agents module]
+    +-- requires --> [Multiple tasks exist for workload calculation]
+    +-- enhances --> [AI Task Creation] (suggest assignee during creation)
 
-[Drupal Route Layer]
-    Board route: /admin/content/project/{project}/board
-        |
-        +-- Local task tab entry in links.task.yml
-        |     base_route: entity.project.canonical
-        |     title: "Board"
-        |
-        +-- BoardController::content(Project $project)
-        |     Renders: mount point <div id="kanban-app"></div>
-        |     Attaches: kanban_board library
-        |     Passes: drupalSettings with project context
-        |
-        +-- Permission: 'access group_ai_pm dashboard'
+[Batch AI Operations]
+    |
+    +-- requires --> [AI Agents module]
+    +-- requires --> [Task entity CRUD] (exists)
+    +-- uses --> [QueueWorker pattern] (drupal-batch-queue-cron skill)
+    +-- enhances --> [AI Task Creation] (bulk create variant)
 
-[Interaction Layer] ----requires----> Core Board Layer
-    TaskDetailPanel.vue (slide-over from right)
-        |
-        +-- InlineTitleEditor.vue (click-to-edit)
-        +-- StatusSelector.vue (dropdown or button group)
-        +-- PrioritySelector.vue
-        +-- AssigneeSelector.vue (user autocomplete)
-        +-- "Edit full page" link to entity.task.edit_form
-        +-- Escape to close
-        |
-    KeyboardShortcuts.vue (composable)
-        |
-        +-- Board navigation: arrow keys between cards/columns
-        +-- Quick actions: C=create, S=status, P=priority, A=assign
-        +-- Panel: Enter=open detail, Escape=close
-        +-- Global: ?=show shortcut help overlay
-        |
-    CommandPalette.vue ----requires----> Keyboard system + API
-        |
-        +-- Ctrl+K to open overlay
-        +-- Fuzzy search over task titles (client-side, tasks already loaded)
-        +-- Action items: change status, assign, navigate to project
-        +-- Recent actions memory
-        |
-    ContextMenu.vue
-        |
-        +-- Right-click on card: status submenu, priority submenu, assign, edit, delete
-        +-- Rendered via Vue teleport to body
-        |
-    FilterBar.vue
-        |
-        +-- Assignee filter, priority filter, due date range
-        +-- Active filter pills with dismiss buttons
-        +-- URL query parameter sync for shareable/bookmarkable filtered views
+[Task History Analytics]
+    |
+    +-- requires --> [Custom database table] (hook_schema)
+    +-- requires --> [hook_entity_update on task entity]
+    +-- enables --> [AI-Suggested Assignments] (completion rate data)
+    +-- enables --> [Dashboard improvements] (metrics display)
+    +-- enhances --> [Views integration] (drupal-views-dev skill)
 
-[Dashboard Layer] ----requires----> API Layer
-    Enhanced DashboardController
-        |
-        +-- ProjectCard components (Vue or Twig)
-        |     task count bars per status, progress percentage
-        +-- Quick actions: New Project, recent project links
-        +-- Board links per project
-
-[List Enhancement Layer] ----independent, no Vue---
-    AJAX status toggles on TaskListBuilder
-        |
-        +-- Drupal #ajax render element on status field
-        +-- AjaxResponse with ReplaceCommand
-        +-- Works on /admin/content/task (existing list page)
+[Eval-Author Agent]
+    |
+    +-- requires --> [Drush Skill] (runtime assertion quality)
+    +-- requires --> [Historical eval results] (difficulty calibration)
+    +-- requires --> [All 14 skill files] (pattern coverage analysis)
+    +-- produces --> [evals.json, runtime assertions] (per phase)
 ```
 
-### Critical Path
+### Dependency Notes
 
-1. **REST API Layer** -- Everything else depends on endpoints returning task data as JSON
-2. **Vue 3 Infrastructure** -- Build tooling, library registration, drupalSettings, mount point
-3. **Kanban Board + Drag-and-Drop** -- Core feature; validates entire approach end-to-end
-4. **Board Route + Local Task Tab** -- Makes board discoverable in Drupal navigation
-5. **Optimistic UI + Error Handling** -- Makes the board feel responsive rather than laggy
-6. **Detail Panel + Inline Editing** -- Makes the board actually usable for task management (not just status changes)
-7. **Keyboard Shortcuts** -- Transforms usability from "GUI tool" to "power tool"
-8. **Command Palette** -- Peak UX; depends on keyboard system and search infrastructure
-9. **Dashboard + List Enhancements** -- Polish layer; can run in parallel with steps 6-8
+- **Drush Skill enables Eval-Author Agent**: The eval-author agent generates `drush php-eval` runtime assertions. A Drush skill teaches the correct syntax and common verification patterns, making the agent's output more reliable.
+- **Skill Gap Fixes are independent**: Each fix is a targeted SKILL.md edit. No external dependencies. Can be done in parallel with anything.
+- **AI features share the AI Agents module**: All three AI features (task creation, assignment suggestion, batch operations) use the same AiFunctionCall plugin pattern. They can be built in parallel.
+- **Task History Analytics feeds AI Assignment**: The SuggestAssigneeTool uses completion rate data from the history table. History table must exist before assignment suggestions can use historical data. However, the tool can work with simple entity queries alone (no history) and gain the historical dimension later.
+- **Eval-Author Agent is cross-cutting**: Once built, it designs evals for ALL subsequent phases. Build it early to reduce manual eval design effort for the rest of the milestone.
 
 ---
 
-## User Workflows
+## MVP Definition
 
-### Workflow 1: Admin opens the module for the first time
+### Build First (Foundations)
 
-1. Navigate to /admin/content in Drupal admin
-2. See "Project Dashboard" in admin content menu (exists today)
-3. Click dashboard -- see project summary cards with task distribution bars (replaces current HTML table)
-4. Click "Add project" to create first project (existing add form)
-5. After saving, redirected to project view page with new "Board" tab visible alongside View/Edit/Delete
+These features are prerequisites for everything else in the milestone.
 
-### Workflow 2: Daily task management on the Kanban board
+- [ ] **Drush skill** -- Enables smarter runtime assertions. Required knowledge for eval-author agent. Fills a real gap in the skill collection (15th skill).
+- [ ] **Eval-author agent** -- Eliminates the manual bottleneck of designing 15-30 assertions per phase. The orchestrator has spent ~30min per phase on assertion design in v3-v4. Automating this unlocks faster iteration.
+- [ ] **Skill gap fixes** -- Quick wins (LOW complexity). Each fix directly improves eval pass rates for affected patterns. Shippable in hours, not days.
 
-1. Navigate to /admin/content/project/{id} and click "Board" tab
-2. Board loads showing 4 columns: To Do | In Progress | Review | Done
-3. Skeleton loaders show briefly while tasks fetch from API
-4. Scan cards: red badge = critical priority, amber card border = due today/overdue
-5. Drag a task card from "To Do" to "In Progress" -- card moves immediately (optimistic update)
-6. Green toast confirms save; if server fails, card snaps back with red error toast
-7. Click "+" on "To Do" column header to quick-create a task
-8. Type task title in inline input, press Enter -- card appears at top of column
-9. Press S while a card is focused to open status change menu
-10. Press C anywhere on the board to create a new task
+### Build After Foundations (AI Features)
 
-### Workflow 3: Reviewing task details without leaving the board
+These require the AI Agents module and the existing AiFunctionCall pattern. Each is independently valuable.
 
-1. On the board, click a task card (or press Enter when card is focused)
-2. Detail panel slides in from the right side (board still visible, dimmed slightly)
-3. Panel shows: title (click to edit inline), description, status selector, priority selector, assignee autocomplete, due date, created/updated timestamps
-4. Click the title text -- it becomes an editable input. Type new title, press Enter to save
-5. Click priority badge to cycle through Low/Medium/High/Critical (PATCH fires in background)
-6. Click "Open full page" link to go to Drupal entity edit form for complex changes
-7. Press Escape to close the panel and return to board focus
+- [ ] **CreateTaskFromTextTool** -- Most user-visible AI feature. Natural language task creation is the "wow" moment. Demonstrates practical AI integration with Drupal entities.
+- [ ] **Task history analytics table** -- Foundation for metrics. The hook_entity_update listener and schema are simple to implement. Every feature in the analytics domain depends on this.
 
-### Workflow 4: Filtering and finding tasks
+### Build Last (Enhancement Layer)
 
-1. On the board, click the filter bar above the columns
-2. Select "Assignee: Jane" from dropdown -- board filters to show only Jane's tasks
-3. Filter pill appears: "Assignee: Jane [x]" -- click x to remove filter
-4. Add second filter: "Priority: Critical" -- board shows only Jane's critical tasks
-5. URL updates to include filter params (bookmarkable/shareable)
-6. Press Ctrl+K to open command palette, type "fix login bug"
-7. Matching task appears in results -- press Enter to open its detail panel
+These build on the foundations and are independently deferrable.
 
-### Workflow 5: Keyboard-first power user session
-
-1. Open board, press ? to see keyboard shortcut help overlay
-2. Use arrow keys to navigate between cards (up/down in column, left/right across columns)
-3. On a card: press S, then select "In Progress" from status menu -- card moves to new column
-4. Press C to create new task, type title, Enter to save
-5. Press P on a card to change priority without opening detail panel
-6. Ctrl+K to search for a specific task by name, Enter to navigate to it
-7. Escape to dismiss any open menu/panel/overlay
-
-### Workflow 6: Using list view with AJAX enhancements
-
-1. Navigate to /admin/content/task (existing TaskListBuilder page)
-2. See task table with existing columns plus new interactive status dropdown per row
-3. Click the status dropdown on a task row -- AJAX updates status without page reload
-4. Row visually updates (status text/badge changes), Drupal status message confirms save
-5. No Vue dependency -- this works in pure Drupal AJAX, independent of the board
+- [ ] **SuggestAssigneeTool** -- Requires tasks to exist and benefits from history data. More valuable later in the milestone when there is data to analyze.
+- [ ] **BatchUpdateTasksTool** -- Quality-of-life tool for power users. Less flashy than task creation, but demonstrates queue-based AI patterns.
+- [ ] **Analytics dashboard integration** -- Cycle time, throughput, bottleneck detection metrics displayed on the existing dashboard. Builds on the history table.
+- [ ] **Views integration for history** -- Exposes history table to Views. Advanced feature for admin customization.
+- [ ] **Cross-cutting eval pass with eval-author** -- Final validation that the eval-author agent + Drush skill + gap fixes actually improve eval outcomes. Measures the milestone's impact.
 
 ---
 
-## MVP Recommendation
+## Feature Prioritization Matrix
 
-### Phase 1: REST API + Vue Foundation + Basic Board
+| Feature | User Value | Implementation Cost | Eval Value | Priority |
+|---------|-----------|---------------------|------------|----------|
+| Drush skill | HIGH (fills gap in 14-skill collection) | MEDIUM (research done, ~300 lines) | HIGH (enables runtime assertions) | P1 |
+| Eval-author agent | HIGH (eliminates manual bottleneck) | HIGH (novel, needs prompt engineering) | HIGH (multiplier for all future phases) | P1 |
+| Skill gap fixes (3 patches) | MEDIUM (targeted improvements) | LOW (hours of SKILL.md editing) | MEDIUM (direct pass rate improvement) | P1 |
+| CreateTaskFromTextTool | HIGH (visible AI feature) | MEDIUM (follows existing pattern) | MEDIUM (tests AI integration skill) | P2 |
+| Task history table + hook | MEDIUM (invisible foundation) | MEDIUM (schema + hook) | MEDIUM (feeds analytics evals) | P2 |
+| SuggestAssigneeTool | MEDIUM (useful when data exists) | HIGH (scoring algorithm, user lookup) | LOW (subjective output, hard to eval) | P3 |
+| BatchUpdateTasksTool | MEDIUM (power user tool) | MEDIUM (queue integration) | MEDIUM (tests batch-queue-cron skill) | P2 |
+| Analytics dashboard | MEDIUM (visibility into metrics) | MEDIUM (queries + template) | LOW (dashboard already tested in v4) | P3 |
+| Views history integration | LOW (admin-only, Views handles display) | MEDIUM (hook_views_data boilerplate) | MEDIUM (tests drupal-views-dev skill) | P3 |
+| Cross-cutting eval pass | HIGH (validates milestone) | LOW (run existing pipeline with new agent) | HIGH (proves eval-author works) | P2 |
 
-Build the endpoints and get a working Kanban board with drag-and-drop. This phase validates the entire technical approach -- if the board works with DnD, everything else is layering on top.
-
-Prioritize:
-1. Custom REST controller with GET tasks-by-project and PATCH task status endpoints
-2. Vue 3 app with KanbanBoard, KanbanColumn, TaskCard components
-3. Drag-and-drop via vuedraggable@next (SortableJS wrapper)
-4. Board route (/admin/content/project/{project}/board) with local task tab
-5. Task cards with title, priority badge, assignee name, due date
-6. Loading states and empty column states
-7. Keyboard-based status change as DnD alternative (accessibility)
-
-Defer:
-- Command palette: Depends on keyboard system and search infrastructure
-- Dashboard overhaul: Current dashboard is functional; board is the priority
-- AJAX list enhancements: Independent workstream, not blocked by Vue
-- Context menu: Nice UX but board works without it
-- Display options: Customization layer, not core functionality
-
-### Phase 2: Interactions + Detail Panel
-
-Make the board a real working surface for task management.
-
-Prioritize:
-1. Task detail slide-over panel with inline title editing
-2. Optimistic UI with error rollback and toast notifications
-3. Keyboard shortcuts (S/P/A/C + arrow navigation)
-4. Quick-create from column header (POST endpoint)
-5. Filter bar (assignee, priority) with URL state
-
-### Phase 3: Command Palette + Dashboard + Polish
-
-Peak UX features and overall module refinement.
-
-Prioritize:
-1. Command palette (Ctrl+K) with fuzzy search and action dispatch
-2. Dashboard overhaul with project summary cards and progress bars
-3. Context menu on right-click
-4. Board display options (show/hide card properties, localStorage)
-5. AJAX status toggles on list view pages
-6. Animation polish, focus management refinement, shortcut help overlay
+**Priority key:**
+- P1: Must build. Milestone fails without these.
+- P2: Should build. Demonstrates the milestone's value.
+- P3: Nice to have. Defers gracefully if time is short.
 
 ---
 
-## Complexity Budget
+## Feature Specification Details
 
-| Category | Feature Count | Avg Complexity | Effort Share |
-|----------|--------------|----------------|--------------|
-| Table Stakes | 11 | MEDIUM | ~55% of total effort |
-| Differentiators | 16 | MEDIUM | ~40% of total effort |
-| Anti-Features | 11 | (avoided) | 0% |
-| Accessibility | (integrated) | MEDIUM | ~5% (spread across phases) |
+### Drush Skill Specifics
 
-The table stakes consume the majority of effort because the REST API layer and Vue 3 infrastructure are foundational HIGH complexity items that every subsequent feature depends on. The board itself, with DnD and responsive layout, is also HIGH complexity. The differentiators layer on top of established foundations and are individually less complex.
+**Target patterns** (from research):
+
+1. **Symfony Console command** (Drush 13.7+ recommended approach):
+   ```php
+   namespace Drupal\my_module\Drush\Commands;
+
+   use Drupal\Core\Entity\EntityTypeManagerInterface;
+   use Drush\Attributes as CLI;
+   use Drush\Commands\AutowireTrait;
+   use Symfony\Component\Console\Attribute\AsCommand;
+   use Symfony\Component\Console\Command\Command;
+
+   #[AsCommand(name: 'my_module:import', description: 'Import data')]
+   class ImportCommand extends Command {
+     use AutowireTrait;
+
+     public function __construct(
+       private readonly EntityTypeManagerInterface $entityTypeManager,
+     ) {
+       parent::__construct();
+     }
+
+     protected function execute($input, $output): int {
+       // Logic here.
+       return Command::SUCCESS;
+     }
+   }
+   ```
+
+2. **File placement**: `src/Drush/Commands/` (not `src/Command/`, not root-level)
+3. **AutowireTrait** (not `drush.services.yml`)
+4. **Return codes**: `Command::SUCCESS` (0), `Command::FAILURE` (1), `Command::INVALID` (2)
+5. **Testing**: `DrushTestTrait` with `$this->drush('command', ['arg'], ['--option' => 'value'])`
+
+**WRONG-way callouts** (the skill's value):
+- WRONG: Placing commands in `src/Command/` (Symfony convention, not Drush convention)
+- WRONG: Using `drush.services.yml` for DI (deprecated in Drush 13, removed in Drush 14)
+- WRONG: Using `@command` DocBlock annotations (deprecated in favor of `#[AsCommand]`)
+- WRONG: Forgetting `parent::__construct()` in AutowireTrait classes
+- WRONG: Missing `*Commands` suffix on command file/class names for DrushCommands approach
+
+**Confidence:** HIGH -- Drush 13.x official docs at drush.org/13.x/commands/ confirm all patterns.
+
+### Eval-Author Agent Specifics
+
+**Agent role:** Opus-class subagent spawned by the orchestrator to design three-tier assertions for a given phase.
+
+**Inputs:**
+- Phase prompt (the eval task description)
+- Primary skill files being tested (SKILL.md contents)
+- Existing module code snapshot (for context)
+- Historical eval results (for difficulty calibration)
+
+**Outputs:**
+- `evals.json` with static expectations targeting non-obvious skill patterns
+- Runtime assertions as executable bash commands (`drush php-eval '...'`, `drush en ...`)
+- Coverage report: which skill patterns are exercised vs untested
+
+**Design principles** (from Anthropic eval best practices):
+1. **Grade outcomes, not paths** -- Assert what the code produces, not how it gets there
+2. **Balanced assertions** -- Test both positive ("does X") and negative ("does NOT do Y") patterns
+3. **Calibrated difficulty** -- Target the with-passes/without-fails sweet spot using historical data
+4. **Isolated trials** -- Each assertion must be independently verifiable
+5. **Avoid rigid grading** -- Allow valid alternative implementations (e.g., `$entity->getCacheTags()` OR `addCacheableDependency()` -- both correct)
+
+**Assertion generation strategy:**
+1. Parse the phase prompt to identify Drupal patterns being exercised
+2. For each pattern, check which SKILL.md covers it
+3. For each SKILL.md pattern, identify the non-obvious aspect (the WRONG/RIGHT callouts)
+4. Generate an assertion targeting that non-obvious aspect
+5. Cross-reference with historical results: if a similar assertion always passed without-skill, it's too easy -- find a harder variant
+
+### AI Task Creation Specifics
+
+**Plugin pattern** (mirrors existing CreateProjectTool):
+```php
+namespace Drupal\group_ai_pm_ai\Plugin\AiFunctionCall;
+
+/**
+ * @AiFunctionCall(
+ *   id = "create_task_from_text",
+ *   label = @Translation("Create Task"),
+ *   description = @Translation("Create a task from natural language description")
+ * )
+ */
+class CreateTaskFromTextTool extends AiFunctionCallBase {
+
+  public function getArguments() {
+    return [
+      'title' => ['type' => 'string', 'required' => TRUE],
+      'description' => ['type' => 'string', 'required' => FALSE],
+      'priority' => ['type' => 'string', 'enum' => [...], 'required' => FALSE],
+      'assignee_name' => ['type' => 'string', 'required' => FALSE],
+      'due_date' => ['type' => 'string', 'description' => 'ISO 8601 date'],
+      'project_id' => ['type' => 'integer', 'required' => TRUE],
+      'status' => ['type' => 'string', 'enum' => [...], 'required' => FALSE],
+    ];
+  }
+}
+```
+
+The LLM parses "Create a high priority task to fix the login bug for Project Alpha, assign to Jane, due Friday" into the structured arguments. The tool validates and creates the entity.
+
+### Task History Analytics Specifics
+
+**Schema** (hook_schema in .install):
+```php
+function group_ai_pm_schema() {
+  $schema['group_ai_pm_task_history'] = [
+    'description' => 'Task status change history',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'task_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'project_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'old_status' => ['type' => 'varchar', 'length' => 32, 'not null' => FALSE],
+      'new_status' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE],
+      'changed_by' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'changed_at' => ['type' => 'int', 'not null' => TRUE],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'task_id' => ['task_id'],
+      'project_id' => ['project_id'],
+      'changed_at' => ['changed_at'],
+    ],
+  ];
+  return $schema;
+}
+```
+
+**Tracking hook** (in .module):
+```php
+function group_ai_pm_entity_update(EntityInterface $entity) {
+  if ($entity->getEntityTypeId() !== 'task') return;
+  $original = $entity->original;
+  if ($original && $original->get('status')->value !== $entity->get('status')->value) {
+    \Drupal::database()->insert('group_ai_pm_task_history')
+      ->fields([...])
+      ->execute();
+  }
+}
+```
+
+**Key metrics:**
+- **Cycle time**: Average elapsed time from first 'todo' to first 'done' per task
+- **Throughput**: Tasks moved to 'done' per week/month
+- **Bottleneck detection**: Status column with highest average dwell time
+- **Completion rate**: Done tasks / total tasks per project (already computed in dashboard)
 
 ---
 
-## Existing Entity Compatibility
+## Competitor/Precedent Analysis
 
-All v4.0 features build on the existing entity structure without schema modifications:
-
-| Entity Field | Board Usage | API Exposure | Notes |
-|--------------|------------|--------------|-------|
-| Task.title | Card title, inline editable | GET/PATCH | Max 255 chars, required |
-| Task.status | Column placement, drag determines target | GET/PATCH | Allowed: todo, in_progress, review, done |
-| Task.priority | Color badge on card, filter dimension | GET/PATCH | Allowed: low, medium, high, critical |
-| Task.assignee | Avatar/name on card, filter dimension | GET/PATCH | entity_reference to user, optional |
-| Task.due_date | Date label, overdue warning logic | GET (read only from board) | datetime field, date-only |
-| Task.description | Detail panel body text | GET (read only from board) | text_long, edit via entity form |
-| Task.project | Board scoping (which project's board) | GET (filter/query param) | entity_reference to project, required |
-| Task.uid | "Created by" in detail panel | GET | Owner via EntityOwnerTrait |
-| Task.created | Sort dimension, detail panel display | GET | Created timestamp |
-| Task.changed | "Last updated" on cards and panel | GET | Changed timestamp |
-| Project.title | Board header, dashboard card, breadcrumb | GET | Max 255 chars |
-| Project.status | Dashboard card badge, project list filter | GET | Allowed: planning, active, review, completed |
-| Project.description | Dashboard card snippet | GET | text_long |
-| Project.uid | Dashboard "Owner" display | GET | Owner via EntityOwnerTrait |
-
-**No entity schema changes needed.** The existing 4-value Task.status field maps 1:1 to Kanban columns. The existing 4-value Task.priority field maps 1:1 to Linear's priority model. The existing entity_reference fields (assignee, project) provide all necessary relationships.
-
----
-
-## Comparison to Existing Drupal PM Modules
-
-| Feature | Burndown | Views Kanban | OpenLucius Board | group_ai_pm v4.0 (target) |
-|---------|----------|-------------|-----------------|---------------------------|
-| Drupal version | ^9/^10/^11 | ^9/^10/^11/^12 | D8 only | ^10/^11 |
-| Board rendering | Custom Twig | Views display plugin | jQuery | Vue 3 SPA |
-| Drag-and-drop | jQuery UI | JS event-based | jQuery | vuedraggable (SortableJS) |
-| Keyboard shortcuts | No | No | No | Yes (Linear-style) |
-| Command palette | No | No | No | Yes (Ctrl+K) |
-| Detail slide panel | No (full page) | No | Inline edit | Yes |
-| Optimistic UI | No | No | No | Yes |
-| Custom statuses | Yes (swimlanes) | Yes (any field) | Fixed | Fixed (4 statuses) |
-| Estimation | T-shirt/geometric | No | No | No (out of scope) |
-| Sprint support | Yes | No | No | No (anti-feature) |
-| Active installs | 39 | Unknown | Unknown | N/A (new) |
-
-The differentiating position is: keyboard-first, optimistic UI, modern Vue 3 rendering. No existing Drupal PM module offers these. The trade-off is fixed workflow statuses -- but the 4-column Kanban model is universally understood.
+| Feature | Existing Module/Pattern | Our Approach | Delta |
+|---------|------------------------|--------------|-------|
+| Drush command skill | No existing Claude skill covers Drush | New skill targeting Drush 13+ patterns | First of its kind |
+| Eval automation | Promptfoo YAML-based eval framework | Custom Opus agent with project-specific knowledge | Tailored to our 3-tier assertion model |
+| AI task creation | AI Agents chatbot (generic) | Purpose-built AiFunctionCall tools with PM domain knowledge | Structured entity creation vs generic chat |
+| Task history tracking | Activity Tracking module (generic CRUD logging) | PM-specific status transition tracking with cycle time | Focused on Kanban workflow metrics |
+| AI assignment | Monday.com, Linear AI features | LLM-based reasoning over workload data, advisory only | Human-in-the-loop, not autonomous |
+| Batch AI ops | No Drupal precedent | Queue-based processing with dry run mode | Combines AI Agents + Batch/Queue patterns |
 
 ---
 
 ## Sources
 
-- [Linear Board Layout Docs](https://linear.app/docs/board-layout) -- column management, grouping, drag behavior, keyboard controls -- HIGH confidence
-- [Linear Conceptual Model](https://linear.app/docs/conceptual-model) -- issue hierarchy, workflow model, entity relationships -- HIGH confidence
-- [Linear Keyboard Shortcuts](https://keycombiner.com/collections/linear/) -- comprehensive shortcut reference -- HIGH confidence
-- [Linear Redesign Blog](https://linear.app/now/how-we-redesigned-the-linear-ui) -- design philosophy, color reduction -- MEDIUM confidence
-- [Burndown Module](https://www.drupal.org/project/burndown) -- D9/10/11 PM module with kanban, 39 installs -- HIGH confidence
-- [Views Kanban Module](https://www.drupal.org/project/views_kanban) -- Views-based kanban display plugin -- HIGH confidence
-- [OpenLucius Kanban](https://www.drupal.org/project/openlucius_board) -- inline add/edit, DnD status/priority -- MEDIUM confidence
-- [Drupal AJAX Forms](https://www.drupal.org/docs/drupal-apis/javascript-api/ajax-forms) -- #ajax render element, callback patterns -- HIGH confidence
-- [Drupal AJAX Commands](https://www.drupal.org/docs/drupal-apis/ajax-api/core-ajax-callback-commands) -- ReplaceCommand, OpenDialogCommand -- HIGH confidence
-- [Drupal Local Tasks](https://www.drupal.org/docs/drupal-apis/menu-api/providing-module-defined-local-tasks) -- links.task.yml, base_route -- HIGH confidence
-- [Drupal REST API Overview](https://www.drupal.org/docs/drupal-apis/restful-web-services-api/restful-web-services-api-overview) -- REST resources, CSRF, authentication -- HIGH confidence
-- [Drupal JSON:API](https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module) -- zero-config entity exposure (considered, rejected for custom controllers) -- HIGH confidence
-- [Drupal Vue.js Integration (Decoupled Blocks)](https://www.drupal.org/docs/contributed-modules/decoupled-blocks-vuejs) -- drupalSettings passing, library registration -- MEDIUM confidence
-- [vuedraggable (Vue 3 / SortableJS)](https://github.com/SortableJS/Vue.Draggable) -- DnD library, animation, touch support -- HIGH confidence
-- [Kanban Board UX Best Practices](https://www.multiboard.dev/posts/best-practices-kanban-columns) -- column design, WIP limits, color coding -- MEDIUM confidence
-- [Kanban Anti-Patterns](https://kanban.university/patterns-and-anti-patterns-for-kanban-board-design/) -- over-engineering, missing WIP limits -- MEDIUM confidence
-- [WCAG 2.2 SC 2.5.7 Dragging Movements](https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html) -- keyboard alternatives required for drag -- HIGH confidence
-- [Drag-and-Drop Accessibility](https://appinstitute.com/drag-and-drop-design-accessibility-best-practices/) -- ARIA roles, keyboard patterns, screen reader support -- MEDIUM confidence
-- [Kanban Board UX Pattern](https://uxpatterns.dev/patterns/data-display/kanban-board) -- detail panel, card design, interaction patterns -- MEDIUM confidence
+- [Drush 13.x Command Authoring](https://www.drush.org/13.x/commands/) -- PHP attributes, AutowireTrait, file placement, lifecycle -- HIGH confidence
+- [Drush 12.x Command Authoring](https://www.drush.org/12.x/commands/) -- Legacy patterns still referenced in older docs -- MEDIUM confidence
+- [Custom Drush Commands with Drush Generate](https://www.fourkitchens.com/blog/development/custom-drush-commands-drush-generate/) -- Practical tutorial for modern Drush commands -- MEDIUM confidence
+- [Drush Test Traits (Unish)](https://www.drush.org/13.x/contribute/unish/) -- PHPUnit testing for Drush commands -- HIGH confidence
+- [Anthropic: Demystifying Evals for AI Agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents) -- Assertion design, grader patterns, difficulty calibration, coverage -- HIGH confidence
+- [AI Agents Drupal Module](https://www.drupal.org/project/ai_agents) -- AiFunctionCall plugin pattern, agent architecture -- HIGH confidence
+- [AI Agents Documentation](https://project.pages.drupalcode.org/ai_agents) -- Module configuration and tool registration -- MEDIUM confidence
+- [QED42: Building AI Agents, Tools, and Assistants in Drupal](https://www.qed42.com/insights/exploring-drupals-ai-agents-a-practical-guide-for-site-builders) -- Practical AiFunctionCall examples -- MEDIUM confidence
+- [Drupal Events Vienna 2025: Building AI Agents Workshop](https://events.drupal.org/vienna2025/session/building-ai-agents-tools-and-assistants-drupal-hands-workshop) -- Custom tool development patterns -- MEDIUM confidence
+- [Drupalize.Me: Expose Custom Database Table to Views](https://drupalize.me/tutorial/expose-custom-database-table-views) -- hook_views_data() for custom tables -- HIGH confidence
+- [Activity Tracking Module](https://www.drupal.org/project/activitytracking) -- Entity operation logging precedent -- MEDIUM confidence
+- [Redgate: Project Management Data Model](https://www.red-gate.com/blog/organize-your-time-and-resources-a-project-management-data-model) -- Schema patterns for PM databases -- MEDIUM confidence
+- [Martin Fowler: Temporal Patterns](https://martinfowler.com/eaaDev/timeNarrative.html) -- Bi-temporal data modeling theory -- HIGH confidence
+- [LLM as a Judge: 2026 Guide](https://labelyourdata.com/articles/llm-as-a-judge) -- Automated assessment patterns, calibration -- MEDIUM confidence
+- [Sana Labs: 7 AI Task Managers 2025](https://sanalabs.com/agents-blog/ai-task-managers-to-boost-productivity) -- AI task management market context -- LOW confidence
+- [ScienceDirect: ML Algorithms for Task Allocation](https://www.sciencedirect.com/science/article/pii/S2405844024159579) -- Academic precedent for AI assignment -- MEDIUM confidence
 
 ---
-*Feature research for: v4.0 Vue.js Kanban UX Overhaul*
-*Researched: 2026-03-08*
+*Feature research for: v5.0 AI Integration, Eval Tooling, & Analytics*
+*Researched: 2026-03-09*
