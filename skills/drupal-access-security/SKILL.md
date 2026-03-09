@@ -342,6 +342,25 @@ The default `EntityAccessControlHandler` checks `administer {entity_type}` permi
 
 > RIGHT: Implement `EntityAccessControlHandler` so access is enforced consistently everywhere the entity is loaded, not just in your controller.
 
+### Programmatic entity access checks
+
+To check access in controllers or services, use the entity's `access()` method or get the access control handler from `entityTypeManager()`:
+
+```php
+// Check access on an existing entity.
+if ($entity->access('update', $this->currentUser())) {
+  // User can update this entity.
+}
+
+// Check create access (no entity instance yet).
+$can_create = $this->entityTypeManager()
+  ->getAccessControlHandler('task')
+  ->createAccess('bundle_name', $this->currentUser());
+```
+
+> WRONG: Calling `$storage->getAccessControlHandler()` on an entity storage object. The storage class (`EntityStorageInterface`) does NOT have a `getAccessControlHandler()` method -- this throws a fatal error at runtime.
+> RIGHT: Get the access control handler from the entity type manager: `$this->entityTypeManager()->getAccessControlHandler('entity_type_id')`. The handler is a separate service, not a method on storage.
+
 ## CSRF protection
 
 > **CRITICAL: EVERY route that changes state without a form MUST have `_csrf_token: 'TRUE'` in requirements.** This includes action links like "mark complete", "approve", "publish", "toggle", "archive", or any controller method that modifies an entity or database record. Without `_csrf_token`, an attacker can craft a URL that silently changes data when clicked by an authenticated user. This is a SECURITY VULNERABILITY. If the route has a form, the form token handles CSRF -- but non-form action routes have NO protection unless you add `_csrf_token: 'TRUE'`.

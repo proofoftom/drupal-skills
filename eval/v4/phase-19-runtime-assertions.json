@@ -1,0 +1,117 @@
+{
+  "phase": "19-interactions-detail-panel-visual-polish",
+  "runtime_assertions": [
+    {
+      "id": "rt-1",
+      "name": "Module still installs cleanly after changes",
+      "command": "ddev drush cr && ddev drush pm:list --status=enabled 2>&1 | grep -q group_ai_pm && echo PASS || echo FAIL",
+      "expected": "PASS",
+      "rationale": "Baseline sanity — any PHP syntax error or broken service definition prevents module from loading"
+    },
+    {
+      "id": "rt-2",
+      "name": "DELETE route is registered",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $all = $provider->getAllRoutes(); $found = FALSE; foreach ($all as $name => $route) { if (strpos($name, 'group_ai_pm') !== FALSE && in_array('DELETE', $route->getMethods())) { $found = TRUE; break; } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Verifies a DELETE method route was registered for the module"
+    },
+    {
+      "id": "rt-3",
+      "name": "DELETE route has CSRF header requirement",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $all = $provider->getAllRoutes(); $found = FALSE; foreach ($all as $name => $route) { if (strpos($name, 'group_ai_pm') !== FALSE && in_array('DELETE', $route->getMethods())) { $reqs = $route->getRequirements(); if (isset($reqs['_csrf_request_header_token'])) { $found = TRUE; break; } } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "DELETE route must use _csrf_request_header_token (header-based) for JavaScript CSRF protection"
+    },
+    {
+      "id": "rt-4",
+      "name": "DELETE route has _format:json requirement",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $all = $provider->getAllRoutes(); $found = FALSE; foreach ($all as $name => $route) { if (strpos($name, 'group_ai_pm') !== FALSE && in_array('DELETE', $route->getMethods())) { $reqs = $route->getRequirements(); if (isset($reqs['_format']) && $reqs['_format'] === 'json') { $found = TRUE; break; } } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "DELETE route needs _format:json for JSON error responses instead of HTML"
+    },
+    {
+      "id": "rt-5",
+      "name": "DELETE route has _admin_route option",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $all = $provider->getAllRoutes(); $found = FALSE; foreach ($all as $name => $route) { if (strpos($name, 'group_ai_pm') !== FALSE && in_array('DELETE', $route->getMethods())) { if ($route->getOption('_admin_route')) { $found = TRUE; break; } } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "DELETE route must use admin theme for consistent admin UI"
+    },
+    {
+      "id": "rt-6",
+      "name": "DELETE route has entity upcasting for task parameter",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $all = $provider->getAllRoutes(); $found = FALSE; foreach ($all as $name => $route) { if (strpos($name, 'group_ai_pm') !== FALSE && in_array('DELETE', $route->getMethods())) { $params = $route->getOption('parameters') ?: []; foreach ($params as $param => $config) { if (isset($config['type']) && strpos($config['type'], 'entity:') === 0) { $found = TRUE; break 2; } } } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "DELETE route must have entity upcasting so the controller receives a loaded entity object"
+    },
+    {
+      "id": "rt-7",
+      "name": "TaskApiController has deleteTask method",
+      "command": "ddev drush php-eval \"$rc = new \\ReflectionClass('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\TaskApiController'); echo $rc->hasMethod('deleteTask') ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Controller must have the deleteTask method for the DELETE endpoint"
+    },
+    {
+      "id": "rt-8",
+      "name": "Project entity can still be created",
+      "command": "ddev drush php-eval \"$project = \\Drupal::entityTypeManager()->getStorage('project')->create(['title' => 'Test Project P19', 'status' => 'active']); $project->save(); echo $project->id() ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Baseline sanity — entity creation still works after module changes"
+    },
+    {
+      "id": "rt-9",
+      "name": "Task entity can still be created with project reference",
+      "command": "ddev drush php-eval \"$projects = \\Drupal::entityTypeManager()->getStorage('project')->loadMultiple(); $pid = array_key_first($projects); $task = \\Drupal::entityTypeManager()->getStorage('task')->create(['title' => 'Test Task P19', 'status' => 'todo', 'priority' => 'medium', 'project' => $pid]); $task->save(); echo $task->id() ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Baseline sanity — task creation with project reference still works"
+    },
+    {
+      "id": "rt-10",
+      "name": "Kanban library still has core/once dependency",
+      "command": "ddev drush php-eval \"$lib = \\Drupal::service('library.discovery')->getLibraryByName('group_ai_pm', 'kanban'); $deps = $lib['dependencies'] ?? []; $found = FALSE; foreach ($deps as $dep) { if (strpos($dep, 'once') !== FALSE) { $found = TRUE; break; } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Kanban library must still depend on core/once for the Drupal.behaviors bridge"
+    },
+    {
+      "id": "rt-11",
+      "name": "Vite build produced dist files",
+      "command": "test -f /tmp/phase19-VARIANT/web/modules/custom/group_ai_pm/js/dist/kanban.js && test -s /tmp/phase19-VARIANT/web/modules/custom/group_ai_pm/js/dist/kanban.js && echo PASS || echo FAIL",
+      "expected": "PASS",
+      "rationale": "Vite build must succeed and produce a non-empty bundle file"
+    },
+    {
+      "id": "rt-12",
+      "name": "deleteKanban function exists in API wrapper",
+      "command": "grep -q 'deleteKanban\\|delete_kanban\\|DELETE' /tmp/phase19-VARIANT/web/modules/custom/group_ai_pm/js/src/api/drupal.js && echo PASS || echo FAIL",
+      "expected": "PASS",
+      "rationale": "API wrapper must have a delete function for the DELETE endpoint"
+    },
+    {
+      "id": "rt-13",
+      "name": "useToast composable exists",
+      "command": "test -f /tmp/phase19-VARIANT/web/modules/custom/group_ai_pm/js/src/composables/useToast.js && echo PASS || echo FAIL",
+      "expected": "PASS",
+      "rationale": "Toast notification composable must be created"
+    },
+    {
+      "id": "rt-14",
+      "name": "useFilters composable exists",
+      "command": "test -f /tmp/phase19-VARIANT/web/modules/custom/group_ai_pm/js/src/composables/useFilters.js && echo PASS || echo FAIL",
+      "expected": "PASS",
+      "rationale": "Filter state composable must be created"
+    },
+    {
+      "id": "rt-15",
+      "name": "DashboardController content() executes without exception",
+      "command": "ddev drush php-eval \"$project = \\Drupal::entityTypeManager()->getStorage('project')->create(['title' => 'P19 Render Test', 'status' => 'active']); $project->save(); $task = \\Drupal::entityTypeManager()->getStorage('task')->create(['title' => 'P19 Task', 'status' => 'todo', 'priority' => 'medium', 'project' => $project->id()]); $task->save(); $controller = \\Drupal::classResolver()->getInstanceFromDefinition('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\DashboardController'); try { $result = $controller->content(); echo is_array($result) ? 'PASS' : 'FAIL'; } catch (\\Exception $e) { echo 'FAIL: ' . $e->getMessage(); }\"",
+      "expected": "PASS",
+      "rationale": "Executes the dashboard controller to catch runtime errors — regression check after phase 19 modifications"
+    },
+    {
+      "id": "rt-16",
+      "name": "KanbanController board() executes without exception",
+      "command": "ddev drush php-eval \"$project = \\Drupal::entityTypeManager()->getStorage('project')->create(['title' => 'P19 Board Test', 'status' => 'active']); $project->save(); $controller = \\Drupal::classResolver()->getInstanceFromDefinition('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\KanbanController'); try { $result = $controller->board($project); echo is_array($result) ? 'PASS' : 'FAIL'; } catch (\\Exception $e) { echo 'FAIL: ' . $e->getMessage(); }\"",
+      "expected": "PASS",
+      "rationale": "Executes the board controller to catch runtime errors — regression check after phase 19 modifications"
+    }
+  ]
+}

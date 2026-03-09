@@ -1,0 +1,124 @@
+{
+  "phase": "18-rest-api-vue-infrastructure-basic-board",
+  "runtime_assertions": [
+    {
+      "id": "rt-1",
+      "name": "Module still installs cleanly after changes",
+      "command": "ddev drush cr && ddev drush pm:list --status=enabled 2>&1 | grep -q group_ai_pm && echo PASS || echo FAIL",
+      "expected": "PASS",
+      "rationale": "Baseline sanity — any PHP syntax error or broken service definition prevents module from loading"
+    },
+    {
+      "id": "rt-2",
+      "name": "At least one API route is registered",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $found = FALSE; foreach (['/api/group-ai-pm', '/api/kanban', '/api/project', '/api/task'] as $pattern) { $routes = $provider->getRoutesByPattern($pattern); if (count(iterator_to_array($routes)) > 0) { $found = TRUE; break; } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Verifies at least one API route was registered in the router (flexible path matching)"
+    },
+    {
+      "id": "rt-3",
+      "name": "Board route is registered",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $found = FALSE; foreach (['group_ai_pm.project.board', 'group_ai_pm.board', 'group_ai_pm.kanban', 'group_ai_pm.project.kanban'] as $name) { try { $provider->getRouteByName($name); $found = TRUE; break; } catch (\\Exception $e) {} } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Verifies the board page route exists (checks multiple naming conventions)"
+    },
+    {
+      "id": "rt-4",
+      "name": "Board route has _admin_route option",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); foreach (['group_ai_pm.project.board', 'group_ai_pm.board', 'group_ai_pm.kanban', 'group_ai_pm.project.kanban'] as $name) { try { $route = $provider->getRouteByName($name); if ($route->getOption('_admin_route')) { echo 'PASS'; exit; } } catch (\\Exception $e) {} } echo 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Board route must use admin theme for consistent admin UI"
+    },
+    {
+      "id": "rt-5",
+      "name": "Kanban theme hook is registered",
+      "command": "ddev drush php-eval \"$hooks = \\Drupal::service('theme.registry')->get(); $found = FALSE; foreach (array_keys($hooks) as $hook) { if (strpos($hook, 'kanban') !== FALSE && strpos($hook, 'group_ai_pm') !== FALSE) { $found = TRUE; break; } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Verifies hook_theme() registered a kanban theme hook (flexible name matching)"
+    },
+    {
+      "id": "rt-6",
+      "name": "API mutation route has CSRF header requirement",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $all = $provider->getAllRoutes(); $found = FALSE; foreach ($all as $name => $route) { if (strpos($name, 'group_ai_pm') !== FALSE && strpos($name, 'api') !== FALSE) { $reqs = $route->getRequirements(); if (isset($reqs['_csrf_request_header_token'])) { $found = TRUE; break; } } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Mutation API routes must use _csrf_request_header_token (header-based) not _csrf_token (query-based)"
+    },
+    {
+      "id": "rt-7",
+      "name": "API routes have _format:json requirement",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $all = $provider->getAllRoutes(); $found = FALSE; foreach ($all as $name => $route) { if (strpos($name, 'group_ai_pm') !== FALSE && strpos($name, 'api') !== FALSE) { $reqs = $route->getRequirements(); if (isset($reqs['_format']) && $reqs['_format'] === 'json') { $found = TRUE; break; } } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "API routes need _format:json for JSON error responses instead of HTML"
+    },
+    {
+      "id": "rt-8",
+      "name": "TaskApiController class exists and is loadable",
+      "command": "ddev drush php-eval \"echo class_exists('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\TaskApiController') ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Controller must be autoloadable (correct namespace, file location)"
+    },
+    {
+      "id": "rt-9",
+      "name": "KanbanController class exists and is loadable",
+      "command": "ddev drush php-eval \"echo class_exists('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\KanbanController') ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Board page controller must be autoloadable"
+    },
+    {
+      "id": "rt-10",
+      "name": "Kanban library is defined",
+      "command": "ddev drush php-eval \"$libs = \\Drupal::service('library.discovery')->getLibrariesByExtension('group_ai_pm'); echo isset($libs['kanban']) ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Kanban library must be registered in libraries.yml for the Vue app to load"
+    },
+    {
+      "id": "rt-11",
+      "name": "Kanban library has drupalSettings dependency",
+      "command": "ddev drush php-eval \"$lib = \\Drupal::service('library.discovery')->getLibraryByName('group_ai_pm', 'kanban'); $deps = $lib['dependencies'] ?? []; $found = FALSE; foreach ($deps as $dep) { if (strpos($dep, 'drupalSettings') !== FALSE) { $found = TRUE; break; } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Without core/drupalSettings dependency, JS settings may load after kanban code"
+    },
+    {
+      "id": "rt-12",
+      "name": "Board local task tab is registered",
+      "command": "ddev drush php-eval \"$manager = \\Drupal::service('plugin.manager.menu.local_task'); $defs = $manager->getDefinitions(); $found = FALSE; foreach ($defs as $id => $def) { if ((strpos($id, 'board') !== FALSE || strpos($id, 'kanban') !== FALSE) && isset($def['base_route']) && $def['base_route'] === 'entity.project.canonical') { $found = TRUE; break; } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Board tab must appear on project entity page via local task link (checks both 'board' and 'kanban' naming)"
+    },
+    {
+      "id": "rt-13",
+      "name": "Project entity can be created programmatically",
+      "command": "ddev drush php-eval \"$project = \\Drupal::entityTypeManager()->getStorage('project')->create(['title' => 'Test Project', 'status' => 'active']); $project->save(); echo $project->id() ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Baseline sanity — entity creation still works after module changes"
+    },
+    {
+      "id": "rt-14",
+      "name": "Task entity can be created with project reference",
+      "command": "ddev drush php-eval \"$projects = \\Drupal::entityTypeManager()->getStorage('project')->loadMultiple(); $pid = array_key_first($projects); $task = \\Drupal::entityTypeManager()->getStorage('task')->create(['title' => 'Test Task', 'status' => 'todo', 'priority' => 'medium', 'project' => $pid]); $task->save(); echo $task->id() ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Baseline sanity — task creation with project reference still works"
+    },
+    {
+      "id": "rt-15",
+      "name": "KanbanController board() executes without exception",
+      "command": "ddev drush php-eval \"$project = \\Drupal::entityTypeManager()->getStorage('project')->create(['title' => 'Board Render Test', 'status' => 'active']); $project->save(); $controller = \\Drupal::classResolver()->getInstanceFromDefinition('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\KanbanController'); try { $result = $controller->board($project); echo is_array($result) ? 'PASS' : 'FAIL'; } catch (\\Exception $e) { echo 'FAIL: ' . $e->getMessage(); }\"",
+      "expected": "PASS",
+      "rationale": "Actually executes the board controller to catch runtime errors like calling methods on wrong objects (e.g., getAccessControlHandler() on storage instead of entityTypeManager) — metadata-only assertions miss these"
+    },
+    {
+      "id": "rt-16",
+      "name": "DashboardController content() executes without exception (empty state)",
+      "command": "ddev drush php-eval \"$controller = \\Drupal::classResolver()->getInstanceFromDefinition('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\DashboardController'); try { $result = $controller->content(); echo is_array($result) ? 'PASS' : 'FAIL'; } catch (\\Exception $e) { echo 'FAIL: ' . $e->getMessage(); }\"",
+      "expected": "PASS",
+      "rationale": "Executes dashboard controller empty state path — catches non-existent route references in Url::fromRoute() that only crash at render time, not at route registration"
+    },
+    {
+      "id": "rt-17",
+      "name": "Vue library does not use defer attribute",
+      "command": "ddev drush php-eval \"$lib = \\Drupal::service('library.discovery')->getLibraryByName('group_ai_pm', 'vue'); foreach ($lib['js'] as $file) { if (isset($file['attributes']['defer'])) { echo 'FAIL: defer on Vue global breaks IIFE consumers'; exit; } } echo 'PASS';\"",
+      "expected": "PASS",
+      "rationale": "Vue is externalized as a global consumed by IIFE-bundled kanban.js — defer causes Vue to execute after the consumer, producing 'Vue is not defined' errors at runtime"
+    }
+  ]
+}

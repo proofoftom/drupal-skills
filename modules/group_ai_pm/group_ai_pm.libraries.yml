@@ -9,3 +9,32 @@ project_summaries:
   css:
     component:
       css/project-summaries.css: {}
+
+dashboard:
+  version: 1.x
+  css:
+    component:
+      css/dashboard.css: {}
+
+vue:
+  version: 3.3.4
+  js:
+    js/vendor/vue.global.prod.js: { minified: true }
+  options:
+    preprocess: false
+  header: true
+  weight: -20
+
+kanban:
+  version: 1.x
+  js:
+    js/dist/kanban.js: {}
+  css:
+    component:
+      js/dist/style.css: {}
+      js/src/kanban.css: {}
+  dependencies:
+    - group_ai_pm/vue
+    - core/drupal
+    - core/drupalSettings
+    - core/once
