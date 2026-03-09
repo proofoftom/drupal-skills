@@ -69,7 +69,7 @@ Full details: milestones/v4.0-ROADMAP.md
 
 - [x] **Phase 22: Drush Skill + Eval-Author Agent** - Build the 15th skill and automated eval design agent (completed 2026-03-09)
 - [x] **Phase 23: Skill Gap Fixes + Eval-Author Validation** - Patch 3 skills and validate eval-author against gold-standard (completed 2026-03-09)
-- [ ] **Phase 24: AI Task Service + NL Task Creation** - Central AI service layer with natural language task creation
+- [x] **Phase 24: AI Task Service + NL Task Creation** - Central AI service layer with natural language task creation (completed 2026-03-09)
 - [ ] **Phase 25: Batch AI Operations + Agent Tools** - Queue-based batch processing and remaining AiFunctionCall plugins
 - [ ] **Phase 26: Task History Analytics** - Custom history table, Views integration, analytics endpoint and dashboard
 - [ ] **Phase 27: Cross-Cutting Eval + Final Report** - Full pipeline validation measuring v5.0 cumulative impact
@@ -163,7 +163,7 @@ Phases execute in numeric order: 22 -> 23 -> 24 -> 25 -> 26 -> 27
 | 18-21 | v4.0 | 10/10 | Shipped | 2026-03-09 |
 | 22. Drush Skill + Eval-Author Agent | v5.0 | 2/2 | Complete | 2026-03-09 |
 | 23. Skill Gap Fixes + Eval-Author Validation | 2/2 | Complete    | 2026-03-09 | - |
-| 24. AI Task Service + NL Task Creation | v5.0 | 2/2 | Complete | 2026-03-09 |
+| 24. AI Task Service + NL Task Creation | v5.0 | Complete    | 2026-03-09 | 2026-03-09 |
 | 25. Batch AI Operations + Agent Tools | v5.0 | 0/TBD | Not started | - |
 | 26. Task History Analytics | v5.0 | 0/TBD | Not started | - |
 | 27. Cross-Cutting Eval + Final Report | v5.0 | 0/TBD | Not started | - |
