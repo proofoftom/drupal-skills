@@ -28,7 +28,7 @@ YES -> Add revision keys (`revision` in entity_keys), extend `EditorialContentEn
 NO -> Extend `ContentEntityBase`.
 
 **Does it need bundles (subtypes like "article" and "page" for nodes)?**
-YES -> Add `bundle_entity_type`, `bundle_label`, `bundle_of` (on the config entity), and `field_ui_base_route`. Create a companion ConfigEntityType to define bundles.
+YES -> Add `bundle_entity_type`, `bundle_label`, `bundle_of` (on the config entity), and `field_ui_base_route`. Create a companion ConfigEntityType to define bundles. See `references/bundled-entities.md` in this skill directory for the complete pattern with hook_update_N().
 NO -> Skip bundle configuration.
 
 **Does it need an admin UI?**
