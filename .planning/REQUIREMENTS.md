@@ -17,10 +17,10 @@
 
 ### AI Features
 
-- [ ] **AI-01**: AiTaskService encapsulates all AI logic, injectable by both REST controllers and AiFunctionCall plugins
-- [ ] **AI-02**: AiTaskService uses optional AI dependency (@? injection) so module functions without AI module
-- [ ] **AI-03**: CreateTaskTool AiFunctionCall plugin creates tasks from natural language, following existing CreateProjectTool pattern
-- [ ] **AI-04**: REST endpoint (POST) accepts natural language text and returns created task with parsed fields
+- [x] **AI-01**: AiTaskService encapsulates all AI logic, injectable by both REST controllers and AiFunctionCall plugins
+- [x] **AI-02**: AiTaskService uses optional AI dependency (@? injection) so module functions without AI module
+- [x] **AI-03**: CreateTaskTool AiFunctionCall plugin creates tasks from natural language, following existing CreateProjectTool pattern
+- [x] **AI-04**: REST endpoint (POST) accepts natural language text and returns created task with parsed fields
 - [ ] **AI-05**: BatchUpdateTool processes multiple tasks via Queue API with dry-run mode and per-item error reporting
 - [ ] **AI-06**: Queue workers implement three-catch pattern (SuspendQueueException, AiRateLimitException + RequeueException, generic Exception)
 - [ ] **AI-07**: UpdateTaskStatusTool AiFunctionCall plugin for AI-driven status changes
@@ -66,10 +66,10 @@
 | TOOL-05 | Phase 23 | Complete |
 | TOOL-06 | Phase 23 | Complete |
 | TOOL-07 | Phase 23 | Complete |
-| AI-01 | Phase 24 | Pending |
-| AI-02 | Phase 24 | Pending |
-| AI-03 | Phase 24 | Pending |
-| AI-04 | Phase 24 | Pending |
+| AI-01 | Phase 24 | Complete |
+| AI-02 | Phase 24 | Complete |
+| AI-03 | Phase 24 | Complete |
+| AI-04 | Phase 24 | Complete |
 | AI-05 | Phase 25 | Pending |
 | AI-06 | Phase 25 | Pending |
 | AI-07 | Phase 25 | Pending |
