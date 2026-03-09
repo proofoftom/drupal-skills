@@ -1,28 +1,35 @@
 # Phase 22: Drush Skill + Eval-Author Agent - Research
 
-**Researched:** 2026-03-09
-**Domain:** Drush 13 command authoring patterns, Claude Code subagent design for eval assertion generation
+**Researched:** 2026-03-09 (revised)
+**Domain:** Drush 13 usage for development, testing, debugging, and scaffolding; Claude Code subagent design for eval assertion generation
 **Confidence:** HIGH
 
 ## Summary
 
-Phase 22 has two distinct deliverables that share no code dependencies but are grouped because both are pure tooling that every subsequent v5.0 phase benefits from: (1) a 15th skill file teaching Drush 13+ command creation patterns, and (2) an Opus-class subagent that automates the design of three-tier eval assertions.
+Phase 22 has two distinct deliverables: (1) a 15th skill file teaching agents how to USE Drush commands for development, self-verification, debugging, and scaffolding, and (2) an Opus-class subagent that automates the design of three-tier eval assertions.
 
-The Drush skill is well-scoped. Drush 13 command authoring has three major breaking changes from Drush 11 and earlier that LLMs consistently get wrong without guidance: directory structure (`src/Drush/Commands/` not `src/Commands/`), dependency injection (`AutowireTrait` not `drush.services.yml`), and command declaration (`#[CLI\Command]` attributes not `@command` annotations for Drush 12, with `#[AsCommand]` as the forward-looking Drush 13.7+ pattern). These are exactly the kind of non-obvious patterns where skills produce measurable delta -- analogous to CacheableJsonResponse in the caching skill (+37.5% delta). The skill also cross-references batch-queue-cron for CLI batch processing and covers Drush commands commonly used in runtime assertions.
+The Drush skill focuses on USAGE, not command authoring. The key insight: our existing runtime assertions use `drush php-eval` for everything — even when built-in Drush commands do the job better. For example, we write 5-line php-eval calls to check routes when `drush route --name=my_module.route` does it in one. We never check `watchdog:show` after operations to catch silent errors. And `drush generate` could save massive tokens on scaffolding boilerplate.
 
-The eval-author agent is higher-risk because it is novel -- no precedent exists in this project for automated assertion generation. The dominant failure mode is tautological assertions that test file existence instead of skill-differentiating patterns (Pitfall #2 from PITFALLS.md). The research confirms that the mitigation strategy is sound: enforce a 60/20/20 assertion category distribution (differentiating/wiring/structural), provide Phase 18 evals as gold-standard examples, and include explicit tautology rejection rules in the agent prompt. The agent follows the exact same `.claude/agents/` frontmatter pattern as eval-grader.md and eval-browser.md.
+The skill teaches three core capabilities:
+1. **Self-verification** — how agents check their own work using Drush (routes, services, entities, permissions, logs)
+2. **Scaffolding** — `drush generate` for module/controller/form/entity/plugin boilerplate (saves tokens, produces phpcs-compliant code)
+3. **The Drupal-first principle** — use `entity:save/create/delete` over `sql:query`, use `php:eval` for API testing when no built-in command exists, use `sql:query` ONLY as last resort
 
-**Primary recommendation:** Build the Drush skill first (it is a well-understood artifact type), then the eval-author agent (using the Drush skill's own evals as a validation target for agent output quality).
+Command authoring (creating custom Drush commands) is preserved as a reference file at `references/command-authoring.md`.
+
+The eval-author agent is unchanged from the original plan — an Opus-class subagent automating three-tier assertion design.
+
+**Primary recommendation:** Build the Drush usage skill first (plan 22-01), then the eval-author agent (plan 22-02).
 
 <phase_requirements>
 ## Phase Requirements
 
 | ID | Description | Research Support |
 |----|-------------|-----------------|
-| TOOL-01 | Drush skill teaches Drush 13+ command creation patterns (src/Drush/Commands/, AutowireTrait, #[AsCommand]) with WRONG/RIGHT callouts for deprecated patterns | Drush 13 official docs verified all patterns. Three breaking changes from Drush 11 identified: directory, DI, attributes. Skill structure follows existing 14-skill pattern (~400-500 lines). |
-| TOOL-02 | Drush skill includes eval assertions targeting non-obvious Drush patterns (file location, DI approach, attribute syntax) | Existing evals.json format verified from drupal-module-scaffold. Non-obvious patterns identified: src/Drush/ directory, AutowireTrait usage, #[CLI\Command] attribute vs @command annotation, parent::__construct() call, Drush\Attributes import alias. |
-| TOOL-03 | Eval-author Opus subagent designs three-tier assertions (static + runtime + browser) from skill content, module code, and phase prompt | Subagent frontmatter pattern verified from eval-grader.md and eval-browser.md. Three-tier assertion structure verified from v3/v4 eval files. Agent needs Read/Glob/Grep/Bash tools, model: opus. |
-| TOOL-04 | Eval-author enforces assertion category distribution (60% differentiating, 20% wiring, max 20% structural) with explicit tautology rejection | Distribution rationale grounded in empirical data: Phase 18 gold-standard (17 assertions, 100% differentiating, +23.3% delta) vs hypothetical tautological assertions (0% delta). Tautology check is a prompt-level rule, not code enforcement. |
+| TOOL-01 | Drush skill teaches Drush usage for development: self-verification recipes (route/service/entity/permission inspection), scaffolding via `drush generate`, debugging via `watchdog:show`, and the Drupal-first principle (entity:save over sql:query) | Drush 13 command inventory verified: entity:create/save/delete, core:route, watchdog:show/tail, php:eval/script, generate (50+ generators), queue:list/run, state:get/set, config:get, role:perm:add, cache:tags. Current eval pipeline uses php-eval for everything — built-in commands would be simpler, more robust, and more readable. |
+| TOOL-02 | Drush skill includes eval assertions testing that agents use correct Drush patterns (built-in commands over raw php-eval, watchdog checks, entity API over SQL, drush generate for scaffolding) | Current runtime assertions (v3/v4) demonstrate the anti-patterns: complex php-eval for route checking (should be `drush route`), manual entity creation via php-eval (should be `entity:create`), no watchdog monitoring. Assertions can test whether skill-guided agents use better patterns. |
+| TOOL-03 | Eval-author Opus subagent designs three-tier assertions (static + runtime + browser) from skill content, module code, and phase prompt | Subagent frontmatter pattern verified from eval-grader.md and eval-browser.md. Agent needs Read/Glob/Grep/Bash tools, model: opus. |
+| TOOL-04 | Eval-author enforces assertion category distribution (60% differentiating, 20% wiring, max 20% structural) with explicit tautology rejection | Distribution rationale grounded in empirical data: Phase 18 gold-standard (17 assertions, 100% differentiating, +23.3% delta). |
 </phase_requirements>
 
 ## Standard Stack
@@ -33,160 +40,228 @@ No new dependencies. Both deliverables are pure knowledge artifacts.
 
 | Artifact | Type | Purpose | Pattern Source |
 |----------|------|---------|---------------|
-| `skills/drupal-drush/SKILL.md` | Skill file | Teaches Drush 13+ command creation | Follows existing 14 skills (see `skills/drupal-*/SKILL.md`) |
-| `skills/drupal-drush/evals/evals.json` | Eval assertions | Measures skill impact on Drush command generation | Follows `skills/drupal-module-scaffold/evals/evals.json` |
+| `skills/drupal-drush/SKILL.md` | Skill file | Teaches Drush usage for development, testing, debugging | Follows existing 14 skills |
+| `skills/drupal-drush/evals/evals.json` | Eval assertions | Measures skill impact on Drush usage quality | Follows `skills/drupal-module-scaffold/evals/evals.json` |
+| `skills/drupal-drush/references/command-authoring.md` | Reference file | Drush 13+ custom command creation patterns | Preserved from original research |
 | `.claude/agents/eval-author.md` | Subagent definition | Automates three-tier assertion design | Follows `.claude/agents/eval-grader.md` |
 
-### Drush Version Compatibility Matrix
+### Key Drush Commands for the Skill
 
-| Drush Version | Drupal Version | Base Class | Command Attribute | DI Pattern |
-|---------------|----------------|------------|-------------------|------------|
-| 12.x | 10.x | `DrushCommands` | `#[CLI\Command]` | `AutowireTrait` (preferred) or `create()` |
-| 13.0-13.6 | 10.2+, 11.x | `DrushCommands` | `#[CLI\Command]` | `AutowireTrait` (preferred) |
-| 13.7+ | 10.2+, 11.x | `Command` (Symfony) | `#[AsCommand]` (Symfony) | `AutowireTrait` (required in 14) |
+**Self-verification (checking your own work):**
 
-**Skill strategy:** Teach the Drush 12 pattern (`extends DrushCommands` + `#[CLI\Command]`) as the D10-compatible primary pattern. Show the Drush 13.7 pure Symfony pattern (`extends Command` + `#[AsCommand]`) as the forward-looking alternative. Both share `src/Drush/Commands/` directory and `AutowireTrait` for DI.
+| Command | What It Checks | Replaces |
+|---------|---------------|----------|
+| `drush route --name=my_module.*` | Route registration | 5-line php-eval with router.route_provider |
+| `drush route --path=/admin/my-page` | Path-to-route mapping | Manual path testing |
+| `drush pm:list --status=enabled --field=name` | Module enabled | `pm:list \| grep` |
+| `drush watchdog:show --severity-min=Warning --count=5` | Recent errors/warnings | Nothing (currently unchecked!) |
+| `drush watchdog:show --type=php` | PHP errors after operations | Nothing |
+| `drush config:get my_module.settings` | Config values | php-eval with \Drupal::config() |
+| `drush state:get my_module.last_run` | State values | php-eval with \Drupal::state() |
+| `drush role:list --format=json` | Roles and permissions | php-eval with user.permissions service |
+| `drush queue:list` | Queue status | php-eval with queue service |
+| `drush cache:tags node:12,user:4` | Cache tag invalidation | No built-in equivalent |
+| `drush php-eval "..."` | Arbitrary PHP (DI, class resolution) | Still needed for complex checks |
+| `drush php:script path/to/test.php` | Multi-step test scripts | Complex shell-escaped php-eval |
+
+**Entity operations (Drupal-first principle):**
+
+| Command | Purpose | Why Not sql:query |
+|---------|---------|------------------|
+| `drush entity:create node article` | Create test entities interactively | Bypasses entity API, skips hooks |
+| `drush entity:save node --bundle=article` | Re-save entities (triggers hooks) | Doesn't fire hook_entity_presave/update |
+| `drush entity:delete node 22,24` | Delete test entities | Leaves orphaned references |
+| `drush php-eval "$entity->save()"` | Programmatic entity save | Same as sql:query — no hooks |
+
+**Scaffolding (drush generate):**
+
+| Generator | What It Creates | Token Savings |
+|-----------|----------------|---------------|
+| `drush generate module` | .info.yml, .module, composer.json | ~200 tokens |
+| `drush generate controller` | Controller class + routing.yml entry | ~300 tokens |
+| `drush generate form:config` | Config form + routing + schema | ~500 tokens |
+| `drush generate form:simple` | Simple form + routing | ~400 tokens |
+| `drush generate entity:content` | Full content entity (class, schema, handlers, forms) | ~2000+ tokens |
+| `drush generate entity:configuration` | Full config entity | ~1500+ tokens |
+| `drush generate plugin:block` | Block plugin class | ~200 tokens |
+| `drush generate service-provider` | Service provider class | ~150 tokens |
+| `drush generate event-subscriber` | Event subscriber + services.yml entry | ~250 tokens |
+| `drush generate hook` | Hook implementation | ~100 tokens |
+| `drush generate test:kernel` | Kernel test class | ~200 tokens |
 
 ### Alternatives Considered
 
 | Instead of | Could Use | Tradeoff |
 |------------|-----------|----------|
-| Teaching Drush 12 pattern as primary | Drush 13.7 pure Symfony pattern only | Would break on Drupal 10 sites using Drush 12. Project targets `^10 \|\| ^11`. |
-| Opus for eval-author | Sonnet for eval-author | Sonnet generates shallow assertions. Eval design requires deep reasoning about what Haiku will miss -- this is Opus-tier work. |
-| Single eval JSON format | Separate files for static/runtime/browser | Existing pipeline uses single evals.json + separate runtime-assertions.json. Do not change what works. |
+| Built-in Drush commands for verification | php-eval for everything | php-eval is more flexible but harder to read, debug, and maintain. Built-in commands have proper error handling. |
+| entity:save for hook-triggering saves | sql:query for direct DB updates | sql:query bypasses entity API — hooks, cache invalidation, access checks all skipped. |
+| drush generate for scaffolding | Writing all boilerplate manually | Manual writing burns tokens and introduces phpcs errors. drush generate produces convention-compliant code. |
+| Opus for eval-author | Sonnet for eval-author | Sonnet generates shallow assertions. Eval design requires deep reasoning — Opus-tier work. |
 
 ## Architecture Patterns
 
 ### Drush Skill File Structure
 
-The skill follows the established pattern of all 14 existing skills. Target length: ~400-500 lines (average of existing skills is 437 lines).
-
 ```
 skills/drupal-drush/
-  SKILL.md          # ~400-500 lines, WRONG/RIGHT callouts
+  SKILL.md                          # Main: USING Drush for development
   evals/
-    evals.json      # Assertions targeting non-obvious patterns
+    evals.json                      # Assertions testing correct Drush usage
+  references/
+    command-authoring.md            # Reference: creating custom Drush commands
 ```
 
 ### Skill Content Structure (Recommended Sections)
 
 ```markdown
-# Drupal Drush Commands
+# Drupal Drush for Development
 
-## Where do Drush commands go?
-  - src/Drush/Commands/ directory (CRITICAL -- NOT src/Commands/)
-  - Namespace: Drupal\{module}\Drush\Commands
-  - Class naming: {Module}Commands extends DrushCommands
+## drush generate — scaffold boilerplate, save tokens
+  - Available generators (module, controller, form, entity, plugin, etc.)
+  - Using --answer for non-interactive generation
+  - Using --dry-run to preview
+  - CRITICAL: drush generate produces phpcs-compliant code
+  - Recipe: scaffold a complete module skeleton in one command
 
-## Command declaration
-  - #[CLI\Command] attribute (Drush 12+, NOT @command annotation)
-  - #[CLI\Argument], #[CLI\Option], #[CLI\Usage] attributes
-  - use Drush\Attributes as CLI; import alias
+## Self-verification recipes — check your own work
+  - After creating routes: drush route --name=my_module.*
+  - After module changes: drush watchdog:show --severity-min=Warning
+  - Service resolution: drush php-eval with classResolver
+  - Entity CRUD verification: entity:create/save/delete
+  - Permission checks: role:list, role:perm:add
+  - Config/state inspection: config:get, state:get
+  - Queue verification: queue:list, queue:run
 
-## Dependency injection
-  - use AutowireTrait; (NOT drush.services.yml)
-  - Constructor injection with type hints
-  - parent::__construct() call required
-  - #[Autowire] for ambiguous services
+## The Drupal-first principle — entity API over SQL
+  - WRONG/RIGHT: sql:query vs entity:save (hooks, cache, access)
+  - entity:create for test data (fires hooks)
+  - entity:save for re-saving (triggers presave/update)
+  - entity:delete for cleanup (fires delete hooks)
+  - php-eval for programmatic API testing
+  - sql:query ONLY for raw DB inspection with no API equivalent
 
-## Common Drush patterns
-  - Output: $this->io()->writeln(), SymfonyStyle tables
-  - Return types: RowsOfFields for formatted output
-  - Error handling: $this->logger()->error()
+## Debugging with Drush
+  - watchdog:show --type=php for PHP errors
+  - watchdog:show --severity-min=Warning for all warnings+
+  - watchdog:tail for live monitoring during development
+  - core:status for environment verification
+  - core:route for route debugging
+  - config:get for config inspection
+  - state:get for state inspection
 
-## Drush commands for runtime assertions
-  - drush php-eval for arbitrary PHP
-  - drush pm:list for module status
-  - drush config:get for config inspection
-  - drush queue:run for queue processing
-
-## D10/D11 compatibility
-  - Drush 12 (D10): #[CLI\Command] + extends DrushCommands
-  - Drush 13.7+ (D11): #[AsCommand] + extends Command (Symfony)
-  - Both: src/Drush/Commands/, AutowireTrait, parent::__construct()
+## php:eval vs php:script — when to use each
+  - php:eval for one-liners (service resolution, class checks)
+  - php:script for complex multi-step tests (avoid shell escaping)
+  - Shell escaping tips for php:eval
+  - WRONG/RIGHT: massive shell-escaped php-eval vs php:script file
 
 ## Cross-references
-  - drupal-batch-queue-cron: drush_backend_batch_process() for CLI batches
-  - drupal-testing: DrushTestTrait for functional tests
+  - drupal-module-scaffold: drush generate complements manual scaffolding
+  - drupal-batch-queue-cron: queue:list/queue:run for testing queues
+  - drupal-testing: drush test:run for running PHPUnit tests
 ```
 
-### Drush 12 Command Pattern (Primary -- D10 Compatible)
+### Self-Verification Recipes (Key Differentiators)
 
+These are the patterns agents should use to check their own work. Current agents DON'T do this — the skill teaches it.
+
+**Recipe 1: After creating routes**
+```bash
+# WRONG: Complex php-eval to check routes
+drush php-eval "$provider = \Drupal::service('router.route_provider'); ..."
+
+# RIGHT: Built-in command
+drush route --name=my_module.api_endpoint
+# or check by path
+drush route --path=/api/my-module/tasks
+```
+
+**Recipe 2: After any module change — check for errors**
+```bash
+drush cr  # rebuild cache
+drush watchdog:show --severity-min=Warning --count=5  # check for new warnings
+```
+
+**Recipe 3: Entity CRUD verification using Drupal API**
+```bash
+# Create test entity via Drupal API (fires hooks)
+drush entity:create node article
+
+# Or programmatically with php-eval (for custom entities)
+drush php-eval "\$e = \Drupal::entityTypeManager()->getStorage('task')->create(['title' => 'Test']); \$e->save(); echo \$e->id();"
+
+# Verify hooks fired by checking watchdog
+drush watchdog:show --count=3
+
+# Clean up
+drush entity:delete node 42
+```
+
+**Recipe 4: Service/DI verification**
+```bash
+# Check service exists and resolves
+drush php-eval "echo \Drupal::hasService('my_module.my_service') ? 'EXISTS' : 'MISSING';"
+
+# Check class is autoloadable
+drush php-eval "echo class_exists('\Drupal\my_module\MyService') ? 'LOADABLE' : 'NOT_FOUND';"
+
+# Full DI resolution test
+drush php-eval "\$svc = \Drupal::service('my_module.my_service'); echo get_class(\$svc);"
+```
+
+**Recipe 5: Permission verification**
+```bash
+drush role:perm:add anonymous 'view project entities'
+drush php-eval "echo \Drupal::currentUser()->hasPermission('view project entities') ? 'HAS' : 'MISSING';"
+```
+
+**Recipe 6: Config and state inspection**
+```bash
+drush config:get my_module.settings  # full config object
+drush config:get my_module.settings api_key  # specific key
+drush state:get my_module.last_cron_run  # state value
+```
+
+**Recipe 7: Queue testing**
+```bash
+drush queue:list  # see all queues and item counts
+drush queue:run my_module_queue  # process items
+drush watchdog:show --type=my_module --count=5  # check results
+```
+
+**Recipe 8: Complex multi-step testing with php:script**
 ```php
-namespace Drupal\my_module\Drush\Commands;
+// test-entity-workflow.php
+$storage = \Drupal::entityTypeManager()->getStorage('task');
+$task = $storage->create(['title' => 'Test Task', 'status' => 'todo']);
+$task->save();
+$id = $task->id();
 
-use Drush\Attributes as CLI;
-use Drush\Commands\AutowireTrait;
-use Drush\Commands\DrushCommands;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
+// Re-load and verify
+$loaded = $storage->load($id);
+echo $loaded->get('title')->value === 'Test Task' ? 'PASS' : 'FAIL';
 
-final class MyModuleCommands extends DrushCommands {
-  use AutowireTrait;
-
-  public function __construct(
-    private readonly EntityTypeManagerInterface $entityTypeManager,
-  ) {
-    parent::__construct();
-  }
-
-  #[CLI\Command(name: 'my-module:list-items', aliases: ['mm:list'])]
-  #[CLI\Argument(name: 'type', description: 'Entity type to list')]
-  #[CLI\Option(name: 'limit', description: 'Max items')]
-  #[CLI\Usage(name: 'drush my-module:list-items node --limit=10', description: 'List 10 nodes')]
-  public function listItems(string $type, array $options = ['limit' => 50]): void {
-    $storage = $this->entityTypeManager->getStorage($type);
-    $ids = $storage->getQuery()->accessCheck(TRUE)->range(0, $options['limit'])->execute();
-    $this->io()->writeln(count($ids) . ' items found.');
-  }
-}
+// Clean up
+$loaded->delete();
+```
+```bash
+drush php:script test-entity-workflow.php
 ```
 
-### Drush 13.7+ Command Pattern (Forward-Looking -- D11)
+### Anti-Patterns This Skill Corrects
 
-```php
-namespace Drupal\my_module\Drush\Commands;
-
-use Drush\Commands\AutowireTrait;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Symfony\Component\Console\Attribute\AsCommand;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
-
-#[AsCommand(
-  name: 'my-module:list-items',
-  description: 'List entity items by type',
-  aliases: ['mm:list'],
-)]
-final class ListItemsCommand extends Command {
-  use AutowireTrait;
-
-  public function __construct(
-    private readonly EntityTypeManagerInterface $entityTypeManager,
-  ) {
-    parent::__construct();
-  }
-
-  protected function configure(): void {
-    $this
-      ->addArgument('type', InputArgument::REQUIRED, 'Entity type to list')
-      ->addOption('limit', NULL, InputOption::VALUE_OPTIONAL, 'Max items', 50);
-  }
-
-  protected function execute(InputInterface $input, OutputInterface $output): int {
-    $type = $input->getArgument('type');
-    $limit = (int) $input->getOption('limit');
-    $storage = $this->entityTypeManager->getStorage($type);
-    $ids = $storage->getQuery()->accessCheck(TRUE)->range(0, $limit)->execute();
-    $output->writeln(count($ids) . ' items found.');
-    return Command::SUCCESS;
-  }
-}
-```
+| Current Anti-Pattern | What We Do Now | What Skill Teaches |
+|---------------------|----------------|-------------------|
+| php-eval for route checks | 5-line shell-escaped php-eval | `drush route --name=route_name` |
+| No error checking | Operations with no watchdog review | `drush watchdog:show --severity-min=Warning` after every change |
+| sql:query for entity ops | Direct DB manipulation | `entity:save`, `entity:create`, `entity:delete` |
+| Manual boilerplate | Write all scaffolding by hand | `drush generate controller`, `drush generate form:config`, etc. |
+| Shell escaping nightmare | Long php-eval with nested quotes | `drush php:script` for complex tests |
+| No self-verification | Agent trusts its own output | Verification recipe after each major operation |
 
 ### Eval-Author Agent Architecture
+
+Unchanged from original research. See original for details.
 
 ```
 .claude/agents/eval-author.md
@@ -195,147 +270,84 @@ final class ListItemsCommand extends Command {
   - permissionMode: bypassPermissions (consistent with eval-grader)
 ```
 
-**Input context the agent receives from orchestrator:**
-1. Skill file(s) being tested (`skills/drupal-*/SKILL.md`)
-2. Phase prompt (what code generation task will be given to Haiku)
-3. Existing module code (current state of `modules/group_ai_pm/`)
-4. Gold-standard examples (`eval/v4/phase-18-evals.json`)
-5. Previous eval results (to learn what passes/fails)
-
-**Output format the agent produces:**
-1. `evals.json` -- static assertions with explanatory rationale per assertion
-2. `runtime-assertions.json` -- drush php-eval commands testing functional behavior
-3. Browser assertions embedded in evals.json as `(via eval-browser)` prefixed expectations
-
 ### Assertion Category Distribution (TOOL-04)
 
 | Category | Target % | What It Tests | Example |
 |----------|----------|---------------|---------|
 | Differentiating | 60%+ | Non-obvious patterns from SKILL.md that Haiku gets wrong without skill | "Uses CacheableJsonResponse not plain JsonResponse for GET endpoints" |
-| Wiring | 20%+ | Components connect correctly -- DI resolves, routes wire to controllers | "(via ddev exec) drush php-eval tests that service container resolves MyService" |
-| Structural | max 20% | Files exist, classes are loadable -- necessary but not sufficient | "Controller class exists and is autoloadable" |
-
-**Tautology rejection rule:** If an assertion would pass for any Drupal module regardless of skill usage (e.g., "module has .info.yml"), it is tautological and must be rejected. Every assertion must reference a specific pattern, class, method, or configuration that the skill uniquely teaches.
-
-### Anti-Patterns to Avoid
-
-- **Teaching deprecated Drush patterns as primary:** The skill must lead with Drush 12+ patterns. Old patterns (src/Commands/, drush.services.yml, @command annotations) go in WRONG callouts only.
-- **eval-author with Write tool:** The agent must NOT write files directly. It returns JSON to the orchestrator, which writes the files. This prevents the agent from modifying skill content or module code.
-- **Mixing structural and differentiating assertions:** Each assertion should be clearly categorizable. "File exists at correct path" is structural. "File uses AutowireTrait instead of create() factory" is differentiating.
-- **Omitting assertion rationale:** Every static assertion in evals.json must include parenthetical rationale explaining WHY the pattern matters and what the wrong alternative is (following Phase 18 gold-standard format).
+| Wiring | 20%+ | Components connect correctly — DI resolves, routes wire to controllers | "(via ddev exec) drush php-eval tests that service container resolves MyService" |
+| Structural | max 20% | Files exist, classes are loadable — necessary but not sufficient | "Controller class exists and is autoloadable" |
 
 ## Don't Hand-Roll
 
 | Problem | Don't Build | Use Instead | Why |
 |---------|-------------|-------------|-----|
-| Skill file format | Custom format | Existing SKILL.md format with frontmatter | 14 validated skills already use this format; the eval pipeline expects it |
-| Agent definition format | Custom YAML/JSON agent spec | `.claude/agents/*.md` frontmatter format | eval-grader.md and eval-browser.md prove the pattern works |
-| Eval assertion format | New assertion schema | Existing evals.json + runtime-assertions.json | v3/v4 pipeline consumes this format; changing it breaks the pipeline |
-| Assertion quality checking | Automated tautology detection code | Prompt-level rules in eval-author system prompt | Tautology detection is a reasoning task, not a pattern match. Opus handles it via instructions. |
-
-**Key insight:** Phase 22 produces zero code that runs in the module or eval pipeline. Everything is a knowledge artifact (skill file, agent prompt, assertion JSON). The "don't hand-roll" guidance here is about format consistency, not library selection.
+| Skill file format | Custom format | Existing SKILL.md format with frontmatter | 14 validated skills already use this format |
+| Agent definition format | Custom YAML/JSON | `.claude/agents/*.md` frontmatter | eval-grader.md and eval-browser.md prove the pattern |
+| Eval assertion format | New assertion schema | Existing evals.json + runtime-assertions.json | v3/v4 pipeline consumes this format |
+| Command-authoring content | Rewrite from scratch | Preserved in references/command-authoring.md | Already written and validated in original plan |
 
 ## Common Pitfalls
 
-### Pitfall 1: Drush Skill Teaches Deprecated Patterns
+### Pitfall 1: Using sql:query for Entity Operations
+**What goes wrong:** Agent uses `drush sql:query "UPDATE node_field_data SET status = 1 WHERE nid = 42"` instead of `drush entity:save node 42 --publish`.
+**Why it happens:** SQL feels direct and deterministic. LLMs default to it for "quick" operations.
+**How to avoid:** Skill must teach the Drupal-first principle: entity API operations fire hooks (presave, update, access), invalidate caches, and update indexes. SQL bypasses all of this.
 
-**What goes wrong:** Skill teaches `src/Commands/` directory, `drush.services.yml` for DI, or `@command` annotations. Generated commands are not discovered by Drush 12+.
-**Why it happens:** Most LLM training data contains Drush 8-11 patterns. The `src/Drush/Commands/` directory requirement is Drush 12+ specific (2023+).
-**How to avoid:** Lead with Drush 12+ patterns. Place CRITICAL NEVER callouts on deprecated approaches. Include WRONG/RIGHT comparisons for all three breaking changes (directory, DI, attributes).
-**Warning signs:** `drush list` does not show the command; `drush -vvv my:command` shows discovery errors.
+### Pitfall 2: No Self-Verification After Code Changes
+**What goes wrong:** Agent creates routes, services, entities but never verifies they actually work. Silent errors accumulate.
+**Why it happens:** Agents trust their own output. No habit of "run drush watchdog:show after changes."
+**How to avoid:** Skill provides explicit verification recipes: after routes → `drush route`, after any change → `drush watchdog:show`, after entity changes → create+load test.
 
-### Pitfall 2: Eval-Author Generates Tautological Assertions
+### Pitfall 3: php-eval for Everything
+**What goes wrong:** Agent writes complex shell-escaped php-eval when a built-in Drush command does the job in one line.
+**Why it happens:** LLM training data doesn't emphasize Drush's built-in command inventory. php-eval is the "Swiss army knife" fallback.
+**How to avoid:** Skill maps common verification tasks to built-in commands. WRONG/RIGHT callouts show the simpler alternative.
 
-**What goes wrong:** Agent produces assertions like "Controller file exists" or "Module has .info.yml" that pass 100% for both with-skill and without-skill runs, producing 0% delta.
-**Why it happens:** LLMs gravitate toward assertions they can verify with high confidence, which are exactly the assertions that test obvious, undifferentiated behavior.
-**How to avoid:** Enforce 60/20/20 distribution. Provide Phase 18 gold-standard examples. Include explicit tautology rejection rules. Each assertion must reference a specific SKILL.md pattern.
-**Warning signs:** All assertions pass at 100% for both variants. No assertion mentions a specific method, class, or API from the SKILL.md.
+### Pitfall 4: Not Using drush generate for Scaffolding
+**What goes wrong:** Agent manually writes 200+ lines of boilerplate for a content entity when `drush generate entity:content` produces it in seconds.
+**Why it happens:** LLMs don't know drush generate exists or what generators are available.
+**How to avoid:** Skill lists all 50+ generators with what they produce and estimated token savings.
 
-### Pitfall 3: Eval-Author Generates Only Static Assertions (No Runtime)
-
-**What goes wrong:** Agent produces 15 static assertions and 0 runtime assertions. Module passes all static checks but `drush en` fails, or DI is broken.
-**Why it happens:** Static assertions are natural outputs of code analysis. Runtime assertions require understanding Drupal's bootstrap, service container, and execution behavior.
-**How to avoid:** Agent prompt must mandate all three tiers. Include runtime assertion examples (drush php-eval patterns). Explicitly require at least 3 runtime assertions per eval.
-**Warning signs:** Zero runtime-assertions.json entries. All assertions use grep/file-read patterns, none use ddev exec or drush commands.
-
-### Pitfall 4: Missing parent::__construct() in Drush Command Class
-
-**What goes wrong:** Command class with `AutowireTrait` and `extends DrushCommands` omits `parent::__construct()` call. Symfony Console throws error about uninitialized command name.
-**Why it happens:** Standard Drupal classes (controllers, forms) do not require parent constructor calls. Drush commands do because Symfony Console Command's constructor sets the command name.
-**How to avoid:** Skill must explicitly call out `parent::__construct()` requirement with WRONG/RIGHT example. Eval assertion should check for `parent::__construct()` in constructor.
-**Warning signs:** Fatal error on `drush list`: "LogicException: Command has no name."
-
-### Pitfall 5: Confusing #[CLI\Command] (Drush 12) with #[AsCommand] (Drush 13.7)
-
-**What goes wrong:** Skill teaches `#[AsCommand]` for Drush 12 sites or `#[CLI\Command]` for Drush 13.7+ sites. Either mismatch causes issues or deprecation warnings.
-**Why it happens:** Two overlapping transition periods: `#[CLI\Command]` replaced `@command` annotations in Drush 12; `#[AsCommand]` replaces `#[CLI\Command]` in Drush 13.7.
-**How to avoid:** Skill must clearly separate the two patterns with version requirements. Primary pattern = `#[CLI\Command]` (works Drush 12-13.x). Forward-looking = `#[AsCommand]` (Drush 13.7+ only).
-**Warning signs:** Deprecation notices in Drush 13.7+ output. Commands not discovered on Drush 12 sites.
+### Pitfall 5: Eval-Author Generates Tautological Assertions
+**What goes wrong:** Agent produces assertions like "Controller file exists" that pass 100% for both with-skill and without-skill runs.
+**Why it happens:** LLMs gravitate toward high-confidence assertions.
+**How to avoid:** 60/20/20 distribution + tautology rejection rules.
 
 ## Code Examples
 
-### Example: Drush Skill WRONG/RIGHT Callout (Verified Pattern)
+### Example: Route Verification — WRONG vs RIGHT
 
 ```markdown
-> WRONG: Placing Drush command files in `src/Commands/MyModuleCommands.php`.
-> Drush 12+ requires command files under `src/Drush/Commands/`. Files in the
-> old `src/Commands/` location are NOT discovered. This is the #1 cause of
-> "Command not found" errors in modern Drupal.
-> RIGHT: Place commands at `src/Drush/Commands/MyModuleCommands.php` with
-> namespace `Drupal\my_module\Drush\Commands`. The `Drush/` subdirectory
-> is mandatory for auto-discovery.
+> **WRONG — complex php-eval for route checking:**
+> ```bash
+> drush php-eval "$provider = \Drupal::service('router.route_provider');
+>   $found = FALSE;
+>   foreach (['my_module.api', 'my_module.list'] as $name) {
+>     try { $provider->getRouteByName($name); $found = TRUE; break; }
+>     catch (\Exception $e) {}
+>   } echo $found ? 'PASS' : 'FAIL';"
+> ```
+> This is unreadable, fragile (shell escaping), and hard to debug.
+>
+> **RIGHT — built-in Drush command:**
+> ```bash
+> drush route --name=my_module.api
+> drush route --path=/api/my-module/items
+> ```
+> One line, human-readable, proper error messages on failure.
 ```
 
-Source: [Drush 13.x Command Authoring](https://www.drush.org/13.x/commands/)
-
-### Example: Eval Assertion Targeting Non-Obvious Drush Pattern
+### Example: Eval Assertion for Drush Usage Skill
 
 ```json
 {
   "expectations": [
-    "Drush command file is located in src/Drush/Commands/ directory, NOT in src/Commands/ (Drush 12+ requires the Drush/ subdirectory for auto-discovery -- files in the old src/Commands/ location are silently ignored and drush list will not show the command)",
-    "Command class uses 'use AutowireTrait;' for dependency injection instead of a drush.services.yml file (drush.services.yml is deprecated in Drush 12+ and will be removed in Drush 14 -- AutowireTrait resolves services from constructor type hints automatically)",
-    "Constructor calls parent::__construct() (Symfony Console Command's constructor initializes the command name -- omitting it causes a LogicException: 'Command has no name')",
-    "Class imports Drush attributes via 'use Drush\\Attributes as CLI;' and uses #[CLI\\Command] or #[AsCommand] attributes, NOT @command annotations in docblocks (PHP 8 attributes are the standard for Drush 12+ command metadata -- docblock annotations are the Drush 8-11 legacy format)"
+    "Agent uses drush watchdog:show or watchdog:tail to check for errors after module changes (without the skill, agents never check watchdog — silent errors accumulate and cause cascading failures in later development steps)",
+    "Agent uses drush route for route verification instead of multi-line php-eval with router.route_provider (php-eval route checking requires complex shell escaping and produces cryptic output on failure)",
+    "Agent uses entity:save or entity:create for entity operations instead of sql:query (sql:query bypasses Drupal's entity API — hooks, cache invalidation, and access checks are all skipped, causing state inconsistency)",
+    "Agent uses drush generate for scaffolding at least one component (module, controller, form, entity, or plugin) instead of manually writing all boilerplate (drush generate produces phpcs-compliant code and saves 200-2000+ tokens per component)"
   ]
-}
-```
-
-### Example: Eval-Author Agent System Prompt (Key Rules)
-
-```markdown
-## Assertion Design Rules
-
-1. NEVER generate assertions that test for file existence alone, standard
-   Drupal boilerplate, or patterns that Haiku produces correctly WITHOUT
-   the skill. Every assertion must target a specific pattern from the
-   SKILL.md WRONG/RIGHT callouts or CRITICAL sections.
-
-2. Category distribution (MANDATORY):
-   - At least 60% DIFFERENTIATING: tests non-obvious skill-taught patterns
-   - At least 20% WIRING: tests that components connect (DI resolves,
-     routes wire to controllers, commands are discoverable)
-   - At most 20% STRUCTURAL: tests file/class existence
-
-3. Tautology check: For each assertion, ask "Would Haiku produce this
-   pattern correctly WITHOUT reading the skill?" If YES, the assertion
-   is tautological -- rewrite it to test the SPECIFIC approach the skill
-   teaches over the default approach Haiku would use.
-
-4. Every static assertion MUST include a parenthetical rationale explaining
-   (a) what the wrong alternative is, and (b) what happens when you do it
-   wrong. Follow the Phase 18 gold-standard format.
-```
-
-### Example: Runtime Assertion for Drush Command Discovery
-
-```json
-{
-  "id": "rt-1",
-  "name": "Custom Drush command is discovered",
-  "command": "ddev drush list --filter=my_module 2>&1 | grep -q 'my-module:' && echo PASS || echo FAIL",
-  "expected": "PASS",
-  "rationale": "Verifies that the command file in src/Drush/Commands/ is auto-discovered by Drush -- catches the #1 pitfall of placing commands in the wrong directory"
 }
 ```
 
@@ -343,20 +355,12 @@ Source: [Drush 13.x Command Authoring](https://www.drush.org/13.x/commands/)
 
 | Old Approach | Current Approach | When Changed | Impact |
 |--------------|------------------|--------------|--------|
-| `src/Commands/` directory | `src/Drush/Commands/` directory | Drush 12 (2023) | Commands not discovered if in wrong directory |
-| `drush.services.yml` for DI | `AutowireTrait` in class | Drush 12.5+ (2023), required Drush 14 | Services file deprecated, autowire preferred |
-| `@command` docblock annotations | `#[CLI\Command]` PHP attributes | Drush 12 (2023) | Annotations still work but are legacy |
-| `#[CLI\Command]` Drush attributes | `#[AsCommand]` Symfony attribute | Drush 13.7 (2025) | CLI\Command deprecated, AsCommand is future |
-| `extends DrushCommands` | `extends Command` (Symfony) | Drush 13.7 (2025) | DrushCommands base class deprecated |
-| Manual eval assertion design | Eval-author Opus subagent | Phase 22 (new) | Eliminates 30-min manual bottleneck per phase |
-| Two-tier assertions (static + runtime) | Three-tier (static + runtime + browser) | v4.0 Phase 18 | Browser assertions catch rendering issues |
-
-**Deprecated/outdated:**
-- `drush.services.yml` -- deprecated Drush 12+, removal planned for Drush 14
-- `@command` annotation in docblocks -- deprecated Drush 12, replaced by PHP 8 attributes
-- `DrushCommands` base class -- deprecated Drush 13.7, replaced by Symfony Command
-- `#[CLI\Command]` attribute -- deprecated Drush 13.7, replaced by `#[AsCommand]`
-- `create()` factory method for Drush DI -- superseded by AutowireTrait (still works but not recommended)
+| php-eval for route checking | `drush route --name=X --path=Y` | Drush 10.5+ | 1-line vs 5-line, readable output |
+| No entity CLI commands | `entity:create/save/delete` | Drush 11+ | Proper entity API with hook firing |
+| Manual boilerplate | `drush generate` (50+ generators) | Drush 12+ | phpcs-compliant scaffolding |
+| No cache tag CLI | `drush cache:tags` | Drush 13+ | Direct cache tag invalidation testing |
+| No self-verification habit | Verification recipes in skill | Phase 22 (new) | Agents check their own work |
+| Manual eval assertion design | Eval-author Opus subagent | Phase 22 (new) | Eliminates manual bottleneck |
 
 ## Validation Architecture
 
@@ -365,74 +369,67 @@ Source: [Drush 13.x Command Authoring](https://www.drush.org/13.x/commands/)
 | Property | Value |
 |----------|-------|
 | Framework | Eval pipeline (headless claude -p + eval-grader agent) |
-| Config file | `skills/drupal-drush/evals/evals.json` (new -- Wave 0 gap) |
-| Quick run command | `ddev drush list --filter=module_name` (verifies Drush command discovery) |
+| Config file | `skills/drupal-drush/evals/evals.json` (new) |
+| Quick run command | `drush route --name=my_module.*` (verifies route-level self-verification) |
 | Full suite command | Full A/B eval pipeline (headless with/without runs + grading) |
 
 ### Phase Requirements to Test Map
 
-| Req ID | Behavior | Test Type | Automated Command | File Exists? |
-|--------|----------|-----------|-------------------|-------------|
-| TOOL-01 | Drush skill teaches correct patterns | manual + static | Review SKILL.md content manually; verify WRONG/RIGHT callouts | -- Wave 0 |
-| TOOL-02 | Eval assertions target non-obvious patterns | static | `cat skills/drupal-drush/evals/evals.json \| jq '.evals[0].expectations'` | -- Wave 0 |
-| TOOL-03 | Eval-author produces three-tier assertions | manual | Run eval-author agent with test input; verify output has static + runtime + browser | -- Wave 0 |
-| TOOL-04 | Assertion distribution enforced | manual | Count assertion categories in eval-author output; verify 60/20/20 | -- Wave 0 |
-
-### Sampling Rate
-
-- **Per task commit:** Verify skill file structure, assertion count, agent definition format
-- **Per wave merge:** Run eval-author with Drush skill as test input; verify output quality
-- **Phase gate:** Drush skill evals.json passes format validation; eval-author produces valid JSON output for at least one test scenario
+| Req ID | Behavior | Test Type | File Exists? |
+|--------|----------|-----------|-------------|
+| TOOL-01 | Drush skill teaches usage patterns | manual + static | -- Wave 0 |
+| TOOL-02 | Eval assertions target Drush usage patterns | static | -- Wave 0 |
+| TOOL-03 | Eval-author produces three-tier assertions | manual | -- Wave 0 |
+| TOOL-04 | Assertion distribution enforced | manual | -- Wave 0 |
 
 ### Wave 0 Gaps
 
-- [ ] `skills/drupal-drush/SKILL.md` -- the primary deliverable (does not exist yet)
-- [ ] `skills/drupal-drush/evals/evals.json` -- Drush-specific eval assertions
-- [ ] `.claude/agents/eval-author.md` -- Opus subagent definition
+- [ ] `skills/drupal-drush/SKILL.md` — usage-focused skill (does not exist yet)
+- [ ] `skills/drupal-drush/evals/evals.json` — Drush usage assertions
+- [ ] `skills/drupal-drush/references/command-authoring.md` — command authoring reference
+- [ ] `.claude/agents/eval-author.md` — Opus subagent definition
 
 ## Open Questions
 
-1. **Should the Drush skill teach DrushTestTrait for testing Drush commands?**
-   - What we know: DrushTestTrait exists and is used for functional testing of Drush extensions. The drupal-testing skill already covers PHPUnit patterns.
-   - What's unclear: Whether DrushTestTrait coverage belongs in the Drush skill or the testing skill. Adding it to both would duplicate content.
-   - Recommendation: Include a brief cross-reference in the Drush skill pointing to drupal-testing. Do NOT duplicate DrushTestTrait content. Keep the Drush skill focused on command creation, not command testing.
+1. **Should drush generate be the PRIMARY scaffolding approach?**
+   - What we know: drush generate produces phpcs-compliant code. It has 50+ generators covering modules, controllers, forms, entities, plugins, tests.
+   - What's unclear: Whether agents can reliably use `--answer` flags for non-interactive generation, or if they need the interactive mode. Also unclear: how well ddev environments support drush generate.
+   - Recommendation: Teach drush generate as a powerful option with examples. Let agents decide based on context. Don't make it mandatory — some scaffolding needs custom patterns not covered by generators.
 
-2. **Should the eval-author agent produce browser assertions for the Drush skill?**
-   - What we know: Drush commands have no browser-visible output. Browser assertions test rendered web pages.
-   - What's unclear: Whether the eval-author should always produce all three tiers or skip tiers that don't apply.
-   - Recommendation: The Drush skill's own evals will have NO browser assertions (Drush is CLI-only). The eval-author agent should be taught that browser assertions are tier-optional based on the phase scope. Not every phase needs browser checks.
+2. **How granular should verification recipes be?**
+   - What we know: Current agents don't self-verify at all. Any verification is an improvement.
+   - What's unclear: Whether teaching too many recipes overwhelms the skill's signal.
+   - Recommendation: Focus on the 5-7 highest-impact recipes. Link to Drush docs for the long tail.
 
-3. **#[CLI\Command] vs #[AsCommand] as primary pattern in skill?**
-   - What we know: `#[CLI\Command]` works Drush 12+. `#[AsCommand]` works Drush 13.7+ only but is the future direction. The project targets `^10 || ^11` which maps to Drush 12-13.
-   - What's unclear: How quickly the Drush ecosystem will migrate. Whether `#[CLI\Command]` will be removed in Drush 14 or just deprecated further.
-   - Recommendation: Use `#[CLI\Command]` + `extends DrushCommands` as the PRIMARY pattern (works across Drush 12-13.x). Show `#[AsCommand]` + `extends Command` as the D11/Drush 13.7+ forward-looking pattern. This mirrors the existing skill convention of showing both D10 and D11 syntax.
+3. **Should the skill teach ddev-specific patterns?**
+   - What we know: Our eval pipeline uses ddev. All drush commands are prefixed with `ddev drush`.
+   - What's unclear: Whether the skill should be ddev-agnostic or ddev-aware.
+   - Recommendation: Show commands without `ddev` prefix (standard Drush). Note that in ddev environments, prefix with `ddev drush`. This keeps the skill portable.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- [Drush 13.x Command Authoring](https://www.drush.org/13.x/commands/) -- File location, PHP attributes, class structure, deprecated patterns
-- [Drush 13.x Dependency Injection](https://www.drush.org/13.x/dependency-injection/) -- AutowireTrait, constructor injection, drush.services.yml deprecation
-- [Drush AutowireTrait source](https://github.com/drush-ops/drush/blob/13.x/src/Commands/AutowireTrait.php) -- Verified trait exists in vendor
-- [Drush 13.x Install/Compatibility](https://www.drush.org/13.x/install/) -- Drush 13 supports Drupal 10.2+ and 11, PHP 8.3+
-- [Drush GitHub commands.md](https://github.com/drush-ops/drush/blob/13.x/docs/commands.md) -- Complete command authoring reference
-- Existing eval-grader.md, eval-browser.md -- Agent frontmatter format verified (project-specific)
-- Phase 18 evals.json -- Gold-standard assertion format with 17 assertions, +23.3% delta (project-specific)
-- PITFALLS.md from v5.0 research -- Pitfalls #1 and #2 directly address this phase
+- [Drush 13.x Commands](https://www.drush.org/13.x/commands/) — Complete command inventory
+- [Drush 13.x entity:save](https://www.drush.org/13.x/commands/entity_save/) — Entity save with hook firing
+- [Drush 13.x entity:create](https://www.drush.org/13.x/commands/entity_create/) — Interactive entity creation
+- [Drush 13.x entity:delete](https://www.drush.org/13.x/commands/entity_delete/) — Entity deletion
+- [Drush 13.x core:route](https://www.drush.org/13.x/commands/core_route/) — Route inspection
+- [Drush 13.x watchdog:show](https://www.drush.org/13.x/commands/watchdog_show/) — Log inspection
+- [Drush 13.x php:eval](https://www.drush.org/13.x/commands/php_eval/) — Arbitrary PHP execution
+- [Drush 13.x generate](https://www.drush.org/13.x/commands/generate/) — Code scaffolding
+- [Drush 13.x generators](https://www.drush.org/13.x/generators/) — All available generators
+- Existing eval runtime assertions (v3/v4) — Current Drush usage anti-patterns (project-specific)
 
 ### Secondary (MEDIUM confidence)
-- [Drupalize.Me: Drush Custom Command Tutorials Updated](https://drupalize.me/blog/drush-custom-command-tutorials-updated) -- Migration examples from annotations to attributes, AutowireTrait usage
-- [Drush GitHub releases](https://github.com/drush-ops/drush/releases) -- Drush 13.7 deprecates annotated commands, introduces first-class Symfony Console support
-- [Drush ConfigCommands source](https://github.com/drush-ops/drush/blob/13.x/src/Commands/config/ConfigCommands.php) -- Real-world command example with AutowireTrait
-
-### Tertiary (LOW confidence)
-- Drush 14 plans -- AutowireTrait will be required, drush.services.yml removed. Timeline unclear.
+- [Drush 13.x state:get](https://www.drush.org/13.x/commands/state_get/) — State inspection
+- [Drush 13.x cache:tags](https://www.drush.org/13.x/commands/cache_tags/) — Cache tag invalidation
 
 ## Metadata
 
 **Confidence breakdown:**
-- Standard stack: HIGH -- Drush 13 patterns verified against official docs, AutowireTrait confirmed in vendor directory, existing skill format well-established
-- Architecture: HIGH -- Skill file structure follows 14 existing skills exactly; agent definition follows 3 existing agents exactly; assertion format follows v3/v4 evals exactly
-- Pitfalls: HIGH -- Drush deprecated patterns verified via official docs; tautological assertion risk grounded in empirical Phase 18 data; all prevention strategies are prompt-level rules, not code
+- Standard stack: HIGH — Drush 13 commands verified against official docs
+- Architecture: HIGH — Skill format follows 14 existing skills; agent format follows existing agents
+- Pitfalls: HIGH — Anti-patterns identified from our own eval pipeline (empirical evidence)
 
 **Research date:** 2026-03-09
-**Valid until:** 2026-04-09 (stable -- Drush 13.x is the current major version, agent format is project-internal)
+**Valid until:** 2026-04-09

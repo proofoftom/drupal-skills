@@ -7,8 +7,8 @@
 
 ### Tooling
 
-- [ ] **TOOL-01**: Drush skill teaches Drush 13+ command creation patterns (src/Drush/Commands/, AutowireTrait, #[AsCommand]) with WRONG/RIGHT callouts for deprecated patterns
-- [ ] **TOOL-02**: Drush skill includes eval assertions targeting non-obvious Drush patterns (file location, DI approach, attribute syntax)
+- [ ] **TOOL-01**: Drush skill teaches Drush usage for development: self-verification recipes (route/service/entity/permission inspection via built-in commands), scaffolding via `drush generate`, debugging via `watchdog:show`, and the Drupal-first principle (entity:save over sql:query). Command-authoring patterns preserved as reference file.
+- [ ] **TOOL-02**: Drush skill includes eval assertions targeting Drush usage patterns (built-in commands over raw php-eval, watchdog checks, entity API over SQL, drush generate for scaffolding)
 - [ ] **TOOL-03**: Eval-author Opus subagent designs three-tier assertions (static + runtime + browser) from skill content, module code, and phase prompt
 - [ ] **TOOL-04**: Eval-author enforces assertion category distribution (60% differentiating, 20% wiring, max 20% structural) to prevent tautological assertions
 - [ ] **TOOL-05**: Eval-author output validated against Phase 18 gold-standard before relying on it for new phases

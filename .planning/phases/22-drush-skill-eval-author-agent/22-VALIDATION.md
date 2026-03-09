@@ -19,7 +19,7 @@ created: 2026-03-09
 |----------|-------|
 | **Framework** | Eval pipeline (headless claude -p + eval-grader agent) |
 | **Config file** | `skills/drupal-drush/evals/evals.json` (new — Wave 0 creates) |
-| **Quick run command** | `ddev drush list --filter=module_name` (verifies Drush command discovery) |
+| **Quick run command** | `drush route --name=my_module.*` (verifies route-level self-verification) |
 | **Full suite command** | Full A/B eval pipeline (headless with/without runs + grading) |
 | **Estimated runtime** | ~300 seconds (headless runs + grading) |
 
@@ -27,8 +27,8 @@ created: 2026-03-09
 
 ## Sampling Rate
 
-- **After every task commit:** Verify skill file structure, assertion count, agent definition format
-- **After every plan wave:** Run eval-author with Drush skill as test input; verify output quality
+- **After every task commit:** Verify skill file structure, assertion count, reference file presence
+- **After every plan wave:** Review SKILL.md content for usage focus (not command authoring)
 - **Before `/gsd:verify-work`:** Full suite must be green
 - **Max feedback latency:** 30 seconds (quick checks), 300 seconds (full eval)
 
@@ -38,22 +38,21 @@ created: 2026-03-09
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 22-01-01 | 01 | 1 | TOOL-01 | manual + static | Review SKILL.md content; verify WRONG/RIGHT callouts | ❌ W0 | ⬜ pending |
-| 22-01-02 | 01 | 1 | TOOL-02 | static | `cat skills/drupal-drush/evals/evals.json \| jq '.evals[0].expectations'` | ❌ W0 | ⬜ pending |
-| 22-02-01 | 02 | 1 | TOOL-03 | manual | Run eval-author agent with test input; verify three-tier output | ❌ W0 | ⬜ pending |
-| 22-02-02 | 02 | 1 | TOOL-04 | manual | Count assertion categories in eval-author output; verify 60/20/20 | ❌ W0 | ⬜ pending |
-
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+| 22-01-01 | 01 | 1 | TOOL-01 | manual + static | Review SKILL.md for usage focus; verify WRONG/RIGHT callouts cover php-eval vs drush route, sql:query vs entity:save, manual vs drush generate | -- W0 | pending |
+| 22-01-02 | 01 | 1 | TOOL-02 | static | `cat skills/drupal-drush/evals/evals.json \| jq '.evals[0].expectations'` | -- W0 | pending |
+| 22-02-01 | 02 | 2 | TOOL-03 | manual | Run eval-author agent with test input; verify three-tier output | -- W0 | pending |
+| 22-02-02 | 02 | 2 | TOOL-04 | manual | Count assertion categories in eval-author output; verify 60/20/20 | -- W0 | pending |
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `skills/drupal-drush/SKILL.md` — the primary Drush skill deliverable (does not exist yet)
-- [ ] `skills/drupal-drush/evals/evals.json` — Drush-specific eval assertions
+- [ ] `skills/drupal-drush/SKILL.md` — usage-focused Drush skill
+- [ ] `skills/drupal-drush/evals/evals.json` — Drush usage eval assertions
+- [ ] `skills/drupal-drush/references/command-authoring.md` — command authoring reference
 - [ ] `.claude/agents/eval-author.md` — Opus subagent definition
 
-*All are deliverables, not test infrastructure. No test framework install needed.*
+*All are deliverables, not test infrastructure.*
 
 ---
 
@@ -61,9 +60,9 @@ created: 2026-03-09
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| SKILL.md teaches correct Drush 13+ patterns | TOOL-01 | Semantic quality review | Read SKILL.md; verify src/Drush/Commands/, AutowireTrait, #[AsCommand], WRONG/RIGHT callouts |
+| SKILL.md teaches Drush usage for development | TOOL-01 | Semantic quality review | Read SKILL.md; verify self-verification recipes, drush generate, Drupal-first principle, watchdog debugging |
 | Eval-author produces three-tier output | TOOL-03 | Requires agent execution | Run eval-author with Drush skill + sample module; check static + runtime + browser tiers |
-| Assertion distribution enforced | TOOL-04 | Requires category counting | Count differentiating/wiring/structural in output; verify ≥60/~20/≤20 split |
+| Assertion distribution enforced | TOOL-04 | Requires category counting | Count differentiating/wiring/structural in output; verify >=60/~20/<=20 split |
 
 ---
 

@@ -77,17 +77,17 @@ Full details: milestones/v4.0-ROADMAP.md
 ## Phase Details
 
 ### Phase 22: Drush Skill + Eval-Author Agent
-**Goal**: Eval tooling foundation exists -- a 15th skill teaches Drush command creation and an Opus subagent automates three-tier assertion design
+**Goal**: Eval tooling foundation exists -- a 15th skill teaches Drush USAGE (self-verification, scaffolding, debugging, Drupal-first entity operations) and an Opus subagent automates three-tier assertion design
 **Depends on**: Nothing (first v5.0 phase; builds on shipped v4.0 infrastructure)
 **Requirements**: TOOL-01, TOOL-02, TOOL-03, TOOL-04
 **Success Criteria** (what must be TRUE):
-  1. `skills/drupal-drush/SKILL.md` exists with Drush 13+ patterns (src/Drush/Commands/, AutowireTrait, #[AsCommand]) and WRONG/RIGHT callouts for deprecated patterns
-  2. `skills/drupal-drush/evals/evals.json` contains assertions targeting non-obvious Drush patterns (file location, DI approach, attribute syntax) -- not boilerplate file existence checks
+  1. `skills/drupal-drush/SKILL.md` teaches Drush usage for development: self-verification recipes, `drush generate` scaffolding, debugging via watchdog, and Drupal-first principle (entity:save over sql:query). Command-authoring reference at `references/command-authoring.md`.
+  2. `skills/drupal-drush/evals/evals.json` contains assertions targeting Drush usage patterns (built-in commands over php-eval, watchdog checks, entity API over SQL) -- not boilerplate file existence checks
   3. Eval-author agent (`.claude/agents/eval-author.md`) accepts skill content + module code + phase prompt and outputs three-tier assertions (static + runtime + browser)
   4. Eval-author output enforces assertion category distribution (60% differentiating, 20% wiring, max 20% structural) with explicit tautology rejection
 **Plans:** 2 plans
 Plans:
-- [ ] 22-01-PLAN.md -- Author Drush skill and eval assertions
+- [ ] 22-01-PLAN.md -- Author Drush usage skill and eval assertions
 - [ ] 22-02-PLAN.md -- Create eval-author Opus subagent
 
 ### Phase 23: Skill Gap Fixes + Eval-Author Validation
