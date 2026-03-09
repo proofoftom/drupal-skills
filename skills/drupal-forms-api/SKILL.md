@@ -423,6 +423,66 @@ my_module.settings:
 > WRONG: Using `_controller` to point to a form class in routing.yml. The form will not be processed through Drupal's form builder, losing CSRF protection, validation, and submission handling.
 > RIGHT: Use `_form: '\Drupal\module_name\Form\FormClassName'` in route defaults. Drupal's form builder handles the entire request lifecycle for `_form` routes.
 
+## AJAX form elements
+
+The `#ajax` property triggers server-side callbacks without a full page reload. The `callback` method returns content to replace the `wrapper` element.
+
+```php
+$form['status'] = [
+  '#type' => 'select',
+  '#title' => $this->t('Status'),
+  '#options' => ['draft' => 'Draft', 'published' => 'Published'],
+  '#ajax' => [
+    'callback' => '::statusCallback',
+    'wrapper' => 'status-result',
+  ],
+];
+$form['status_result'] = [
+  '#type' => 'container',
+  '#attributes' => ['id' => 'status-result'],
+];
+// Callback returns the element matching the wrapper ID.
+public function statusCallback(array &$form, FormStateInterface $form_state) {
+  return $form['status_result'];
+}
+```
+
+> WRONG: `'wrapper' => 'status-result'` but target has `'id' => 'result-wrapper'`. AJAX fires but replacement silently fails -- no error, no update. This is the #1 AJAX debugging trap.
+> RIGHT: `#ajax.wrapper` MUST exactly match `#attributes.id` of the container element. Both are plain strings (no `#` prefix).
+
+**AjaxResponse for multi-command callbacks** -- when you need multiple DOM updates, messages, or side effects:
+
+```php
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Ajax\MessageCommand;
+
+public function statusCallback(array &$form, FormStateInterface $form_state) {
+  $response = new AjaxResponse();
+  $response->addCommand(new ReplaceCommand('#status-result', $form['status_result']));
+  $response->addCommand(new MessageCommand($this->t('Status updated.')));
+  return $response;
+}
+```
+
+Return a **render array** for single wrapper replacement (simplest). Return an **AjaxResponse** for multiple DOM updates or side effects.
+**AJAX in tables (unique wrapper per row)** -- for per-entity AJAX like status toggles:
+
+```php
+foreach ($entities as $id => $entity) {
+  $form['tasks'][$id]['status'] = [
+    '#type' => 'select',
+    '#options' => $options,
+    '#default_value' => $entity->get('status')->value,
+    '#ajax' => [
+      'callback' => '::updateTaskStatus',
+      'wrapper' => 'task-row-' . $id,
+    ],
+  ];
+  $form['tasks'][$id]['#attributes']['id'] = 'task-row-' . $id;
+}
+```
+
 ## D10/D11 compatibility
 
 Form API patterns are identical in Drupal 10 and Drupal 11. No attribute syntax changes apply to forms. The `buildForm()`, `validateForm()`, `submitForm()` lifecycle, `ConfigFormBase`, `ConfirmFormBase`, and form alter hooks all work the same across both versions.
