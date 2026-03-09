@@ -5,7 +5,8 @@
 - ✅ **v1.0 Skill Authoring** -- Phases 1-7 (shipped 2026-03-07)
 - ✅ **v2.0 Eval & Optimization Loop** -- Phases 8-12 (shipped 2026-03-08)
 - ✅ **v3.0 Group AI Project Management** -- Phases 13-17 (shipped 2026-03-08)
-- 🚧 **v4.0 UX Overhaul** -- Phases 18-21 (in progress)
+- ✅ **v4.0 UX Overhaul** -- Phases 18-21 (shipped 2026-03-09)
+- 📋 **v5.0 AI Integration & Eval Tooling** -- Phases 22-27 (planned)
 
 ## Phases
 
@@ -50,88 +51,110 @@ Full details: milestones/v3.0-ROADMAP.md
 
 </details>
 
-### v4.0 UX Overhaul (In Progress)
+<details>
+<summary>v4.0 UX Overhaul (Phases 18-21) -- SHIPPED 2026-03-09</summary>
 
-**Milestone Goal:** Transform group_ai_pm from functional admin CRUD into a polished, interactive project management tool -- Vue.js Kanban boards with drag-and-drop, AJAX interactions, and visual polish -- validated through eval-driven development with three-tier assertions (static + runtime + browser).
+- [x] Phase 18: REST API + Vue Infrastructure + Basic Board (3/3 plans)
+- [x] Phase 19: Interactions + Detail Panel + Visual Polish (3/3 plans)
+- [x] Phase 20: Dashboard + List Enhancements (2/2 plans)
+- [x] Phase 21: Testing + Final Eval (2/2 plans)
 
-- [ ] **Phase 18: REST API + Vue Infrastructure + Basic Board** - Working Kanban board with drag-and-drop on a Drupal admin page
-- [ ] **Phase 19: Interactions + Detail Panel + Visual Polish** - Full task management from the board with inline editing and optimistic UI
-- [ ] **Phase 20: Dashboard + List Enhancements** - Enhanced dashboard entry point and AJAX list improvements
-- [ ] **Phase 21: Testing + Final Eval** - Test coverage and three-tier eval results validating skill effectiveness
+Full details: milestones/v4.0-ROADMAP.md
+
+</details>
+
+### v5.0 AI Integration & Eval Tooling
+
+**Milestone Goal:** Add AI-powered project management features to group_ai_pm while first building foundational tooling -- a Drush skill and an eval-author agent -- that makes all subsequent phases more robust and less context-heavy.
+
+- [ ] **Phase 22: Drush Skill + Eval-Author Agent** - Build the 15th skill and automated eval design agent
+- [ ] **Phase 23: Skill Gap Fixes + Eval-Author Validation** - Patch 3 skills and validate eval-author against gold-standard
+- [ ] **Phase 24: AI Task Service + NL Task Creation** - Central AI service layer with natural language task creation
+- [ ] **Phase 25: Batch AI Operations + Agent Tools** - Queue-based batch processing and remaining AiFunctionCall plugins
+- [ ] **Phase 26: Task History Analytics** - Custom history table, Views integration, analytics endpoint and dashboard
+- [ ] **Phase 27: Cross-Cutting Eval + Final Report** - Full pipeline validation measuring v5.0 cumulative impact
 
 ## Phase Details
 
-### Phase 18: REST API + Vue Infrastructure + Basic Board
-**Goal**: Users can view and manage task status via a drag-and-drop Kanban board embedded in the Drupal admin UI, backed by custom REST endpoints and a Vite-built Vue 3 application
-**Depends on**: v3.0 complete (existing module with Project/Task entities, Group integration)
-**Requirements**: API-01, API-02, API-03, API-04, API-05, API-06, API-07, API-08, VUE-01, VUE-02, VUE-03, VUE-04, VUE-05, VUE-06, VUE-07, VUE-08, BOARD-01, BOARD-02, BOARD-03, BOARD-04, BOARD-05, BOARD-06, BOARD-07, BOARD-08, BOARD-09, BOARD-10
+### Phase 22: Drush Skill + Eval-Author Agent
+**Goal**: Eval tooling foundation exists -- a 15th skill teaches Drush command creation and an Opus subagent automates three-tier assertion design
+**Depends on**: Nothing (first v5.0 phase; builds on shipped v4.0 infrastructure)
+**Requirements**: TOOL-01, TOOL-02, TOOL-03, TOOL-04
 **Success Criteria** (what must be TRUE):
-  1. Navigating to /admin/content/project/{id}/board displays a Kanban board with 4 status columns showing that project's tasks as draggable cards
-  2. Dragging a task card from one column to another updates the task's status via a PATCH request with CSRF protection, and the board reflects the change without page reload
-  3. Clicking the "+" button on a column header creates a new task pre-filled with that column's status, and the card appears in the column immediately
-  4. The board page loads with server-rendered initial state (no loading spinner for initial data) and shows loading/empty/error states for subsequent interactions
-  5. A "Board" local task tab appears alongside existing entity tabs, and the board is only accessible to users with appropriate entity-level permissions
-**Plans:** 3 plans
-Plans:
-- [ ] 18-01-PLAN.md -- REST API endpoints (TaskApiController + ProjectApiController + routes)
-- [ ] 18-02-PLAN.md -- Vue build pipeline + Drupal integration (Vite, behaviors bridge, CSRF wrapper, libraries)
-- [ ] 18-03-PLAN.md -- KanbanController page shell + Vue board components (4 components + composable)
+  1. `skills/drupal-drush/SKILL.md` exists with Drush 13+ patterns (src/Drush/Commands/, AutowireTrait, #[AsCommand]) and WRONG/RIGHT callouts for deprecated patterns
+  2. `skills/drupal-drush/evals/evals.json` contains assertions targeting non-obvious Drush patterns (file location, DI approach, attribute syntax) -- not boilerplate file existence checks
+  3. Eval-author agent (`.claude/agents/eval-author.md`) accepts skill content + module code + phase prompt and outputs three-tier assertions (static + runtime + browser)
+  4. Eval-author output enforces assertion category distribution (60% differentiating, 20% wiring, max 20% structural) with explicit tautology rejection
+**Plans**: TBD
 
-### Phase 19: Interactions + Detail Panel + Visual Polish
-**Goal**: Users can manage all task properties directly from the board without navigating to entity edit forms, with optimistic feedback, visual indicators, and polished interaction patterns
-**Depends on**: Phase 18
-**Requirements**: INTERACT-01, INTERACT-02, INTERACT-03, INTERACT-04, INTERACT-05, INTERACT-06, INTERACT-07, VISUAL-01, VISUAL-02, VISUAL-03
+### Phase 23: Skill Gap Fixes + Eval-Author Validation
+**Goal**: Three skill gaps are closed and the eval-author agent is validated against known-good evals before relying on it for new phases
+**Depends on**: Phase 22
+**Requirements**: TOOL-05, TOOL-06, TOOL-07
 **Success Criteria** (what must be TRUE):
-  1. Clicking a task card opens a slide-over panel showing full task metadata, and the board remains visible behind it
-  2. Double-clicking a task title on the card enables inline editing -- Enter saves, Escape cancels, and the update persists after page reload
-  3. Drag-and-drop shows immediate visual feedback (card lift shadow, destination highlight) and rolls back with a toast notification if the server request fails
-  4. Overdue tasks show a red border, due-today tasks show amber, and assignees display as colored-initial avatars on task cards
-  5. The filter bar narrows visible cards by assignee and priority, with active filters shown as dismissible pills and persisted in URL query params
-**Plans:** 3 plans
-Plans:
-- [ ] 19-01-PLAN.md -- PHP backend serialization + DELETE endpoint + JS composables + API wrapper
-- [ ] 19-02-PLAN.md -- TaskCard enhancements (inline edit, due date, avatar) + drag animations + toast integration
-- [ ] 19-03-PLAN.md -- Board-level components (panel, context menu, filter bar, display options) + wiring + Vite rebuild
+  1. Eval-author agent, given Phase 18 inputs, produces assertions that match or exceed the gold-standard Phase 18 evals (17 assertions, +23.3% delta) in quality and distribution
+  2. entities-fields SKILL.md includes bundle_of pattern with hook_update_N() for schema changes
+  3. caching SKILL.md includes lazy_builder pattern and CacheableMetadata bubbling examples
+  4. forms-api SKILL.md includes concrete #ajax patterns (callback, wrapper, AjaxResponse) within the 500-line budget
+**Plans**: TBD
 
-### Phase 20: Dashboard + List Enhancements
-**Goal**: Users have an enhanced dashboard showing project health at a glance, and can toggle task status directly from list views without JavaScript frameworks
-**Depends on**: Phase 18 (uses API-05 endpoint for dashboard data)
-**Requirements**: DASH-01, DASH-02, DASH-03
+### Phase 24: AI Task Service + NL Task Creation
+**Goal**: Users can create tasks from natural language input via both the REST API and AI agent tools
+**Depends on**: Phase 23 (skill patches change eval baselines; must be stable before measuring AI features)
+**Requirements**: AI-01, AI-02, AI-03, AI-04
 **Success Criteria** (what must be TRUE):
-  1. The dashboard page shows project summary cards with task count bars per status and a progress percentage, pulling data from the project summary API endpoint
-  2. Dashboard quick actions (New Project, recent project links, Board links) are visible and functional without scrolling
-  3. Task list pages have inline AJAX status toggle dropdowns that update without page reload, using pure Drupal AJAX (no Vue dependency)
-**Plans:** 2 plans
-Plans:
-- [ ] 20-01-PLAN.md -- Enhanced dashboard with project summary cards, progress bars, quick actions (DASH-01, DASH-02)
-- [ ] 20-02-PLAN.md -- TaskStatusForm with AJAX status toggle dropdowns (DASH-03)
+  1. AiTaskService is injectable by both REST controllers and AiFunctionCall plugins, encapsulating all AI logic in one service
+  2. Module installs and functions normally when the AI module is not present (optional @? dependency verified)
+  3. CreateTaskTool AiFunctionCall plugin creates a Task entity from natural language input, parsing title, description, status, and assignee
+  4. POST endpoint accepts natural language text and returns created task JSON with all parsed fields
+**Plans**: TBD
 
-### Phase 21: Testing + Final Eval
-**Goal**: The complete v4.0 module passes automated tests and coding standards, and three-tier eval results validate that skills produce correct Vue/REST/AJAX wiring
-**Depends on**: Phase 18, Phase 19, Phase 20
-**Requirements**: TEST-01, TEST-02, TEST-03, EVAL-01, EVAL-02, EVAL-03, EVAL-04
+### Phase 25: Batch AI Operations + Agent Tools
+**Goal**: Users can run AI operations on multiple tasks at once, and AI agents have a complete toolkit for task management
+**Depends on**: Phase 24
+**Requirements**: AI-05, AI-06, AI-07
 **Success Criteria** (what must be TRUE):
-  1. Kernel tests pass for all REST endpoints (response shapes, access control, CSRF validation, cache tags)
-  2. Functional tests pass for board page rendering (local task tab present, drupalSettings populated, Vue mount point exists)
-  3. `phpcs --standard=Drupal,DrupalPractice` reports zero errors on all new and modified PHP files
-  4. Browser eval assertions confirm the board renders, drag-and-drop changes task status, and AJAX list toggles function
-  5. Per-phase delta report shows with-plugin vs without-plugin comparison across all three tiers (static + runtime + browser)
-**Plans:** 2 plans
-Plans:
-- [ ] 21-01-PLAN.md -- Design eval assertions (static + runtime + browser targeting drupal-testing skill)
-- [ ] 21-02-PLAN.md -- Execute eval pipeline, grade, compute v4.0 aggregate delta, promote
+  1. BatchUpdateTool processes multiple tasks via Queue API with dry-run mode that reports what would change without persisting
+  2. Queue workers implement three-catch pattern (SuspendQueueException, AiRateLimitException + RequeueException, generic Exception) -- rate-limited items are requeued, not deleted
+  3. UpdateTaskStatusTool AiFunctionCall plugin changes task status through AI agent conversation
+  4. Per-item error reporting returns success/failure status for each task in a batch operation
+**Plans**: TBD
+
+### Phase 26: Task History Analytics
+**Goal**: All task changes are recorded and surfaceable through Views reports, REST API, and the dashboard
+**Depends on**: Phase 25 (history captures both manual and AI-driven mutations)
+**Requirements**: ANLZ-01, ANLZ-02, ANLZ-03, ANLZ-04, ANLZ-05, ANLZ-06
+**Success Criteria** (what must be TRUE):
+  1. `group_ai_pm_task_history` table exists with composite indexes (task_id+timestamp, field_name+timestamp, uid+timestamp) via hook_schema()
+  2. Editing any task field (manually or via AI) creates a history record captured by hook_entity_presave()
+  3. hook_update_N() creates the history table on existing installations (paired with hook_schema())
+  4. History table is exposed to Views via hook_views_data() and produces working Views reports
+  5. Analytics REST endpoint returns aggregated metrics (cycle time, throughput, bottlenecks) via CacheableJsonResponse, and dashboard displays analytics summary
+**Plans**: TBD
+
+### Phase 27: Cross-Cutting Eval + Final Report
+**Goal**: v5.0 cumulative impact is measured with empirical data comparable to v3.0 (+16.7%) and v4.0 (+7.6%) baselines
+**Depends on**: Phase 26 (all features must be complete before cross-cutting measurement)
+**Requirements**: EVAL-01, EVAL-02
+**Success Criteria** (what must be TRUE):
+  1. Cross-cutting eval pass runs the full A/B pipeline using eval-author-designed assertions across all v5.0 features
+  2. v5.0 aggregate delta is computed with per-phase breakdowns and compared to v3.0 (+16.7%) and v4.0 (+7.6%) baselines in a final report
+**Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 18 -> 19 -> 20 -> 21
+Phases execute in numeric order: 22 -> 23 -> 24 -> 25 -> 26 -> 27
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-7 | v1.0 | 26/28 | Shipped | 2026-03-07 |
 | 8-12 | v2.0 | 23/23 | Shipped | 2026-03-08 |
 | 13-17 | v3.0 | Complete | Shipped | 2026-03-08 |
-| 18. REST API + Vue + Board | v4.0 | 0/3 | Planned | - |
-| 19. Interactions + Detail + Visual | v4.0 | 0/3 | Planned | - |
-| 20. Dashboard + List | v4.0 | 0/2 | Planned | - |
-| 21. Testing + Final Eval | v4.0 | 0/2 | Planned | - |
+| 18-21 | v4.0 | 10/10 | Shipped | 2026-03-09 |
+| 22. Drush Skill + Eval-Author Agent | v5.0 | 0/TBD | Not started | - |
+| 23. Skill Gap Fixes + Eval-Author Validation | v5.0 | 0/TBD | Not started | - |
+| 24. AI Task Service + NL Task Creation | v5.0 | 0/TBD | Not started | - |
+| 25. Batch AI Operations + Agent Tools | v5.0 | 0/TBD | Not started | - |
+| 26. Task History Analytics | v5.0 | 0/TBD | Not started | - |
+| 27. Cross-Cutting Eval + Final Report | v5.0 | 0/TBD | Not started | - |
