@@ -87,7 +87,11 @@ Plans:
   3. Drag-and-drop shows immediate visual feedback (card lift shadow, destination highlight) and rolls back with a toast notification if the server request fails
   4. Overdue tasks show a red border, due-today tasks show amber, and assignees display as colored-initial avatars on task cards
   5. The filter bar narrows visible cards by assignee and priority, with active filters shown as dismissible pills and persisted in URL query params
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 19-01-PLAN.md -- PHP backend serialization + DELETE endpoint + JS composables + API wrapper
+- [ ] 19-02-PLAN.md -- TaskCard enhancements (inline edit, due date, avatar) + drag animations + toast integration
+- [ ] 19-03-PLAN.md -- Board-level components (panel, context menu, filter bar, display options) + wiring + Vite rebuild
 
 ### Phase 20: Dashboard + List Enhancements
 **Goal**: Users have an enhanced dashboard showing project health at a glance, and can toggle task status directly from list views without JavaScript frameworks
@@ -122,6 +126,6 @@ Phases execute in numeric order: 18 -> 19 -> 20 -> 21
 | 8-12 | v2.0 | 23/23 | Shipped | 2026-03-08 |
 | 13-17 | v3.0 | Complete | Shipped | 2026-03-08 |
 | 18. REST API + Vue + Board | v4.0 | 0/3 | Planned | - |
-| 19. Interactions + Detail + Visual | v4.0 | 0/TBD | Not started | - |
+| 19. Interactions + Detail + Visual | v4.0 | 0/3 | Planned | - |
 | 20. Dashboard + List | v4.0 | 0/TBD | Not started | - |
 | 21. Testing + Final Eval | v4.0 | 0/TBD | Not started | - |
