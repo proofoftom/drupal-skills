@@ -1,179 +1,88 @@
-# Requirements: Drupal Skills v4.0 — UX Overhaul
+# Requirements: Drupal Skills
 
-**Defined:** 2026-03-08
-**Core Value:** Transform group_ai_pm from functional admin CRUD into a polished, interactive project management tool with Vue.js Kanban boards, AJAX interactions, and visual polish.
+**Defined:** 2026-03-09
+**Core Value:** Claude can generate correct, production-ready Drupal module code across all major development domains when guided by these skills.
 
-## v4.0 Requirements
+## v5.0 Requirements
 
-Requirements for v4.0 milestone. Extends the existing v3.0 module (39 files, entities, Group integration, AI tools all in place). Zero entity schema changes.
+### Tooling
 
-### REST API Layer
+- [ ] **TOOL-01**: Drush skill teaches Drush 13+ command creation patterns (src/Drush/Commands/, AutowireTrait, #[AsCommand]) with WRONG/RIGHT callouts for deprecated patterns
+- [ ] **TOOL-02**: Drush skill includes eval assertions targeting non-obvious Drush patterns (file location, DI approach, attribute syntax)
+- [ ] **TOOL-03**: Eval-author Opus subagent designs three-tier assertions (static + runtime + browser) from skill content, module code, and phase prompt
+- [ ] **TOOL-04**: Eval-author enforces assertion category distribution (60% differentiating, 20% wiring, max 20% structural) to prevent tautological assertions
+- [ ] **TOOL-05**: Eval-author output validated against Phase 18 gold-standard before relying on it for new phases
+- [ ] **TOOL-06**: entities-fields skill updated with bundle_of pattern and hook_update_N() for schema changes
+- [ ] **TOOL-07**: caching skill updated with lazy_builder pattern and CacheableMetadata bubbling
 
-- [ ] **API-01**: Custom REST controller serving tasks grouped by status column for a project (GET endpoint with CacheableJsonResponse)
-- [ ] **API-02**: PATCH endpoint for task status update (drag-and-drop target) with `_csrf_request_header_token` protection
-- [ ] **API-03**: PATCH endpoint for task inline edits (title, priority, assignee) with entity access checks
-- [ ] **API-04**: POST endpoint for task quick-create from board with status pre-fill
-- [ ] **API-05**: GET endpoint for project summary data (task counts per status) for dashboard
-- [ ] **API-06**: Entity-level access checks on all endpoints (not just route-level permission)
-- [ ] **API-07**: `_format: json` route requirement on all API routes for proper JSON error responses
-- [ ] **API-08**: Cache tags on all JSON responses (task:{id}, task_list, project:{id}) for Drupal cache integration
+### AI Features
 
-### Vue Infrastructure
-
-- [ ] **VUE-01**: Vite build pipeline producing IIFE output with stable filenames, committed to js/dist/
-- [ ] **VUE-02**: Vue 3 externalized as separate Drupal library (js/vendor/vue.global.prod.js)
-- [ ] **VUE-03**: Drupal.behaviors bridge with once() guard preventing double-mounting
-- [ ] **VUE-04**: drupalSettings data passing (project ID, API base URL, CSRF token URL, status/priority labels, permissions)
-- [ ] **VUE-05**: core/drupalSettings and core/once declared as library dependencies
-- [ ] **VUE-06**: CSRF token fetched once on mount, cached, included in all mutation requests
-- [ ] **VUE-07**: BEM-namespaced CSS (gapm- prefix) using Claro admin theme CSS custom properties
-- [ ] **VUE-08**: Bundle size under 100 KB gzipped (Vue runtime + SortableJS + app code), loaded only on board route
-
-### Kanban Board (Table Stakes)
-
-- [ ] **BOARD-01**: Kanban board view per project with 4 status columns (To Do, In Progress, Review, Done)
-- [ ] **BOARD-02**: Drag-and-drop between columns via vue-draggable-plus/SortableJS updating task status
-- [ ] **BOARD-03**: Task cards displaying title, priority badge (color-coded), assignee name, due date
-- [ ] **BOARD-04**: Status-colored column headers with task count badges
-- [ ] **BOARD-05**: Board route at /admin/content/project/{project}/board with "Board" local task tab
-- [ ] **BOARD-06**: Loading skeleton, empty column states, and error states
-- [ ] **BOARD-07**: Responsive column layout (4 columns side-by-side at 1200px+, horizontal scroll on narrow)
-- [ ] **BOARD-08**: Keyboard alternative to drag-and-drop for status changes (WCAG 2.5.7 compliance)
-- [ ] **BOARD-09**: Task quick-create via inline title input at column header ("+" button)
-- [ ] **BOARD-10**: Server-rendered initial state via drupalSettings (no extra API call on page load)
-
-### Interactions & Detail
-
-- [ ] **INTERACT-01**: Task detail slide-over panel (right side, board still visible) with full task metadata
-- [ ] **INTERACT-02**: Inline title editing on task cards (click-to-edit, Enter to save, Escape to cancel)
-- [ ] **INTERACT-03**: Optimistic UI updates with error rollback and toast notifications on drag-and-drop
-- [ ] **INTERACT-04**: Context menu on right-click (Change Status, Change Priority, Assign, Edit, Delete)
-- [ ] **INTERACT-05**: Filter bar (assignee, priority) with dismissible pills and URL query param persistence
-- [ ] **INTERACT-06**: Smooth drag animations (card lift shadow, destination highlight, settle easing)
-- [ ] **INTERACT-07**: Drag-and-drop ghost/preview (reduced opacity at source, card follows cursor)
-
-### Visual Polish
-
-- [ ] **VISUAL-01**: Due date visual warnings (red border = overdue, amber = due today, subtle = within 3 days)
-- [ ] **VISUAL-02**: Assignee avatars (user picture or colored initials fallback) on task cards
-- [ ] **VISUAL-03**: Board display options (show/hide card properties, compact vs expanded, localStorage persistence)
-
-### Dashboard & List Enhancements
-
-- [ ] **DASH-01**: Enhanced dashboard with project summary cards showing task count bars per status and progress percentage
-- [ ] **DASH-02**: Dashboard quick actions (New Project, recent project links, Board links)
-- [ ] **DASH-03**: AJAX status toggles on TaskListBuilder rows (Drupal #ajax, no Vue dependency)
-
-### Testing & Eval
-
-- [ ] **TEST-01**: Kernel tests for REST endpoint response shapes and access control
-- [ ] **TEST-02**: Functional tests for board page rendering, local task tab presence, drupalSettings population
-- [ ] **TEST-03**: phpcs compliance on all new and modified PHP files
-- [ ] **EVAL-01**: Static eval assertions targeting wiring (library deps, drupalSettings attachment, CSRF fetch in JS)
-- [ ] **EVAL-02**: Runtime eval assertions (drush-based endpoint verification, module enable, permission checks)
-- [ ] **EVAL-03**: Browser eval assertions (board renders, drag-drop works, AJAX toggles function) via eval-browser
-- [ ] **EVAL-04**: Three-tier eval results per phase with delta measurement (with-plugin vs without-plugin)
-
-## Deferred Requirements
-
-Tracked for v5.0+. Not in current roadmap.
-
-### Keyboard Power User
-
-- **KB-01**: Single-key shortcuts (S=status, P=priority, A=assign, C=create)
-- **KB-02**: Command palette (Ctrl+K) with fuzzy search and action dispatch
-- **KB-03**: Full keyboard navigation (arrow keys between cards/columns, ARIA activedescendant)
-- **KB-04**: Shortcut help overlay (? key)
-
-### Advanced AI (from v3.0 deferrals)
-
-- **AI-06**: AI-powered task creation from natural language
-- **AI-07**: Batch AI operations
-- **AI-08**: AI-suggested task assignments and status updates
+- [ ] **AI-01**: AiTaskService encapsulates all AI logic, injectable by both REST controllers and AiFunctionCall plugins
+- [ ] **AI-02**: AiTaskService uses optional AI dependency (@? injection) so module functions without AI module
+- [ ] **AI-03**: CreateTaskTool AiFunctionCall plugin creates tasks from natural language, following existing CreateProjectTool pattern
+- [ ] **AI-04**: REST endpoint (POST) accepts natural language text and returns created task with parsed fields
+- [ ] **AI-05**: BatchUpdateTool processes multiple tasks via Queue API with dry-run mode and per-item error reporting
+- [ ] **AI-06**: Queue workers implement three-catch pattern (SuspendQueueException, AiRateLimitException + RequeueException, generic Exception)
+- [ ] **AI-07**: UpdateTaskStatusTool AiFunctionCall plugin for AI-driven status changes
 
 ### Analytics
 
-- **DB-01**: Task history tracking database table
-- **DB-02**: Views integration for analytics data
+- [ ] **ANLZ-01**: Custom task history table via hook_schema() with composite indexes (task_id+timestamp, field_name+timestamp, uid+timestamp)
+- [ ] **ANLZ-02**: hook_entity_presave() records all task field changes to history table
+- [ ] **ANLZ-03**: hook_update_N() pairs with hook_schema() for existing installations
+- [ ] **ANLZ-04**: hook_views_data() exposes history table to Views for custom reports
+- [ ] **ANLZ-05**: Analytics REST endpoint returns aggregated metrics via CacheableJsonResponse
+- [ ] **ANLZ-06**: Dashboard integration displays analytics summary with task history metrics
+
+### Validation
+
+- [ ] **EVAL-01**: Cross-cutting eval pass measures v5.0 cumulative impact using eval-author-designed assertions
+- [ ] **EVAL-02**: v5.0 aggregate delta computed and compared to v3.0 (+16.7%) and v4.0 (+7.6%) baselines
+
+## v6+ Requirements
+
+- **AI-DEFER-01**: SuggestAssigneeTool based on workload history (needs sufficient data)
+- **AI-DEFER-02**: Real-time AI chat in Kanban (requires WebSocket)
+- **ANLZ-DEFER-01**: Full burndown charts with Sprint entity
+- **ANLZ-DEFER-02**: Plugin-based analytics engine
 
 ## Out of Scope
 
-Explicitly excluded. Documented to prevent scope creep.
-
 | Feature | Reason |
 |---------|--------|
-| Swimlanes | Filter bar achieves same insight at 10x less complexity |
-| WebSocket real-time updates | Single-user admin context; poll on focus instead |
-| Gantt chart / timeline view | Massive frontend complexity, not a Kanban feature |
-| Custom workflow states | 4 fixed statuses match universal Kanban; existing schema |
-| Sprint/cycle management | Separate sub-module scope |
-| Manual card reordering within columns | Sort deterministically (priority > due date > created) |
-| Rich text editor in cards | Link to entity form for description editing |
-| File attachments on cards | Link to entity form for file management |
-| Activity log per card | Show "Last updated" instead; revision history on entity page |
-| Entity schema changes | Existing Task/Project fields cover all v4.0 features |
-| TypeScript | Haiku generates invalid TS; adds build complexity |
-| CSS frameworks (Tailwind/Bootstrap) | Conflicts with Claro admin theme |
-| Pinia/Vuex state management | ref() + composables sufficient for single-page state |
-| Vue Router | Fights Drupal routing; this is an embedded island, not SPA |
+| AI-suggested assignments | Needs history data; HIGH complexity for LOW eval value now |
+| Real-time AI chat | Duplicates AI Agents chatbot; needs WebSocket |
+| Burndown charts | Requires Sprint entity, story points -- massive scope |
+| AI module 1.3.0-rc2 upgrade | RC not stable, no needed features |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| API-01 | Phase 18 | Pending |
-| API-02 | Phase 18 | Pending |
-| API-03 | Phase 18 | Pending |
-| API-04 | Phase 18 | Pending |
-| API-05 | Phase 18 | Pending |
-| API-06 | Phase 18 | Pending |
-| API-07 | Phase 18 | Pending |
-| API-08 | Phase 18 | Pending |
-| VUE-01 | Phase 18 | Pending |
-| VUE-02 | Phase 18 | Pending |
-| VUE-03 | Phase 18 | Pending |
-| VUE-04 | Phase 18 | Pending |
-| VUE-05 | Phase 18 | Pending |
-| VUE-06 | Phase 18 | Pending |
-| VUE-07 | Phase 18 | Pending |
-| VUE-08 | Phase 18 | Pending |
-| BOARD-01 | Phase 18 | Pending |
-| BOARD-02 | Phase 18 | Pending |
-| BOARD-03 | Phase 18 | Pending |
-| BOARD-04 | Phase 18 | Pending |
-| BOARD-05 | Phase 18 | Pending |
-| BOARD-06 | Phase 18 | Pending |
-| BOARD-07 | Phase 18 | Pending |
-| BOARD-08 | Phase 18 | Pending |
-| BOARD-09 | Phase 18 | Pending |
-| BOARD-10 | Phase 18 | Pending |
-| INTERACT-01 | Phase 19 | Pending |
-| INTERACT-02 | Phase 19 | Pending |
-| INTERACT-03 | Phase 19 | Pending |
-| INTERACT-04 | Phase 19 | Pending |
-| INTERACT-05 | Phase 19 | Pending |
-| INTERACT-06 | Phase 19 | Pending |
-| INTERACT-07 | Phase 19 | Pending |
-| VISUAL-01 | Phase 19 | Pending |
-| VISUAL-02 | Phase 19 | Pending |
-| VISUAL-03 | Phase 19 | Pending |
-| DASH-01 | Phase 20 | Pending |
-| DASH-02 | Phase 20 | Pending |
-| DASH-03 | Phase 20 | Pending |
-| TEST-01 | Phase 21 | Pending |
-| TEST-02 | Phase 21 | Pending |
-| TEST-03 | Phase 21 | Pending |
-| EVAL-01 | Phase 21 | Pending |
-| EVAL-02 | Phase 21 | Pending |
-| EVAL-03 | Phase 21 | Pending |
-| EVAL-04 | Phase 21 | Pending |
+| TOOL-01 | Phase 22 | Pending |
+| TOOL-02 | Phase 22 | Pending |
+| TOOL-03 | Phase 22 | Pending |
+| TOOL-04 | Phase 22 | Pending |
+| TOOL-05 | Phase 23 | Pending |
+| TOOL-06 | Phase 23 | Pending |
+| TOOL-07 | Phase 23 | Pending |
+| AI-01 | Phase 24 | Pending |
+| AI-02 | Phase 24 | Pending |
+| AI-03 | Phase 24 | Pending |
+| AI-04 | Phase 24 | Pending |
+| AI-05 | Phase 25 | Pending |
+| AI-06 | Phase 25 | Pending |
+| AI-07 | Phase 25 | Pending |
+| ANLZ-01 | Phase 26 | Pending |
+| ANLZ-02 | Phase 26 | Pending |
+| ANLZ-03 | Phase 26 | Pending |
+| ANLZ-04 | Phase 26 | Pending |
+| ANLZ-05 | Phase 26 | Pending |
+| ANLZ-06 | Phase 26 | Pending |
+| EVAL-01 | Phase 27 | Pending |
+| EVAL-02 | Phase 27 | Pending |
 
-**Coverage:**
-- v4.0 requirements: 46 total (8 API + 8 VUE + 10 BOARD + 7 INTERACT + 3 VISUAL + 3 DASH + 3 TEST + 4 EVAL)
-- Mapped: 46/46
-- Deferred to v5.0+: 7 (4 keyboard, 3 AI)
-- Out of scope: 14 items
+**Coverage:** 22 requirements, 22 mapped, 0 unmapped
 
 ---
-*Requirements defined: 2026-03-08*
-*Traceability updated: 2026-03-08*
+*Requirements defined: 2026-03-09*
