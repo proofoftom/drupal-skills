@@ -484,6 +484,61 @@ Plugin directory convention: `src/Plugin/{PluginType}/` where `{PluginType}` mat
 
 ## Cross-references
 
+## Third-party plugin types (e.g., AI FunctionCall plugins)
+
+When implementing plugins for contrib modules (not Drupal core blocks), always use the base class from the INSTALLED module, not any outdated base class that may appear in existing code in your current module.
+
+> WRONG: Copying the base class from an existing plugin in your codebase if that plugin uses a deprecated or wrong class. Existing code may reference a non-existent class (e.g., `Drupal\ai_agents\Plugin\AiFunctionCall\AiFunctionCallBase`) that was removed or renamed in the contrib module's current version.
+> RIGHT: When creating a new plugin of a third-party type, look at what the installed contrib module exports as its base class. For example, the Drupal AI module (`drupal/ai`) uses `Drupal\ai\Base\FunctionCallBase` (not `AiFunctionCallBase`). Import from the correct namespace verified in the installed code.
+
+> WRONG: Using docblock annotation syntax (`@AiFunctionCall(...)`) for third-party plugin types that have migrated to PHP attribute syntax (`#[FunctionCall(...)]`). Copying the annotation pattern from existing code when the plugin manager expects attributes causes the plugin to be invisible to the plugin manager.
+> RIGHT: Check whether the third-party plugin manager uses annotation or attribute discovery. For `plugin.manager.ai.function_calls`, plugins must use the `#[FunctionCall]` PHP attribute from `Drupal\ai\Attribute\FunctionCall` with `context_definitions` for inputs. Using `@AiFunctionCall` annotation or a `getArguments()` method means the plugin is never discovered.
+
+### AI FunctionCall plugin pattern (drupal/ai module)
+
+For AI agent tools using the `drupal/ai` module's `plugin.manager.ai.function_calls`:
+
+```php
+use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ai\Attribute\FunctionCall;
+use Drupal\ai\Base\FunctionCallBase;
+use Drupal\ai\Service\FunctionCalling\ExecutableFunctionCallInterface;
+use Drupal\ai\Service\FunctionCalling\FunctionCallInterface;
+
+#[FunctionCall(
+  id: 'my_module:my_tool',
+  function_name: 'my_tool',
+  name: 'My Tool',
+  description: 'Does something useful for the AI agent.',
+  group: 'my_module',
+  context_definitions: [
+    'text' => new ContextDefinition(
+      data_type: 'string',
+      label: new TranslatableMarkup('Text'),
+      required: TRUE,
+    ),
+  ],
+)]
+class MyTool extends FunctionCallBase implements ExecutableFunctionCallInterface {
+
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): FunctionCallInterface|static {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->myService = $container->get('my_module.my_service');
+    return $instance;
+  }
+
+  public function execute(): void {
+    $text = $this->getContextValue('text');
+    // ... do work, then:
+    $this->setOutput('Result message');
+  }
+
+}
+```
+
+Key differences from block plugins: no `__construct()` needed (use setter injection after `parent::create()`), use `$this->getContextValue('field')` to access inputs, use `$this->setOutput('message')` to return results.
+
 See also: **drupal-forms-api** (if installed) for Form API lifecycle used in block config forms (`blockForm`/`blockSubmit` use the same render array form elements as `buildForm()`). If not available, `blockForm()` returns a form render array using the same `#type` elements as regular forms -- `textfield`, `select`, `number`, etc. Use `$form_state->setErrorByName()` in `blockValidate()`.
 
 See also: **drupal-config-storage** (if installed) for Config API patterns. Block config is NOT stored via Config API -- it uses the block placement system. Config API is for module-level settings. If not available, do not use `\Drupal::config()` for block settings -- use `$this->configuration` and `blockSubmit()`.

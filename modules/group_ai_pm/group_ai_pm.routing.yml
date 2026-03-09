@@ -32,7 +32,7 @@ group_ai_pm.project.complete:
 group_ai_pm.api.ai_create:
   path: '/api/kanban/project/{project}/ai-create'
   defaults:
-    _controller: '\Drupal\group_ai_pm\Controller\AiTaskController::createTask'
+    _controller: '\Drupal\group_ai_pm\Controller\AiTaskController::createFromText'
   methods: [POST]
   requirements:
     _permission: 'edit group_ai_pm task'
