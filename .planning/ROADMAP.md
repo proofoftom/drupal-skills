@@ -113,7 +113,10 @@ Plans:
   2. Module installs and functions normally when the AI module is not present (optional @? dependency verified)
   3. CreateTaskTool AiFunctionCall plugin creates a Task entity from natural language input, parsing title, description, status, and assignee
   4. POST endpoint accepts natural language text and returns created task JSON with all parsed fields
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 24-01-PLAN.md -- Design eval assertions using eval-author process
+- [ ] 24-02-PLAN.md -- Run A/B eval pipeline, grade, iterate, promote code
 
 ### Phase 25: Batch AI Operations + Agent Tools
 **Goal**: Users can run AI operations on multiple tasks at once, and AI agents have a complete toolkit for task management
@@ -160,7 +163,7 @@ Phases execute in numeric order: 22 -> 23 -> 24 -> 25 -> 26 -> 27
 | 18-21 | v4.0 | 10/10 | Shipped | 2026-03-09 |
 | 22. Drush Skill + Eval-Author Agent | v5.0 | 2/2 | Complete | 2026-03-09 |
 | 23. Skill Gap Fixes + Eval-Author Validation | 2/2 | Complete    | 2026-03-09 | - |
-| 24. AI Task Service + NL Task Creation | v5.0 | 0/TBD | Not started | - |
+| 24. AI Task Service + NL Task Creation | v5.0 | 0/2 | Planned | - |
 | 25. Batch AI Operations + Agent Tools | v5.0 | 0/TBD | Not started | - |
 | 26. Task History Analytics | v5.0 | 0/TBD | Not started | - |
 | 27. Cross-Cutting Eval + Final Report | v5.0 | 0/TBD | Not started | - |
