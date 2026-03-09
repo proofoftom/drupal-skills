@@ -12,8 +12,8 @@
 - [x] **TOOL-03**: Eval-author Opus subagent designs three-tier assertions (static + runtime + browser) from skill content, module code, and phase prompt
 - [x] **TOOL-04**: Eval-author enforces assertion category distribution (60% differentiating, 20% wiring, max 20% structural) to prevent tautological assertions
 - [ ] **TOOL-05**: Eval-author output validated against Phase 18 gold-standard before relying on it for new phases
-- [ ] **TOOL-06**: entities-fields skill updated with bundle_of pattern and hook_update_N() for schema changes
-- [ ] **TOOL-07**: caching skill updated with lazy_builder pattern and CacheableMetadata bubbling
+- [x] **TOOL-06**: entities-fields skill updated with bundle_of pattern and hook_update_N() for schema changes
+- [x] **TOOL-07**: caching skill updated with lazy_builder pattern and CacheableMetadata bubbling
 
 ### AI Features
 
@@ -64,8 +64,8 @@
 | TOOL-03 | Phase 22 | Complete |
 | TOOL-04 | Phase 22 | Complete |
 | TOOL-05 | Phase 23 | Pending |
-| TOOL-06 | Phase 23 | Pending |
-| TOOL-07 | Phase 23 | Pending |
+| TOOL-06 | Phase 23 | Complete |
+| TOOL-07 | Phase 23 | Complete |
 | AI-01 | Phase 24 | Pending |
 | AI-02 | Phase 24 | Pending |
 | AI-03 | Phase 24 | Pending |
