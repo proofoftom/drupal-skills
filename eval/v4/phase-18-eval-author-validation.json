@@ -1,0 +1,185 @@
+{
+  "_meta": {
+    "type": "eval-author-validation",
+    "description": "Assertions produced by following the eval-author agent process with Phase 18 inputs, for validation against gold-standard phase-18-evals.json",
+    "generated": "2026-03-09",
+    "gold_standard_ref": "eval/v4/phase-18-evals.json",
+    "gold_standard_count": 17,
+    "gold_standard_delta": "+23.3%",
+    "process": "6-step eval-author agent process executed manually: read skills, read prompt, read existing code, read gold-standard, design assertions, tautology self-check"
+  },
+  "phase": "18-rest-api-vue-infrastructure-basic-board",
+  "skills_tested": [
+    "drupal-routing-controllers",
+    "drupal-access-security",
+    "drupal-caching",
+    "drupal-theming",
+    "drupal-module-scaffold"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Read the existing Drupal module at /tmp/phase18-VARIANT/web/modules/custom/group_ai_pm/ to understand its current code. This module has Project and Task content entities with CRUD routes, entity forms, access control handlers, dynamic permissions, a settings form, dashboard controller, a ProjectStatusBlock block plugin, Views integration, Twig templates, cron/queue processing, and AI agent tools.\n\nExtend this module with a Kanban board feature that adds REST API endpoints and a Vue.js-powered interactive board. Implement the following:\n\n1. **REST API Endpoints (Custom Controllers)**: Create custom controllers (NOT REST resource plugins, NOT JSON:API) for the Kanban board data:\n   - `TaskApiController` with these methods:\n     a. `kanban(ProjectInterface $project)` — GET endpoint returning all tasks for a project grouped by status columns (todo, in_progress, review, done) as JSON. Each task serialized with: id, title, status, priority, assignee (id + name or null), dueDate, created, changed, editUrl. Include cache tags so the response invalidates when tasks change.\n     b. `updateStatus(TaskInterface $task, Request $request)` — PATCH endpoint that reads new status from JSON body, validates it's an allowed value, updates the task, returns updated task JSON. Must verify the user can update this specific task entity.\n     c. `updateTask(TaskInterface $task, Request $request)` — PATCH endpoint for editing title, priority, or assignee. Validates inputs, returns updated task JSON. Must verify entity-level update access.\n     d. `quickCreate(ProjectInterface $project, Request $request)` — POST endpoint that creates a new task with title from JSON body, defaults status to 'todo' and priority to 'medium'. Returns 201 with new task JSON. Must check both project view access and task create access.\n   - `ProjectApiController` with:\n     e. `summary(ProjectInterface $project)` — GET endpoint returning task counts per status column. Include cache tags.\n\n2. **API Routes**: Add 5 routes in routing.yml for the endpoints above. All API routes should:\n   - Return JSON error responses (not HTML) for 403/404/422 errors\n   - Use entity parameter upcasting for {project} and {task} parameters\n   - Protect mutation routes (PATCH, POST) against CSRF attacks for JavaScript callers (the existing project.complete route uses _csrf_token for server-rendered links — API routes called from JavaScript need a DIFFERENT CSRF mechanism that uses request headers)\n   - Be treated as admin routes\n\n3. **Vue.js Build Pipeline**: Set up a Vite-based build system in the module's js/ directory:\n   - package.json with vue, vue-draggable-plus, sortablejs as dependencies, vite + @vitejs/plugin-vue as devDependencies\n   - Vite config that builds to IIFE format with stable filenames (no hashes), Vue externalized as a global\n   - Copy Vue production build to js/vendor/vue.global.prod.js\n   - Build output to js/dist/kanban.js and js/dist/kanban.css\n   - js/.gitignore for node_modules/ only (dist/ and vendor/ are committed)\n\n4. **Drupal Integration Layer**:\n   - main.js entry point that wraps Vue app creation in Drupal.behaviors with a guard to prevent double-mounting when Drupal re-attaches behaviors to AJAX-inserted content (use core's once() function)\n   - CSRF-aware API wrapper (js/src/api/drupal.js) that fetches a token from /session/token and includes it as X-CSRF-Token header on mutation requests\n   - Libraries.yml: define 'vue' library (header, weight -20) and 'kanban' library with dependencies on the vue library, core/drupal, core/drupalSettings, and core/once\n   - Add a theme hook for the kanban board in hook_theme() with project variable\n   - Create Twig template with a #kanban-app div mount point\n\n5. **KanbanController**: Create a Drupal page controller for the board:\n   - Route at /admin/content/project/{project}/board\n   - Returns a render array using the kanban theme hook\n   - Attaches the kanban library\n   - Populates drupalSettings.groupAiPm.kanban with ALL data Vue needs: projectId, projectTitle, apiBaseUrl, csrfTokenUrl, columns config, status labels, priority labels, tasks grouped by status, and user permissions (createTask, editAnyTask)\n   - This is server-rendered initial state — Vue hydrates from drupalSettings, no extra API call on page load\n\n6. **Board Local Task Tab**: Add a 'Board' tab on the project entity page (alongside View, Edit, Delete) using the local task link system.\n\n7. **Vue Components**:\n   - KanbanBoard.vue — root component rendering 4 status columns, error display\n   - KanbanColumn.vue — uses VueDraggable from vue-draggable-plus for drag-and-drop between columns\n   - TaskCard.vue — shows title, priority badge, assignee, due date. Includes a 'Move to...' dropdown menu as keyboard-accessible alternative to drag-and-drop (WCAG 2.5.7)\n   - QuickCreateForm.vue — inline title input that appears when clicking '+' on column header\n   - useKanban.js composable — manages reactive board state, API calls with optimistic updates and error rollback\n\n8. **Kanban CSS**: BEM-namespaced styles with 'gapm-' prefix. 4 columns side-by-side at 1200px+, horizontal scroll on narrow viewports. Priority-colored left borders on task cards. Status-colored column headers.\n\nCreate all new files and modify existing files in /tmp/phase18-VARIANT/web/modules/custom/group_ai_pm/\nAfter creating/modifying files, run: cd /tmp/phase18-VARIANT && ddev drush cr 2>/dev/null; true\nThen build the Vue app: cd /tmp/phase18-VARIANT/web/modules/custom/group_ai_pm/js && npm install && npx vite build 2>/dev/null; true\nDo NOT ask questions -- just create the code.",
+      "expected_output": "Extended module with TaskApiController and ProjectApiController using CacheableJsonResponse, 5 API routes with _csrf_request_header_token and _format:json, Vite IIFE build pipeline, Drupal.behaviors bridge with once() guard, CSRF-aware API wrapper, KanbanController with drupalSettings, Board local task tab, 4 Vue components with VueDraggable and keyboard status menu, useKanban composable.",
+      "expectations": [
+        "API mutation routes (PATCH and POST) specify _csrf_request_header_token: 'TRUE' in their route requirements, NOT _csrf_token: 'TRUE' (the existing module uses _csrf_token for server-rendered action links like project.complete, but API routes called from JavaScript fetch() must use _csrf_request_header_token which validates a token sent via X-CSRF-Token request header -- _csrf_token requires the token as a URL query parameter which JavaScript callers do not provide)",
+        "Every API route definition in routing.yml includes _format: json in the requirements section (without _format: json, Drupal's exception subscriber renders 403, 404, and 422 errors as full HTML pages instead of JSON objects -- JavaScript callers receive unparseable HTML error responses)",
+        "GET API endpoints use CacheableJsonResponse from Drupal\\Core\\Cache\\CacheableJsonResponse instead of plain Symfony JsonResponse (CacheableJsonResponse implements CacheableResponseInterface allowing Drupal's Dynamic Page Cache to cache and properly invalidate responses -- plain JsonResponse bypasses the page cache entirely, forcing a full database query on every request)",
+        "API controllers that load entities add CacheableMetadata with cache tags via addCacheableDependency() for each entity loaded, plus list-level tags like 'task_list' for collection endpoints (without per-entity cache tags, updating or deleting a single task does not invalidate the cached Kanban board response -- users see stale data until a manual cache clear)",
+        "API controllers perform entity-level access checks using $entity->access('update') or $entity->access('view') rather than relying solely on route-level _permission checks (route permissions only verify 'can this user reach this URL' while entity access handlers check 'can this user act on THIS specific entity' -- essential for own-vs-any permission patterns where user A cannot edit user B's tasks)",
+        "API controller classes inject dependencies via the create() + __construct() factory pattern using ContainerInterface, not via static \\Drupal:: service locator calls (\\Drupal::entityTypeManager() and \\Drupal::currentUser() in controller methods bypass dependency injection, making the code untestable and violating Drupal coding standards -- the routing-controllers skill identifies this as the #1 DI violation)",
+        "All new routes including API routes and the board page route include options._admin_route: TRUE in their route definitions (routes under /admin/ path prefix do NOT automatically inherit the admin theme -- without _admin_route: TRUE, these routes render with the frontend theme, breaking the admin UI appearance)",
+        "Route definitions for API endpoints with custom entity type parameters ({project}, {task}) include explicit entity upcasting configuration via options.parameters.{param}.type: 'entity:{entity_type}' (Drupal auto-detects upcasting only for core entity types like {node} and {user} -- custom entity types like 'project' and 'task' require explicit configuration or the controller receives raw ID strings instead of loaded entity objects)",
+        "The kanban library definition in libraries.yml declares dependencies on both core/drupalSettings AND core/once (without the core/drupalSettings dependency, Drupal may inject the drupalSettings script tag after the kanban JS, causing 'drupalSettings is undefined' errors; without core/once, the once() function used in the behaviors bridge is undefined)",
+        "The main.js Drupal.behaviors entry point uses the once() function from Drupal core to guard Vue app mounting, preventing duplicate Vue instances when Drupal re-attaches behaviors after AJAX content insertion (without once(), each AJAX response triggers Drupal.behaviors.attach() again, mounting another Vue instance on #kanban-app -- causing doubled rendering, conflicting event handlers, and memory leaks)",
+        "The KanbanController populates drupalSettings with pre-loaded task data grouped by status so the Vue app can hydrate immediately from server-rendered state without making an extra API call on initial page load (server-side data injection via #attached.drupalSettings eliminates the loading spinner delay and extra HTTP round-trip -- the controller loads entities, serializes them to arrays, and passes them through drupalSettings)",
+        "The KanbanController returns a render array using '#theme' => 'group_ai_pm_kanban' or equivalent custom theme hook, NOT inline HTML or raw markup strings (render arrays with #theme go through Drupal's full render pipeline -- enabling caching, theme overridability by site themes, hook_preprocess, and automatic XSS protection; raw markup bypasses all of these)",
+        "A Board local task tab is defined in group_ai_pm.links.task.yml with base_route set to entity.project.canonical so it appears alongside the existing View, Edit, and Delete tabs on the project entity page (local tasks without base_route appear as standalone menu items or fail to render in the tab group entirely)",
+        "The Vite build configuration outputs the Vue app in IIFE format, not ES modules or UMD (Drupal's library system loads JavaScript via traditional script tags and does not support ES module imports -- IIFE wraps the entire app in a self-executing function compatible with script tag loading)",
+        "The JavaScript API wrapper fetches a CSRF token from /session/token and includes it as an X-CSRF-Token header on mutation requests (Drupal's _csrf_request_header_token route requirement validates exactly this header name -- using a different header, omitting the header, or sending the token in the request body results in 403 Forbidden responses on all PATCH/POST API calls)",
+        "The Vite rollup configuration externalizes Vue as a global variable (via rollupOptions.external and output.globals mapping 'vue' to 'Vue') because Vue is loaded separately from js/vendor/vue.global.prod.js as its own Drupal library (bundling Vue into kanban.js would duplicate the Vue runtime and create conflicts with the separate global Vue instance, potentially doubling the JavaScript payload)",
+        "Task serialization converts Unix timestamps from getCreatedTime()/getChangedTime() (which return seconds since epoch) to ISO 8601 date strings using date('c', $timestamp) or equivalent before including them in JSON API responses (JavaScript's new Date() interprets bare numeric values as milliseconds, not seconds -- passing Unix timestamp 1741500000 produces a date in January 1970 instead of March 2025; ISO 8601 strings like '2026-03-09T12:00:00+00:00' parse correctly in all browsers)"
+      ]
+    }
+  ],
+  "runtime_assertions": [
+    {
+      "id": "rt-1",
+      "name": "Module enables cleanly after Phase 18 changes",
+      "command": "ddev drush cr && ddev drush pm:list --status=enabled 2>&1 | grep -q group_ai_pm && echo PASS || echo FAIL",
+      "expected": "PASS",
+      "rationale": "Baseline sanity -- any PHP syntax error, broken service definition, or namespace mismatch prevents module from loading",
+      "category": "wiring"
+    },
+    {
+      "id": "rt-2",
+      "name": "At least one API route is registered in the router",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $found = FALSE; foreach (['/api/group-ai-pm', '/api/kanban', '/api/project', '/api/task'] as $pattern) { $routes = $provider->getRoutesByPattern($pattern); if (count(iterator_to_array($routes)) > 0) { $found = TRUE; break; } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Verifies at least one API route was registered -- flexible path matching covers multiple naming conventions",
+      "category": "wiring"
+    },
+    {
+      "id": "rt-3",
+      "name": "Board page route exists",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $found = FALSE; foreach (['group_ai_pm.project.board', 'group_ai_pm.board', 'group_ai_pm.kanban', 'group_ai_pm.project.kanban', 'group_ai_pm.kanban_board'] as $name) { try { $provider->getRouteByName($name); $found = TRUE; break; } catch (\\Exception $e) {} } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Verifies the board controller page route was registered (checks multiple naming conventions)",
+      "category": "wiring"
+    },
+    {
+      "id": "rt-4",
+      "name": "Board route has _admin_route: TRUE option",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); foreach (['group_ai_pm.project.board', 'group_ai_pm.board', 'group_ai_pm.kanban', 'group_ai_pm.project.kanban', 'group_ai_pm.kanban_board'] as $name) { try { $route = $provider->getRouteByName($name); if ($route->getOption('_admin_route')) { echo 'PASS'; exit; } } catch (\\Exception $e) {} } echo 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Board route must use admin theme -- without _admin_route: TRUE, admin pages render with frontend theme",
+      "category": "differentiating"
+    },
+    {
+      "id": "rt-5",
+      "name": "Kanban theme hook is registered",
+      "command": "ddev drush php-eval \"$hooks = \\Drupal::service('theme.registry')->get(); $found = FALSE; foreach (array_keys($hooks) as $hook) { if (strpos($hook, 'kanban') !== FALSE || strpos($hook, 'board') !== FALSE) { if (strpos($hook, 'group_ai_pm') !== FALSE) { $found = TRUE; break; } } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Verifies hook_theme() registered a kanban/board theme hook (not just that a template file exists)",
+      "category": "wiring"
+    },
+    {
+      "id": "rt-6",
+      "name": "At least one API mutation route uses _csrf_request_header_token",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $all = $provider->getAllRoutes(); $found = FALSE; foreach ($all as $name => $route) { if (strpos($name, 'group_ai_pm') !== FALSE) { $reqs = $route->getRequirements(); if (isset($reqs['_csrf_request_header_token'])) { $found = TRUE; break; } } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Mutation API routes must use _csrf_request_header_token (header-based CSRF for JavaScript callers) not _csrf_token (query-string CSRF for server-rendered links)",
+      "category": "differentiating"
+    },
+    {
+      "id": "rt-7",
+      "name": "At least one API route has _format: json requirement",
+      "command": "ddev drush php-eval \"$provider = \\Drupal::service('router.route_provider'); $all = $provider->getAllRoutes(); $found = FALSE; foreach ($all as $name => $route) { if (strpos($name, 'group_ai_pm') !== FALSE && strpos($name, 'api') !== FALSE) { $reqs = $route->getRequirements(); if (isset($reqs['_format']) && $reqs['_format'] === 'json') { $found = TRUE; break; } } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "API routes need _format: json so Drupal returns JSON error responses, not HTML pages",
+      "category": "differentiating"
+    },
+    {
+      "id": "rt-8",
+      "name": "TaskApiController class is autoloadable",
+      "command": "ddev drush php-eval \"echo class_exists('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\TaskApiController') ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Controller must be in correct PSR-4 namespace path for autoloading",
+      "category": "wiring"
+    },
+    {
+      "id": "rt-9",
+      "name": "KanbanController class is autoloadable",
+      "command": "ddev drush php-eval \"echo class_exists('\\\\Drupal\\\\group_ai_pm\\\\Controller\\\\KanbanController') ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Board page controller must be in correct PSR-4 namespace path",
+      "category": "wiring"
+    },
+    {
+      "id": "rt-10",
+      "name": "Kanban library is defined and discoverable",
+      "command": "ddev drush php-eval \"$libs = \\Drupal::service('library.discovery')->getLibrariesByExtension('group_ai_pm'); echo isset($libs['kanban']) ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Kanban library must be registered in libraries.yml for the Vue app assets to load",
+      "category": "wiring"
+    },
+    {
+      "id": "rt-11",
+      "name": "Kanban library declares core/drupalSettings dependency",
+      "command": "ddev drush php-eval \"$lib = \\Drupal::service('library.discovery')->getLibraryByName('group_ai_pm', 'kanban'); $deps = $lib['dependencies'] ?? []; $found = FALSE; foreach ($deps as $dep) { if (strpos($dep, 'drupalSettings') !== FALSE) { $found = TRUE; break; } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Without core/drupalSettings dependency, drupalSettings may load after kanban JS causing undefined errors",
+      "category": "differentiating"
+    },
+    {
+      "id": "rt-12",
+      "name": "Board local task tab exists with correct base_route",
+      "command": "ddev drush php-eval \"$manager = \\Drupal::service('plugin.manager.menu.local_task'); $defs = $manager->getDefinitions(); $found = FALSE; foreach ($defs as $id => $def) { if ((strpos($id, 'board') !== FALSE || strpos($id, 'kanban') !== FALSE) && isset($def['base_route']) && $def['base_route'] === 'entity.project.canonical') { $found = TRUE; break; } } echo $found ? 'PASS' : 'FAIL';\"",
+      "expected": "PASS",
+      "rationale": "Board tab must appear on project entity page via local task link with correct base_route grouping",
+      "category": "wiring"
+    }
+  ],
+  "assertion_distribution": {
+    "static": {
+      "differentiating": 17,
+      "wiring": 0,
+      "structural": 0,
+      "total": 17,
+      "differentiating_pct": "100%",
+      "wiring_pct": "0%",
+      "structural_pct": "0%"
+    },
+    "runtime": {
+      "differentiating": 4,
+      "wiring": 8,
+      "structural": 0,
+      "total": 12,
+      "differentiating_pct": "33%",
+      "wiring_pct": "67%",
+      "structural_pct": "0%"
+    },
+    "browser": 0,
+    "notes": "All 17 static assertions are differentiating (100%), matching gold-standard distribution. Runtime assertions are split between differentiating (patterns that skills uniquely teach) and wiring (functional connectivity). No structural assertions -- file existence tests were rejected as tautological. No browser assertions -- Phase 18 UI is Vue-rendered client-side, requiring build step; static and runtime assertions provide sufficient coverage."
+  },
+  "core_differentiator_coverage": {
+    "csrf_request_header_token": true,
+    "format_json": true,
+    "cacheable_json_response": true,
+    "entity_upcasting_config": true,
+    "once_guard": true,
+    "covered": 5,
+    "total": 5,
+    "note": "All 5 core Phase 18 differentiators are covered by static assertions"
+  },
+  "tautology_check": {
+    "rejected_patterns": [
+      "Rejected 'Module has .info.yml file' -- every Drupal module has this, not skill-dependent",
+      "Rejected 'TaskApiController class extends ControllerBase' -- standard base class, Haiku always uses it",
+      "Rejected 'Controller file exists at expected path' -- file existence does not test code quality",
+      "Rejected 'Module enables cleanly' as sole assertion -- necessary but not differentiating (kept as rt-1 alongside differentiating runtime checks)",
+      "Rejected 'service is defined in services.yml' -- basic wiring, not a pattern skills uniquely teach"
+    ],
+    "all_assertions_pass_tautology_test": true
+  }
+}
