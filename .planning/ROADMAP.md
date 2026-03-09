@@ -116,7 +116,10 @@ Plans:
   3. `phpcs --standard=Drupal,DrupalPractice` reports zero errors on all new and modified PHP files
   4. Browser eval assertions confirm the board renders, drag-and-drop changes task status, and AJAX list toggles function
   5. Per-phase delta report shows with-plugin vs without-plugin comparison across all three tiers (static + runtime + browser)
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 21-01-PLAN.md -- Design eval assertions (static + runtime + browser targeting drupal-testing skill)
+- [ ] 21-02-PLAN.md -- Execute eval pipeline, grade, compute v4.0 aggregate delta, promote
 
 ## Progress
 
@@ -131,4 +134,4 @@ Phases execute in numeric order: 18 -> 19 -> 20 -> 21
 | 18. REST API + Vue + Board | v4.0 | 0/3 | Planned | - |
 | 19. Interactions + Detail + Visual | v4.0 | 0/3 | Planned | - |
 | 20. Dashboard + List | v4.0 | 0/2 | Planned | - |
-| 21. Testing + Final Eval | v4.0 | 0/TBD | Not started | - |
+| 21. Testing + Final Eval | v4.0 | 0/2 | Planned | - |
