@@ -347,7 +347,7 @@ class MyController extends ControllerBase {
 > **CRITICAL -- Avoid static \Drupal:: calls in controllers and services:**
 > WRONG: `\Drupal::service('my_service')` or `\Drupal::entityTypeManager()` inside controller methods or service classes.
 > RIGHT: Inject services via `create()` + constructor in controllers, or via services.yml in services. This is the #1 most common DI violation.
-> Static \Drupal:: calls are acceptable in `.module` files and procedural hooks where constructor injection is unavailable (Sipos, Ch. 2).
+> Static \Drupal:: calls are acceptable in `.module` files and procedural hooks where constructor injection is unavailable (these are procedural contexts where the service container is not available).
 
 The DI flow works like this:
 1. Drupal finds the route and resolves the controller.
