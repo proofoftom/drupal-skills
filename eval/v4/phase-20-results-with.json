@@ -1,0 +1,183 @@
+{
+  "variant": "with",
+  "phase": "20-dashboard-list-enhancements",
+  "static_results": [
+    {
+      "id": 1,
+      "description": "DashboardController uses #theme render array, not inline #markup",
+      "result": "PASS",
+      "reason": "DashboardController.php line 72 and 152 both use '#theme' => 'group_ai_pm_dashboard', never '#markup'"
+    },
+    {
+      "id": 2,
+      "description": "hook_theme() registers group_ai_pm_dashboard with variables defaults",
+      "result": "PASS",
+      "reason": "group_ai_pm.module lines 37-45 declare group_ai_pm_dashboard with variables: projects=>[], empty=>FALSE, recent_projects=>[], quick_action_new_project_url=>NULL, attributes=>NULL — all with defaults. 'projects' and 'quick_action_new_project_url' are equivalent to the described 'project_cards' and 'quick_actions' per '(or equivalent keys)' language"
+    },
+    {
+      "id": 3,
+      "description": "Dashboard Twig template filename follows underscore-to-hyphen convention",
+      "result": "PASS",
+      "reason": "Template file is group-ai-pm-dashboard.html.twig matching hook name group_ai_pm_dashboard with underscores converted to hyphens"
+    },
+    {
+      "id": 4,
+      "description": "DashboardController attaches dashboard library in same render array as #theme",
+      "result": "PASS",
+      "reason": "DashboardController.php: both the empty-state (line 76-84) and the main (line 157-165) render arrays include '#attached' => ['library' => ['group_ai_pm/dashboard']] in the same array as '#theme'"
+    },
+    {
+      "id": 5,
+      "description": "#cache includes list tags AND per-entity getCacheTags() or addCacheableDependency()",
+      "result": "FAIL",
+      "reason": "DashboardController.php uses only static list tags 'project_list' and 'task_list' (line 161-162). No call to $entity->getCacheTags() or addCacheableDependency() found anywhere in the controller — individual entity cache tags are missing"
+    },
+    {
+      "id": 6,
+      "description": "#cache contexts includes user.permissions",
+      "result": "PASS",
+      "reason": "DashboardController.php line 163: 'contexts' => ['user.permissions'] is present in both render arrays"
+    },
+    {
+      "id": 7,
+      "description": "TaskStatusForm route uses _form key not _controller",
+      "result": "PASS",
+      "reason": "group_ai_pm.routing.yml line 136: '_form: \\Drupal\\group_ai_pm\\Form\\TaskStatusForm' is used correctly"
+    },
+    {
+      "id": 8,
+      "description": "TaskStatusForm route includes _admin_route: TRUE",
+      "result": "PASS",
+      "reason": "group_ai_pm.routing.yml line 141: '_admin_route: TRUE' is present under the task_status_form route options"
+    },
+    {
+      "id": 9,
+      "description": "TaskStatusForm uses DI via create() factory and constructor injection",
+      "result": "PASS",
+      "reason": "TaskStatusForm.php lines 38-50: constructor injects EntityTypeManagerInterface and DateFormatterInterface; create() factory at line 46 retrieves them from container. No static \\Drupal:: calls used"
+    },
+    {
+      "id": 10,
+      "description": "DashboardController maintains DI create() and constructor injection after rewrite",
+      "result": "PASS",
+      "reason": "DashboardController.php lines 38-51: constructor injects EntityTypeManagerInterface and DateFormatterInterface; create() factory at line 46 retrieves them from container. No ControllerBase lazy methods used"
+    },
+    {
+      "id": 11,
+      "description": "Board URL generated via Url::fromRoute(), not hardcoded path",
+      "result": "PASS",
+      "reason": "DashboardController.php line 131: 'board_url' => Url::fromRoute('group_ai_pm.kanban_board', ['project' => $project->id()])->toString() — route-based generation"
+    },
+    {
+      "id": 12,
+      "description": "TaskStatusForm extends FormBase",
+      "result": "PASS",
+      "reason": "TaskStatusForm.php line 14: 'class TaskStatusForm extends FormBase' — not EntityListBuilder or any other class"
+    },
+    {
+      "id": 13,
+      "description": "buildForm uses '#type' => 'table', not '#theme' => 'table' or raw HTML",
+      "result": "PASS",
+      "reason": "TaskStatusForm.php line 76: '#type' => 'table' is used, enabling form element embedding with proper AJAX support"
+    },
+    {
+      "id": 14,
+      "description": "Dashboard library entry includes dependencies key with core/drupal",
+      "result": "FAIL",
+      "reason": "group_ai_pm.libraries.yml lines 13-17: dashboard library has version and css keys but NO dependencies key — core/drupal dependency is absent. Only the kanban library (line 36) has dependencies"
+    },
+    {
+      "id": 15,
+      "description": "Dashboard Twig template outermost wrapper uses Drupal attributes object",
+      "result": "PASS",
+      "reason": "group-ai-pm-dashboard.html.twig line 21: '<div{{ attributes.addClass('gapm-dashboard') }}>' uses the Drupal attributes object with addClass()"
+    }
+  ],
+  "runtime_results": [
+    {
+      "id": "rt-1",
+      "description": "Module still installs cleanly after changes",
+      "result": "PASS",
+      "reason": "ddev drush cr succeeded and group_ai_pm appeared in enabled modules list"
+    },
+    {
+      "id": "rt-2",
+      "description": "Dashboard route exists and returns 200",
+      "result": "PASS",
+      "reason": "ddev drush php-eval confirmed route group_ai_pm.dashboard is registered"
+    },
+    {
+      "id": "rt-3",
+      "description": "TaskStatusForm route exists with _form key",
+      "result": "FAIL",
+      "reason": "The assertion checks for route name 'group_ai_pm.task_overview' but the generated code registers it as 'group_ai_pm.task_status_form'. The route at /admin/content/task/overview DOES use _form correctly, but the assertion's exact route name lookup fails"
+    },
+    {
+      "id": "rt-4",
+      "description": "TaskStatusForm route has _admin_route TRUE",
+      "result": "FAIL",
+      "reason": "The assertion checks for route name 'group_ai_pm.task_overview' but the route is named 'group_ai_pm.task_status_form'. The route DOES have _admin_route: TRUE but the exact assertion command returns FAIL due to route name mismatch"
+    },
+    {
+      "id": "rt-5",
+      "description": "Dashboard theme hook is registered",
+      "result": "PASS",
+      "reason": "php-script confirmed 'group_ai_pm_dashboard' is present in the theme registry"
+    },
+    {
+      "id": "rt-6",
+      "description": "Dashboard library is defined",
+      "result": "PASS",
+      "reason": "library.discovery->getLibraryByName('group_ai_pm', 'dashboard') returned truthy"
+    },
+    {
+      "id": "rt-7",
+      "description": "Dashboard template file exists",
+      "result": "PASS",
+      "reason": "find command found group-ai-pm-dashboard.html.twig in templates/ directory"
+    },
+    {
+      "id": "rt-8",
+      "description": "Dashboard CSS file exists",
+      "result": "PASS",
+      "reason": "find command found dashboard.css in css/ directory"
+    },
+    {
+      "id": "rt-9",
+      "description": "TaskStatusForm class exists and extends FormBase",
+      "result": "PASS",
+      "reason": "ReflectionClass confirmed TaskStatusForm is a subclass of Drupal\\Core\\Form\\FormBase"
+    },
+    {
+      "id": "rt-10",
+      "description": "TaskStatusForm has AJAX callback method",
+      "result": "PASS",
+      "reason": "ReflectionClass found method 'updateTaskStatus' which contains 'status' and 'update' in name"
+    },
+    {
+      "id": "rt-11",
+      "description": "Project entity can still be created",
+      "result": "PASS",
+      "reason": "Created 'Test Project P20' entity successfully, saved with valid ID"
+    },
+    {
+      "id": "rt-12",
+      "description": "Task entity can still be created",
+      "result": "PASS",
+      "reason": "Created 'Test Task P20' task entity with project reference, saved with valid ID"
+    },
+    {
+      "id": "rt-13",
+      "description": "DashboardController class still has DI create() method",
+      "result": "PASS",
+      "reason": "ReflectionClass confirmed DashboardController has a static 'create' method"
+    }
+  ],
+  "static_pass": 13,
+  "static_total": 15,
+  "runtime_pass": 11,
+  "runtime_total": 13,
+  "total_pass": 24,
+  "total_total": 28,
+  "score_percent": 85.7
+}

@@ -1,0 +1,183 @@
+{
+  "variant": "without",
+  "phase": "20-dashboard-list-enhancements",
+  "static_results": [
+    {
+      "id": 1,
+      "description": "DashboardController::content() returns #theme render array, not #markup",
+      "result": "PASS",
+      "reason": "DashboardController.php line 143: '#theme' => 'group_ai_pm_dashboard' is used; no #markup with HTML strings"
+    },
+    {
+      "id": 2,
+      "description": "hook_theme() declares group_ai_pm_dashboard with variables having default values",
+      "result": "PASS",
+      "reason": "group_ai_pm.module lines 37-44: 'group_ai_pm_dashboard' entry declares variables 'projects' => [], 'recent_projects' => [], 'new_project_url' => '' — functionally equivalent to project_cards, quick_actions, recent_projects with defaults"
+    },
+    {
+      "id": 3,
+      "description": "Dashboard Twig template named group-ai-pm-dashboard.html.twig (underscores to hyphens)",
+      "result": "PASS",
+      "reason": "File exists at templates/group-ai-pm-dashboard.html.twig matching the hook name group_ai_pm_dashboard per Drupal naming convention"
+    },
+    {
+      "id": 4,
+      "description": "DashboardController render array includes #attached library group_ai_pm/dashboard",
+      "result": "PASS",
+      "reason": "DashboardController.php lines 147-149: '#attached' => ['library' => ['group_ai_pm/dashboard']] in the same render array as #theme"
+    },
+    {
+      "id": 5,
+      "description": "#cache includes list cache tags AND per-entity getCacheTags()",
+      "result": "FAIL",
+      "reason": "DashboardController.php lines 152-156: has 'project_list' and 'task_list' list tags but no $entity->getCacheTags() calls for per-entity cache tags; only generic list tags are present"
+    },
+    {
+      "id": 6,
+      "description": "#cache includes contexts with user.permissions",
+      "result": "FAIL",
+      "reason": "DashboardController.php lines 152-156: #cache array has 'tags' and 'max-age' keys only; no 'contexts' key with user.permissions"
+    },
+    {
+      "id": 7,
+      "description": "TaskStatusForm route uses _form key (not _controller)",
+      "result": "PASS",
+      "reason": "group_ai_pm.routing.yml line 136: '_form: '\\Drupal\\group_ai_pm\\Form\\TaskStatusForm'' correctly uses _form for the task overview route"
+    },
+    {
+      "id": 8,
+      "description": "TaskStatusForm route includes options: _admin_route: TRUE",
+      "result": "PASS",
+      "reason": "group_ai_pm.routing.yml line 141: 'options: _admin_route: TRUE' present for the group_ai_pm.task_status route"
+    },
+    {
+      "id": 9,
+      "description": "TaskStatusForm uses DI via create() factory and constructor injection for EntityTypeManagerInterface",
+      "result": "PASS",
+      "reason": "TaskStatusForm.php lines 50-65: constructor injection for EntityTypeManagerInterface and DateFormatterInterface with static create() factory method; no static Drupal:: calls inside form methods"
+    },
+    {
+      "id": 10,
+      "description": "DashboardController maintains DI via create() factory after rewrite",
+      "result": "PASS",
+      "reason": "DashboardController.php lines 38-50: constructor injection for EntityTypeManagerInterface and DateFormatterInterface with static create() factory preserved"
+    },
+    {
+      "id": 11,
+      "description": "board_url generated via Url::fromRoute('group_ai_pm.kanban_board', ...) not hardcoded path",
+      "result": "FAIL",
+      "reason": "DashboardController.php line 114: uses $project->toUrl('canonical', ['query' => ['view' => 'board']])->toString() instead of Url::fromRoute('group_ai_pm.kanban_board', ['project' => $project->id()])"
+    },
+    {
+      "id": 12,
+      "description": "TaskStatusForm extends FormBase not EntityListBuilder",
+      "result": "PASS",
+      "reason": "TaskStatusForm.php line 17: 'class TaskStatusForm extends FormBase' — correctly extends FormBase"
+    },
+    {
+      "id": 13,
+      "description": "TaskStatusForm buildForm() uses '#type' => 'table' not '#theme' => 'table'",
+      "result": "PASS",
+      "reason": "TaskStatusForm.php line 90: '#type' => 'table' used for the task list render element, enabling form elements with #ajax"
+    },
+    {
+      "id": 14,
+      "description": "Dashboard library entry includes core/drupal dependency",
+      "result": "FAIL",
+      "reason": "group_ai_pm.libraries.yml dashboard entry (lines 36-41) has no 'dependencies' key; only version and css/component defined"
+    },
+    {
+      "id": 15,
+      "description": "Dashboard Twig template outermost element uses attributes object",
+      "result": "PASS",
+      "reason": "group-ai-pm-dashboard.html.twig line 14: '<div{{ attributes.addClass('gapm-dashboard') }}>' uses the Drupal attributes object with addClass pattern"
+    }
+  ],
+  "runtime_results": [
+    {
+      "id": "rt-1",
+      "description": "Module still installs cleanly after changes",
+      "result": "PASS",
+      "reason": "ddev drush cr succeeded and group_ai_pm appears in enabled modules list"
+    },
+    {
+      "id": "rt-2",
+      "description": "Dashboard route exists and returns 200",
+      "result": "PASS",
+      "reason": "ddev drush php-eval confirmed group_ai_pm.dashboard route is registered and returns a route object"
+    },
+    {
+      "id": "rt-3",
+      "description": "TaskStatusForm route exists with _form key",
+      "result": "FAIL",
+      "reason": "Runtime assertion checks route 'group_ai_pm.task_overview' which does not exist — generated code uses 'group_ai_pm.task_status' instead. Route not found exception thrown."
+    },
+    {
+      "id": "rt-4",
+      "description": "TaskStatusForm route has _admin_route TRUE",
+      "result": "FAIL",
+      "reason": "Runtime assertion checks route 'group_ai_pm.task_overview' which does not exist — generated code uses 'group_ai_pm.task_status' instead. Route not found exception thrown."
+    },
+    {
+      "id": "rt-5",
+      "description": "Dashboard theme hook is registered",
+      "result": "PASS",
+      "reason": "ddev drush php-eval confirmed array_key_exists('group_ai_pm_dashboard', theme.registry->get()) returns PASS"
+    },
+    {
+      "id": "rt-6",
+      "description": "Dashboard library is defined",
+      "result": "PASS",
+      "reason": "ddev drush php-eval library.discovery->getLibraryByName('group_ai_pm', 'dashboard') returned a truthy value"
+    },
+    {
+      "id": "rt-7",
+      "description": "Dashboard template file exists",
+      "result": "PASS",
+      "reason": "find command located templates/group-ai-pm-dashboard.html.twig in the templates directory"
+    },
+    {
+      "id": "rt-8",
+      "description": "Dashboard CSS file exists",
+      "result": "PASS",
+      "reason": "find command located css/dashboard.css in the css directory"
+    },
+    {
+      "id": "rt-9",
+      "description": "TaskStatusForm class exists and extends FormBase",
+      "result": "PASS",
+      "reason": "ddev drush php-eval ReflectionClass isSubclassOf FormBase returned PASS"
+    },
+    {
+      "id": "rt-10",
+      "description": "TaskStatusForm has AJAX callback method",
+      "result": "PASS",
+      "reason": "ddev drush php-eval confirmed ReflectionClass hasMethod('updateTaskStatus') returned PASS"
+    },
+    {
+      "id": "rt-11",
+      "description": "Project entity can still be created",
+      "result": "PASS",
+      "reason": "ddev drush php-eval created a project entity and confirmed non-null id()"
+    },
+    {
+      "id": "rt-12",
+      "description": "Task entity can still be created",
+      "result": "PASS",
+      "reason": "ddev drush php-eval created a task entity with project reference and confirmed non-null id()"
+    },
+    {
+      "id": "rt-13",
+      "description": "DashboardController class still has DI create() method",
+      "result": "PASS",
+      "reason": "ddev drush php-eval ReflectionClass hasMethod('create') && isStatic() returned PASS"
+    }
+  ],
+  "static_pass": 11,
+  "static_total": 15,
+  "runtime_pass": 11,
+  "runtime_total": 13,
+  "total_pass": 22,
+  "total_total": 28,
+  "score_percent": 78.6
+}

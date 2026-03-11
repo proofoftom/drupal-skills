@@ -1,0 +1,19 @@
+{
+  "name": "group_ai_pm_kanban",
+  "version": "1.0.0",
+  "description": "Kanban board for Group AI Project Management",
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "sortablejs": "^1.15.0",
+    "vue": "^3.3.4",
+    "vue-draggable-plus": "^0.1.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.3.4",
+    "terser": "^5.46.0",
+    "vite": "^4.4.9"
+  }
+}
