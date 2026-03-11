@@ -1,0 +1,49 @@
+{
+  "phase": "16-views-theming-processing",
+  "type": "runtime",
+  "note": "These assertions are executed via ddev drush on the live Drupal instance AFTER headless code generation. They catch functional failures that static code analysis misses. IMPORTANT: rt-1 MUST run first (it uninstalls/reinstalls, destroying entities). All entity-creating assertions must come after rt-1.",
+  "assertions": [
+    {
+      "id": "rt-1",
+      "name": "Module re-enables cleanly after code changes",
+      "command": "ddev drush cr && ddev drush pm:uninstall group_ai_pm -y && ddev drush en group_ai_pm -y",
+      "expect_exit_code": 0,
+      "rationale": "Catches fatal syntax errors, broken namespaces, invalid service definitions, bad entity annotations, schema mismatches, malformed hook_theme() implementations, and broken .libraries.yml parsing. Must run FIRST before any entity-creating assertions."
+    },
+    {
+      "id": "rt-2",
+      "name": "Views data registered for Project entity via EntityViewsData handler",
+      "command": "ddev drush php-eval \"$data = \\Drupal::service('views.views_data')->get('group_ai_pm_project'); echo ($data && count($data) > 1) ? 'VIEWS_DATA_OK:fields=' . count($data) : 'NO_VIEWS_DATA';\"",
+      "expect_output_contains": "VIEWS_DATA_OK:",
+      "rationale": "Static analysis can verify the annotation exists, but this confirms the EntityViewsData handler class is actually loadable, properly extends the base class, and returns valid views data for the project base table. A broken namespace, wrong parent class, or malformed getViewsData() return silently produces no views data."
+    },
+    {
+      "id": "rt-3",
+      "name": "Theme hooks registered in theme registry",
+      "command": "ddev drush php-eval \"$registry = \\Drupal::service('theme.registry')->get(); $task = isset($registry['group_ai_pm_task_card']); $project = isset($registry['group_ai_pm_project_summary']); echo ($task && $project) ? 'THEME_OK:task_card=' . ($registry['group_ai_pm_task_card']['template'] ?? 'no-tpl') . ',project_summary=' . ($registry['group_ai_pm_project_summary']['template'] ?? 'no-tpl') : 'THEME_MISSING:task_card=' . ($task ? 'yes' : 'no') . ',project_summary=' . ($project ? 'yes' : 'no');\"",
+      "expect_output_contains": "THEME_OK:",
+      "rationale": "Static analysis can find hook_theme() in .module, but this verifies: (1) the hook function signature is correct and callable, (2) the return array structure is valid, (3) template files are found at the declared paths. A wrong function name, bad return format, or misnamed template file causes silent registration failure."
+    },
+    {
+      "id": "rt-4",
+      "name": "CSS library defined and discoverable",
+      "command": "ddev drush php-eval \"$libs = \\Drupal::service('library.discovery')->getLibrariesByExtension('group_ai_pm'); echo count($libs) > 0 ? 'LIBS_FOUND:' . implode(',', array_keys($libs)) : 'NO_LIBS';\"",
+      "expect_output_contains": "LIBS_FOUND:",
+      "rationale": "Static analysis can find .libraries.yml, but this verifies: (1) the YAML is valid and parseable, (2) CSS file paths are correct relative to module root, (3) any library dependencies resolve. A malformed YAML file, wrong CSS path, or invalid dependency causes the library to silently fail to load."
+    },
+    {
+      "id": "rt-5",
+      "name": "QueueWorker plugin discoverable by plugin manager",
+      "command": "ddev drush php-eval \"$defs = \\Drupal::service('plugin.manager.queue_worker')->getDefinitions(); $found = array_filter(array_keys($defs), fn($id) => str_contains($id, 'overdue') || str_contains($id, 'notification') || str_contains($id, 'group_ai_pm')); echo count($found) > 0 ? 'QWORKER_FOUND:' . implode(',', $found) : 'NO_QWORKER';\"",
+      "expect_output_contains": "QWORKER_FOUND:",
+      "rationale": "A QueueWorker class can exist and look correct, but if the annotation/attribute is malformed, the namespace directory is wrong, or the class has a fatal DI error, the plugin manager won't discover it. This verifies the full plugin discovery chain including cron time budget annotation."
+    },
+    {
+      "id": "rt-6",
+      "name": "Cron detects overdue task and creates queue items",
+      "command": "ddev drush php-eval \"$proj = \\Drupal::entityTypeManager()->getStorage('project')->create(['title' => 'RT Test Project', 'status' => 'active']); $proj->save(); $task = \\Drupal::entityTypeManager()->getStorage('task')->create(['title' => 'Overdue RT Test', 'status' => 'todo', 'due_date' => '2020-01-01', 'project' => $proj->id()]); $task->save(); \\Drupal::service('cron')->run(); $defs = \\Drupal::service('plugin.manager.queue_worker')->getDefinitions(); $found = array_filter(array_keys($defs), fn($id) => str_contains($id, 'overdue') || str_contains($id, 'notification') || str_contains($id, 'group_ai_pm')); $total = 0; foreach ($found as $name) { $q = \\Drupal::queue($name); $total += $q->numberOfItems(); } echo $total > 0 ? 'CRON_QUEUE_OK:items=' . $total : 'CRON_QUEUE_EMPTY:workers=' . implode(',', $found);\"",
+      "expect_output_contains": "CRON_QUEUE_OK:",
+      "rationale": "This is the crown jewel runtime assertion — tests the full functional chain: create overdue task → run cron → hook_cron detects overdue → queue factory creates items → QueueWorker plugin ID matches queue name. Static analysis cannot verify this chain. Catches: wrong date comparison logic, mismatched queue/plugin names, missing queue factory call, broken lock acquisition, incorrect entity query in hook_cron."
+    }
+  ]
+}

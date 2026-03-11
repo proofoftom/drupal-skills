@@ -1,0 +1,123 @@
+{
+  "variant": "with-v2",
+  "phase": 18,
+  "static_results": [
+    {
+      "id": 1,
+      "expectation_summary": "API mutation routes (PATCH/POST) use _csrf_request_header_token: 'TRUE', NOT _csrf_token: 'TRUE'",
+      "result": "PASS",
+      "evidence": "group_ai_pm.routing.yml: group_ai_pm.api.task_status (PATCH), group_ai_pm.api.task_update (PATCH), and group_ai_pm.api.task_create (POST) all have '_csrf_request_header_token: TRUE' in requirements."
+    },
+    {
+      "id": 2,
+      "expectation_summary": "All API routes include _format: json in their requirements section",
+      "result": "PASS",
+      "evidence": "All 5 API routes have '_format: json' in requirements. SKILL PATCH EFFECTIVE — routing-controllers CRITICAL callout for _format:json."
+    },
+    {
+      "id": 3,
+      "expectation_summary": "API controllers use CacheableJsonResponse instead of plain JsonResponse for GET endpoints",
+      "result": "PASS",
+      "evidence": "TaskApiController.php and ProjectApiController.php both import and use Drupal\\Core\\Cache\\CacheableJsonResponse for GET endpoints. SKILL PATCH EFFECTIVE — caching CRITICAL callout for CacheableJsonResponse."
+    },
+    {
+      "id": 4,
+      "expectation_summary": "API controllers include CacheableMetadata with cache tags and addCacheableDependency()",
+      "result": "PASS",
+      "evidence": "Both controllers create CacheableMetadata, call addCacheableDependency() on project and each task, add 'group_ai_pm_task_list' cache tags, then $response->addCacheableDependency($cache_metadata). SKILL PATCH EFFECTIVE — caching CacheableMetadata section."
+    },
+    {
+      "id": 5,
+      "expectation_summary": "API controllers enforce entity-level access checks",
+      "result": "PASS",
+      "evidence": "updateStatus() and updateTask() call $task->access('update'); quickCreate() calls $project->access('view') and createAccess()."
+    },
+    {
+      "id": 6,
+      "expectation_summary": "All API controllers use DI via create() + __construct() pattern, NOT static \\Drupal:: calls",
+      "result": "FAIL",
+      "evidence": "Controllers extend ControllerBase and use $this->entityTypeManager() (lazy container methods) but do not implement explicit create()/construct(). No static \\Drupal:: calls found. Haiku used ControllerBase helpers which is acceptable Drupal practice but doesn't meet the strict expectation."
+    },
+    {
+      "id": 7,
+      "expectation_summary": "All new routes include options._admin_route: TRUE",
+      "result": "PASS",
+      "evidence": "All routes in the file have '_admin_route: TRUE' under options."
+    },
+    {
+      "id": 8,
+      "expectation_summary": "Route definitions include entity upcasting via options.parameters.{param}.type: 'entity:{entity_type}'",
+      "result": "PASS",
+      "evidence": "All routes with entity parameters have proper upcasting: entity:project for {project} params, entity:task for {task} params. SKILL PATCH EFFECTIVE — routing-controllers CRITICAL callout for custom entity upcasting."
+    },
+    {
+      "id": 9,
+      "expectation_summary": "Kanban library declares dependencies on core/drupalSettings AND core/once",
+      "result": "PASS",
+      "evidence": "libraries.yml kanban library has both core/drupalSettings and core/once as dependencies."
+    },
+    {
+      "id": 10,
+      "expectation_summary": "Drupal.behaviors entry uses once() to guard against double-mounting",
+      "result": "PASS",
+      "evidence": "main.js uses once('kanban-board', '#kanban-app', context).forEach(...) inside Drupal.behaviors.groupAiPmKanban.attach."
+    },
+    {
+      "id": 11,
+      "expectation_summary": "KanbanController populates drupalSettings with pre-loaded task data grouped by status",
+      "result": "PASS",
+      "evidence": "KanbanController.php attaches drupalSettings.groupAiPm.kanban with projectId, columns, tasks, statusLabels, priorityLabels, permissions."
+    },
+    {
+      "id": 12,
+      "expectation_summary": "KanbanController uses '#theme' with custom theme hook, NOT raw markup",
+      "result": "PASS",
+      "evidence": "KanbanController.php: '#theme' => 'group_ai_pm_kanban'. hook_theme() registers it in group_ai_pm.module."
+    },
+    {
+      "id": 13,
+      "expectation_summary": "Board local task link with base_route: entity.project.canonical",
+      "result": "PASS",
+      "evidence": "group_ai_pm.links.task.yml: group_ai_pm.kanban_board with base_route: entity.project.canonical."
+    },
+    {
+      "id": 14,
+      "expectation_summary": "Vite IIFE output format",
+      "result": "PASS",
+      "evidence": "vite.config.js has formats: ['iife']. Built kanban.js is IIFE format."
+    },
+    {
+      "id": 15,
+      "expectation_summary": "CSRF wrapper fetches /session/token and sends X-CSRF-Token header",
+      "result": "PASS",
+      "evidence": "drupal.js fetches from /session/token, sends X-CSRF-Token header on PATCH/POST."
+    },
+    {
+      "id": 16,
+      "expectation_summary": "Vite externalizes Vue as global",
+      "result": "PASS",
+      "evidence": "vite.config.js: external: ['vue'], globals: { vue: 'Vue' }."
+    }
+  ],
+  "runtime_results_summary": "14/14 PASS (all runtime assertions pass)",
+  "static_score": "15/16",
+  "runtime_score": "14/14",
+  "total_score": "29/30",
+  "comparison": {
+    "without_corrected": "22/30 (73.3%)",
+    "with_v1": "25/30 (83.3%)",
+    "with_v2": "29/30 (96.7%)",
+    "delta_v1": "+10.0%",
+    "delta_v2": "+23.3%",
+    "tier": "HIGH",
+    "skill_patches_effective": [
+      "#2: _format:json (routing-controllers CRITICAL callout)",
+      "#3: CacheableJsonResponse (caching CRITICAL callout)",
+      "#4: CacheableMetadata + addCacheableDependency (caching section)",
+      "#8: Entity upcasting for custom types (routing-controllers CRITICAL callout)"
+    ],
+    "shared_failure_remaining": [
+      "#6: create()/construct() DI — Haiku prefers ControllerBase lazy methods over explicit DI"
+    ]
+  }
+}

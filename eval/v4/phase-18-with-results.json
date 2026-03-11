@@ -1,0 +1,191 @@
+{
+  "variant": "with",
+  "phase": 18,
+  "static_results": [
+    {
+      "id": 1,
+      "expectation_summary": "API mutation routes (PATCH/POST) use _csrf_request_header_token: TRUE, NOT _csrf_token",
+      "result": "PASS",
+      "evidence": "group_ai_pm.routing.yml lines 59, 70, 81: all three PATCH/POST routes (api.task.status, api.task.update, api.task.create) have '_csrf_request_header_token: TRUE'. The existing project.complete route uses _csrf_token (line 28) as expected for server-rendered links."
+    },
+    {
+      "id": 2,
+      "expectation_summary": "All API routes include _format: json in their requirements section",
+      "result": "FAIL",
+      "evidence": "Searched group_ai_pm.routing.yml — no '_format' key appears anywhere in the file. All 5 API routes (api.kanban, api.task.status, api.task.update, api.task.create, api.project.summary) are missing '_format: json' in requirements. Runtime check rt-7 confirmed FAIL."
+    },
+    {
+      "id": 3,
+      "expectation_summary": "API controllers use CacheableJsonResponse instead of plain JsonResponse for GET endpoints",
+      "result": "FAIL",
+      "evidence": "Grepped all controller files — 'CacheableJsonResponse' not found in any file. TaskApiController.php uses JsonResponse (line 83, 126, 128, 179, 198, 232). ProjectApiController.php uses JsonResponse (line 69). 'use Symfony\\Component\\HttpFoundation\\JsonResponse' is imported, but CacheableJsonResponse from Drupal\\Core\\Cache is never imported or used."
+    },
+    {
+      "id": 4,
+      "expectation_summary": "API controllers include CacheableMetadata with cache tags like 'task_list' and addCacheableDependency() on loaded entities",
+      "result": "FAIL",
+      "evidence": "No CacheableMetadata class usage found in controllers. The only addCacheableDependency call is in TaskApiController.php line 233, but it is called on a plain JsonResponse object (not CacheableJsonResponse), and only in the quickCreate method on a newly created task. The kanban() and summary() GET endpoints have no cache tags or CacheableDependency wiring — only raw Cache-Control headers are set."
+    },
+    {
+      "id": 5,
+      "expectation_summary": "API controllers enforce entity-level access checks via $entity->access('view') or $entity->access('update'), not just route-level permission",
+      "result": "PASS",
+      "evidence": "TaskApiController.php: updateStatus() line 116 calls $task->access('update'); updateTask() line 150 calls $task->access('update'); quickCreate() line 196 calls $project->access('view') and line 222 calls $task->access('create'). Access callbacks also use entity-level access. All controllers verify entity-level access beyond just route requirements."
+    },
+    {
+      "id": 6,
+      "expectation_summary": "All API controllers use DI via create() + __construct() with ContainerInterface, NOT static \\Drupal:: calls",
+      "result": "PASS",
+      "evidence": "TaskApiController.php lines 34-45: proper __construct(EntityTypeManagerInterface) and create(ContainerInterface) pattern. ProjectApiController.php lines 30-41: same pattern. KanbanController.php lines 29-41: same pattern. Grep for '\\Drupal::' in all three controller files returned zero matches."
+    },
+    {
+      "id": 7,
+      "expectation_summary": "All new routes include options._admin_route: TRUE",
+      "result": "PASS",
+      "evidence": "group_ai_pm.routing.yml: group_ai_pm.kanban (line 40), group_ai_pm.api.kanban (line 50), group_ai_pm.api.task.status (line 61), group_ai_pm.api.task.update (line 71), group_ai_pm.api.task.create (line 82), group_ai_pm.api.project.summary (line 92) — all 6 new routes have '_admin_route: TRUE' in options."
+    },
+    {
+      "id": 8,
+      "expectation_summary": "Route definitions for API endpoints include entity upcasting via options.parameters.{param}.type: 'entity:{entity_type}'",
+      "result": "FAIL",
+      "evidence": "Searched group_ai_pm.routing.yml for 'parameters', 'entity:project', 'entity:task' — no matches found. None of the API routes configure entity upcasting in options.parameters. Routes use {project} and {task} parameters but rely on implicit upcasting without explicit configuration."
+    },
+    {
+      "id": 9,
+      "expectation_summary": "The kanban library in libraries.yml declares dependencies on core/drupalSettings AND core/once",
+      "result": "PASS",
+      "evidence": "group_ai_pm.libraries.yml lines 27-31: kanban library dependencies include 'group_ai_pm/vue', 'core/drupal', 'core/drupalSettings', and 'core/once'. Both required dependencies are present. Confirmed by runtime rt-11 PASS."
+    },
+    {
+      "id": 10,
+      "expectation_summary": "Drupal.behaviors entry in main.js uses once() to guard against double-mounting the Vue app",
+      "result": "PASS",
+      "evidence": "js/src/main.js lines 6-18: 'Drupal.behaviors.groupAiPmKanban = { attach(context) { const processed = once(\"kanban-app\", \"#kanban-app\", context); if (processed.length === 0) return; ... } }'. The once() guard is correctly applied before mounting the Vue app."
+    },
+    {
+      "id": 11,
+      "expectation_summary": "KanbanController render array populates drupalSettings.groupAiPm.kanban with pre-loaded task data grouped by status",
+      "result": "PASS",
+      "evidence": "KanbanController.php lines 80-119: settings array keyed as 'groupAiPm.kanban' includes projectId, projectTitle, apiBaseUrl, csrfTokenUrl, columns, statusLabels, priorityLabels, tasks (grouped by status from $tasks_by_status), and permissions. Passed via '#attached' => ['drupalSettings' => $settings] on line 119."
+    },
+    {
+      "id": 12,
+      "expectation_summary": "KanbanController render array uses '#theme' => 'group_ai_pm_kanban' and NOT raw HTML markup",
+      "result": "PASS",
+      "evidence": "KanbanController.php line 115: \"'#theme' => 'group_ai_pm_kanban'\". The render array uses the theme hook, not raw markup. hook_theme() in group_ai_pm.module lines 32-36 registers 'group_ai_pm_kanban' with 'project' variable."
+    },
+    {
+      "id": 13,
+      "expectation_summary": "A 'Board' local task link is defined with base_route: entity.project.canonical",
+      "result": "PASS",
+      "evidence": "group_ai_pm.links.task.yml lines 7-10: 'group_ai_pm.kanban' local task has 'title: Board', 'route_name: group_ai_pm.kanban', 'base_route: entity.project.canonical', 'weight: -5'. Confirmed functional via runtime check: plugin exists with correct base_route."
+    },
+    {
+      "id": 14,
+      "expectation_summary": "Vue build pipeline uses Vite with IIFE output format (not ES modules, UMD, or CommonJS)",
+      "result": "PASS",
+      "evidence": "js/vite.config.js lines 7-13: 'build: { lib: { entry: \"src/main.js\", name: \"GroupAiPmKanban\", formats: [\"iife\"], fileName: () => \"kanban.js\" } }'. IIFE format correctly specified."
+    },
+    {
+      "id": 15,
+      "expectation_summary": "CSRF API wrapper fetches token from /session/token and sends it as X-CSRF-Token request header",
+      "result": "PASS",
+      "evidence": "js/src/api/drupal.js lines 13-21: fetchCsrfToken() calls fetch('/session/token') and returns response text. Lines 34-40: for PATCH/POST/PUT/DELETE requests, token is included as 'X-CSRF-Token' header. Correct endpoint and correct header name."
+    },
+    {
+      "id": 16,
+      "expectation_summary": "Vite config externalizes Vue as a global variable (rollupOptions.external: ['vue'] with globals: { vue: 'Vue' })",
+      "result": "PASS",
+      "evidence": "js/vite.config.js lines 14-21: 'rollupOptions: { external: [\"vue\"], output: { globals: { vue: \"Vue\" } } }'. Vue is externalized and mapped to the global 'Vue' variable, which is loaded separately via js/vendor/vue.global.prod.js."
+    }
+  ],
+  "runtime_results": [
+    {
+      "id": "rt-1",
+      "name": "Module still installs cleanly after changes",
+      "result": "PASS",
+      "output": "Cache rebuild complete. group_ai_pm found in enabled module list."
+    },
+    {
+      "id": "rt-2",
+      "name": "API kanban route is registered",
+      "result": "FAIL",
+      "output": "FAIL — getRoutesByPattern('/api/group-ai-pm/project') returned 0 routes. Actual API routes are at '/api/kanban/project/{project}' not '/api/group-ai-pm/project'. The pattern in the assertion does not match the generated route paths."
+    },
+    {
+      "id": "rt-3",
+      "name": "Board route is registered",
+      "result": "FAIL",
+      "output": "FAIL — getRouteByName('group_ai_pm.project.board') throws exception. Board route is registered as 'group_ai_pm.kanban' (confirmed working). The assertion checks for a different route name than what was generated."
+    },
+    {
+      "id": "rt-4",
+      "name": "Board route has _admin_route option",
+      "result": "PASS",
+      "output": "PASS — getRouteByName('group_ai_pm.kanban')->getOption('_admin_route') returns TRUE."
+    },
+    {
+      "id": "rt-5",
+      "name": "Kanban theme hook is registered",
+      "result": "PASS",
+      "output": "PASS — theme.registry contains 'group_ai_pm_kanban' key. hook_theme() correctly registers the kanban theme hook."
+    },
+    {
+      "id": "rt-6",
+      "name": "API mutation route has CSRF header requirement",
+      "result": "PASS",
+      "output": "PASS — group_ai_pm.api.task.status route requirements contains '_csrf_request_header_token'. Confirmed via direct route lookup."
+    },
+    {
+      "id": "rt-7",
+      "name": "API routes have _format:json requirement",
+      "result": "FAIL",
+      "output": "FAIL — getRoutesByPattern('/api/kanban') iterated, no route has '_format' => 'json' in requirements. No API routes include _format:json."
+    },
+    {
+      "id": "rt-8",
+      "name": "TaskApiController class exists and is loadable",
+      "result": "PASS",
+      "output": "PASS — class_exists('\\Drupal\\group_ai_pm\\Controller\\TaskApiController') returns TRUE."
+    },
+    {
+      "id": "rt-9",
+      "name": "KanbanController class exists and is loadable",
+      "result": "PASS",
+      "output": "PASS — class_exists('\\Drupal\\group_ai_pm\\Controller\\KanbanController') returns TRUE."
+    },
+    {
+      "id": "rt-10",
+      "name": "Kanban library is defined",
+      "result": "PASS",
+      "output": "PASS — library.discovery->getLibrariesByExtension('group_ai_pm') contains 'kanban' key."
+    },
+    {
+      "id": "rt-11",
+      "name": "Kanban library has drupalSettings dependency",
+      "result": "PASS",
+      "output": "PASS — getLibraryByName('group_ai_pm', 'kanban') dependencies array includes 'core/drupalSettings'."
+    },
+    {
+      "id": "rt-12",
+      "name": "Board local task tab is registered",
+      "result": "FAIL",
+      "output": "FAIL — assertion checks for plugin ID containing 'board' with base_route 'entity.project.canonical'. The board tab is registered as plugin ID 'group_ai_pm.kanban' (which does not contain the string 'board'), even though it correctly uses base_route 'entity.project.canonical'. The assertion's strpos check for 'board' does not match 'group_ai_pm.kanban'."
+    },
+    {
+      "id": "rt-13",
+      "name": "Project entity can be created programmatically",
+      "result": "PASS",
+      "output": "PASS — Project entity created with title 'Test Project' and status 'active', save() returns a valid ID."
+    },
+    {
+      "id": "rt-14",
+      "name": "Task entity can be created with project reference",
+      "result": "PASS",
+      "output": "PASS — Task entity created with title 'Test Task', status 'todo', priority 'medium', and project reference. save() returns a valid ID."
+    }
+  ],
+  "static_score": "12/16",
+  "runtime_score": "10/14",
+  "total_score": "22/30"
+}

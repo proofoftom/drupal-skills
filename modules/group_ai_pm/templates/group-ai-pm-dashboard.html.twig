@@ -1,0 +1,104 @@
+{#
+/**
+ * @file
+ * Template for the Project Dashboard.
+ *
+ * Available variables:
+ * - projects: Array of project summaries with:
+ *   - title: Project title
+ *   - status: Project status
+ *   - url: Link to project
+ *   - board_url: Link to Kanban board
+ *   - task_counts: Object with counts per status
+ *   - total_tasks: Total task count
+ *   - progress_percentage: Done tasks percentage
+ * - empty: Boolean indicating if there are no projects
+ * - recent_projects: Array of 5 recent projects
+ * - quick_action_new_project_url: URL for new project action
+ * - attributes: Drupal attributes object
+ */
+#}
+<div{{ attributes.addClass('gapm-dashboard') }}>
+  <section class="gapm-dashboard__actions">
+    <h1>{{ 'Project Dashboard'|t }}</h1>
+    <a href="{{ quick_action_new_project_url }}" class="button button--primary">
+      {{ 'Create New Project'|t }}
+    </a>
+  </section>
+
+  {% if empty %}
+    <div class="gapm-dashboard__empty">
+      <p>{{ 'No projects yet. Create your first project to get started.'|t }}</p>
+    </div>
+  {% else %}
+    {% if recent_projects %}
+      <section class="gapm-dashboard__recent">
+        <h2>{{ 'Recent Projects'|t }}</h2>
+        <div class="gapm-dashboard__recent-links">
+          {% for project in recent_projects %}
+            <a href="{{ project.url }}" class="gapm-dashboard__recent-link">
+              {{ project.title }}
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <section class="gapm-dashboard__projects">
+      <h2>{{ 'All Projects'|t }}</h2>
+      <div class="gapm-dashboard__cards">
+        {% for project in projects %}
+          <div class="gapm-dashboard__card">
+            <div class="gapm-dashboard__card-header">
+              <h3 class="gapm-dashboard__card-title">
+                <a href="{{ project.url }}">{{ project.title }}</a>
+              </h3>
+              <span class="gapm-dashboard__status-badge gapm-dashboard__status-badge--{{ project.status }}">
+                {{ project.status|capitalize }}
+              </span>
+            </div>
+
+            <div class="gapm-dashboard__progress">
+              <div class="gapm-dashboard__progress-bar">
+                <div class="gapm-dashboard__progress-fill" style="width: {{ project.progress_percentage }}%"></div>
+              </div>
+              <span class="gapm-dashboard__progress-text">
+                {{ project.progress_percentage }}% {{ 'Complete'|t }}
+              </span>
+            </div>
+
+            <div class="gapm-dashboard__task-counts">
+              <dl class="gapm-dashboard__task-count-list">
+                <div class="gapm-dashboard__task-count-item">
+                  <dt class="gapm-dashboard__task-count-label">{{ 'To Do'|t }}</dt>
+                  <dd class="gapm-dashboard__task-count-value">{{ project.task_counts.todo }}</dd>
+                </div>
+                <div class="gapm-dashboard__task-count-item">
+                  <dt class="gapm-dashboard__task-count-label">{{ 'In Progress'|t }}</dt>
+                  <dd class="gapm-dashboard__task-count-value">{{ project.task_counts.in_progress }}</dd>
+                </div>
+                <div class="gapm-dashboard__task-count-item">
+                  <dt class="gapm-dashboard__task-count-label">{{ 'Review'|t }}</dt>
+                  <dd class="gapm-dashboard__task-count-value">{{ project.task_counts.review }}</dd>
+                </div>
+                <div class="gapm-dashboard__task-count-item">
+                  <dt class="gapm-dashboard__task-count-label">{{ 'Done'|t }}</dt>
+                  <dd class="gapm-dashboard__task-count-value">{{ project.task_counts.done }}</dd>
+                </div>
+              </dl>
+              <p class="gapm-dashboard__total-tasks">
+                {{ 'Total: @count'|t({'@count': project.total_tasks}) }}
+              </p>
+            </div>
+
+            <div class="gapm-dashboard__card-footer">
+              <a href="{{ project.board_url }}" class="button button--secondary">
+                {{ 'Kanban Board'|t }}
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</div>

@@ -1,0 +1,42 @@
+{
+  "variant": "without",
+  "phase": "19-interactions-detail-panel-visual-polish",
+  "static_score": "15/15",
+  "runtime_score": "14/14",
+  "total_score": "29/29",
+  "total_percent": 100.0,
+  "notes": "Perfect score. WITHOUT variant correctly followed all existing code patterns (routes, CSRF, entity upcasting, caching, file_url_generator). The existing module already demonstrates every tested pattern, so Haiku learned from context rather than needing skills.",
+  "static_results": [
+    {"id": 1, "expectation_summary": "DELETE route _csrf_request_header_token", "result": "PASS"},
+    {"id": 2, "expectation_summary": "DELETE route _format: json", "result": "PASS"},
+    {"id": 3, "expectation_summary": "DELETE route entity upcasting", "result": "PASS"},
+    {"id": 4, "expectation_summary": "DELETE route _admin_route: TRUE", "result": "PASS"},
+    {"id": 5, "expectation_summary": "deleteTask entity access check", "result": "PASS"},
+    {"id": 6, "expectation_summary": "pictureUrl via file_url_generator", "result": "PASS"},
+    {"id": 7, "expectation_summary": "members array in drupalSettings", "result": "PASS"},
+    {"id": 8, "expectation_summary": "user entity cache tags", "result": "PASS"},
+    {"id": 9, "expectation_summary": "deleteKanban X-CSRF-Token header", "result": "PASS"},
+    {"id": 10, "expectation_summary": "VueDraggable animation prop", "result": "PASS"},
+    {"id": 11, "expectation_summary": "TaskDetailPanel Teleport", "result": "PASS"},
+    {"id": 12, "expectation_summary": "useFilters replaceState URL sync", "result": "PASS"},
+    {"id": 13, "expectation_summary": "useDisplayOptions localStorage", "result": "PASS"},
+    {"id": 14, "expectation_summary": "CSS overdue class red border", "result": "PASS"},
+    {"id": 15, "expectation_summary": "ToastContainer z-index >= 1000", "result": "PASS"}
+  ],
+  "runtime_results": [
+    {"id": "rt-1", "name": "Module installs", "result": "PASS"},
+    {"id": "rt-2", "name": "DELETE route registered", "result": "PASS"},
+    {"id": "rt-3", "name": "DELETE CSRF header", "result": "PASS"},
+    {"id": "rt-4", "name": "DELETE _format:json", "result": "PASS"},
+    {"id": "rt-5", "name": "DELETE _admin_route", "result": "PASS"},
+    {"id": "rt-6", "name": "DELETE entity upcasting", "result": "PASS"},
+    {"id": "rt-7", "name": "deleteTask method exists", "result": "PASS"},
+    {"id": "rt-8", "name": "Project entity creation", "result": "PASS"},
+    {"id": "rt-9", "name": "Task entity creation", "result": "PASS"},
+    {"id": "rt-10", "name": "core/once dependency", "result": "PASS"},
+    {"id": "rt-11", "name": "Vite dist files", "result": "PASS"},
+    {"id": "rt-12", "name": "deleteKanban function", "result": "PASS"},
+    {"id": "rt-13", "name": "useToast exists", "result": "PASS"},
+    {"id": "rt-14", "name": "useFilters exists", "result": "PASS"}
+  ]
+}
