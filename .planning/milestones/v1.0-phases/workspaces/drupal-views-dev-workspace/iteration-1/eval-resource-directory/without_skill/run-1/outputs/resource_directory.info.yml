@@ -1,7 +1,0 @@
-name: Resource Directory
-type: module
-description: Exposes a resource_links database table to Views with a custom category filter.
-core_version_requirement: ^10 || ^11
-package: Custom
-dependencies:
-  - drupal:views

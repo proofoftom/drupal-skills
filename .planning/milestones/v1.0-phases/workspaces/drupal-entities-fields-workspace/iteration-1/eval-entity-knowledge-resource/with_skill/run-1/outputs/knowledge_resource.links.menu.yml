@@ -1,6 +1,0 @@
-entity.knowledge_resource.collection:
-  title: 'Knowledge Resources'
-  route_name: entity.knowledge_resource.collection
-  description: 'List Knowledge Resource entities'
-  parent: system.admin_content
-  weight: 100

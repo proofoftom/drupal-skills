@@ -1,7 +1,0 @@
-search_settings_baseline.settings:
-  path: '/admin/config/search/search-settings-baseline'
-  defaults:
-    _form: '\Drupal\search_settings_baseline\Form\SearchSettingsBaselineForm'
-    _title: 'Search Settings'
-  requirements:
-    _permission: 'administer site configuration'

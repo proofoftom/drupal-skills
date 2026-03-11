@@ -1,5 +1,0 @@
-name: Content Recommendations Baseline
-type: module
-description: Displays recommended content items via a configurable block plugin.
-package: Custom
-core_version_requirement: ^10 || ^11

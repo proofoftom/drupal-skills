@@ -1,6 +1,0 @@
-services:
-  event_analytics.attendance_tracker:
-    class: Drupal\event_analytics\AttendanceTracker
-    arguments:
-      - '@database'
-      - '@logger.factory'

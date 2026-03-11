@@ -1,5 +1,0 @@
-name: Restricted Reports Baseline
-description: 'Provides a restricted reports page with custom permission-based access control.'
-type: module
-core_version_requirement: ^10 || ^11
-package: Custom

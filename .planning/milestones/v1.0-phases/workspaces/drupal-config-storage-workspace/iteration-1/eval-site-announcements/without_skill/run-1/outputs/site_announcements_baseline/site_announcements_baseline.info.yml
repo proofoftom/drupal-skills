@@ -1,5 +1,0 @@
-name: 'Site Announcements Baseline'
-type: module
-description: 'Stores and manages baseline announcement configuration.'
-package: Custom
-core_version_requirement: ^10 || ^11

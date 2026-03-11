@@ -1,4 +1,0 @@
-services:
-  view_analytics.tracker:
-    class: Drupal\view_analytics\ViewAnalyticsTracker
-    arguments: ['@database', '@request_stack']

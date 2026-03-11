@@ -1,7 +1,0 @@
-restricted_reports_baseline.page:
-  path: '/reports/restricted-baseline'
-  defaults:
-    _controller: '\Drupal\restricted_reports_baseline\Controller\RestrictedReportsBaselineController::page'
-    _title: 'Restricted Reports Baseline'
-  requirements:
-    _custom_access: '\Drupal\restricted_reports_baseline\Access\RestrictedReportsBaselineAccessChecker::access'

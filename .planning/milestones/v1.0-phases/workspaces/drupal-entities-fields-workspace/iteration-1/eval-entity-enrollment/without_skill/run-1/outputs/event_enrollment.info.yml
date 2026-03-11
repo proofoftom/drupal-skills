@@ -1,8 +1,0 @@
-name: Event Enrollment
-type: module
-description: Tracks event enrollments.
-package: Events
-core_version_requirement: ^10
-dependencies:
-  - node
-  - user

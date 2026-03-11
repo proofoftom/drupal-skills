@@ -1,7 +1,0 @@
-name: Event Analytics
-description: 'Tracks event attendance on Drupal nodes.'
-type: module
-core_version_requirement: ^10 || ^11
-package: Events
-dependencies:
-  - drupal:node

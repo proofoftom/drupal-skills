@@ -1,5 +1,0 @@
-name: 'Featured Resources'
-type: module
-description: 'Renders a themed list of featured learning resources.'
-package: 'Custom'
-core_version_requirement: ^10 || ^11

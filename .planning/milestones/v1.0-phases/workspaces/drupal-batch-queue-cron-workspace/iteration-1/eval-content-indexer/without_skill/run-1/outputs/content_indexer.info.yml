@@ -1,5 +1,0 @@
-name: 'Content Indexer'
-type: module
-description: 'Queues unindexed content nodes for processing during cron runs.'
-core_version_requirement: ^10 || ^11
-package: 'Open Social AI'

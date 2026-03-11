@@ -1,4 +1,0 @@
-administer site announcements:
-  title: 'Administer site announcements'
-  description: 'Configure site announcement text and display settings.'
-  restrict access: true

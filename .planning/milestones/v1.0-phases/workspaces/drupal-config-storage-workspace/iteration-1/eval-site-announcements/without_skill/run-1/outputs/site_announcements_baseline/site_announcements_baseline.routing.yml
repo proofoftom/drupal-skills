@@ -1,7 +1,0 @@
-site_announcements_baseline.settings:
-  path: '/admin/config/system/announcements-baseline'
-  defaults:
-    _form: '\Drupal\site_announcements_baseline\Form\AnnouncementsSettingsForm'
-    _title: 'Announcements Baseline Settings'
-  requirements:
-    _permission: 'administer site configuration'

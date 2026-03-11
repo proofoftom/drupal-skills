@@ -1,5 +1,0 @@
-name: Event Enrollment
-type: module
-description: 'Provides an EventEnrollment content entity for tracking event enrollments.'
-core_version_requirement: ^10
-package: Custom

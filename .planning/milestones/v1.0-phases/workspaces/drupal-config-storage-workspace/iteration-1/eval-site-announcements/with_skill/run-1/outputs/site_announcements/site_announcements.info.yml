@@ -1,5 +1,0 @@
-name: Site Announcements
-type: module
-description: 'Stores and manages site-wide announcement configuration.'
-core_version_requirement: ^10 || ^11
-package: Custom

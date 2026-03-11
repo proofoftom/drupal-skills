@@ -1,5 +1,0 @@
-name: 'API Status Endpoint Baseline'
-type: module
-description: 'Provides a JSON API endpoint at /api/system/status with site name and module count.'
-package: Custom
-core_version_requirement: ^10 || ^11

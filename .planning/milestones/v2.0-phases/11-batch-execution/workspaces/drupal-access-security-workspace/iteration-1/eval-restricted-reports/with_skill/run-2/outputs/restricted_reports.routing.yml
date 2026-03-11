@@ -1,7 +1,0 @@
-restricted_reports.page:
-  path: '/reports/restricted'
-  defaults:
-    _controller: '\Drupal\restricted_reports\Controller\RestrictedReportsController::page'
-    _title: 'Restricted Reports'
-  requirements:
-    _permission: 'view restricted reports'
