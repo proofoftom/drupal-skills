@@ -1,7 +1,0 @@
-name: Event Analytics
-type: module
-description: Tracks event attendance on the Open Social site.
-package: Events
-core_version_requirement: ^10 || ^11
-dependencies:
-  - drupal:node

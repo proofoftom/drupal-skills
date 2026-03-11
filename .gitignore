@@ -1,12 +1,7 @@
-# Reference material (not for distribution)
-Sipos D.*.md
-drupal-10-group-ai-pm/
-
 # GSD planning (development only)
-# .planning/
+.planning/
+docs/
 
 # Local dev environments
 .ddev/
-
-# Node
-node_modules/
+drupal-10-group-ai-pm/

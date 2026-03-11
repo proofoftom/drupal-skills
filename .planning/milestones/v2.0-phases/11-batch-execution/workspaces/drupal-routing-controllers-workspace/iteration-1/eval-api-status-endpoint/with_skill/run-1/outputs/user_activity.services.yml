@@ -1,4 +1,0 @@
-services:
-  user_activity.activity_service:
-    class: Drupal\user_activity\Service\UserActivityService
-    arguments: ['@entity_type.manager', '@database']

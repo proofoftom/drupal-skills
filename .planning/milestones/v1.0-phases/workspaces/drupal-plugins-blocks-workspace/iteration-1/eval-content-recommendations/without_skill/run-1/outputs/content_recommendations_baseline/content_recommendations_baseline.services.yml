@@ -1,4 +1,0 @@
-services:
-  content_recommendations_baseline.recommendations_service:
-    class: Drupal\content_recommendations_baseline\RecommendationsService
-    arguments: ['@entity_type.manager']

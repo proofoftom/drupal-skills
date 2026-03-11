@@ -1,5 +1,0 @@
-name: Related Content Block
-type: module
-description: A block plugin that displays related content with proper cache metadata.
-core_version_requirement: ^10 || ^11
-package: Custom

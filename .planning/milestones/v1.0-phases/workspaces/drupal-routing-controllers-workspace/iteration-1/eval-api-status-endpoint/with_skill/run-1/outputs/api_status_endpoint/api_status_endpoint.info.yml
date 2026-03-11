@@ -1,5 +1,0 @@
-name: API Status Endpoint
-description: 'Provides a JSON API endpoint for site status information.'
-type: module
-core_version_requirement: ^10 || ^11
-package: Custom

@@ -1,5 +1,0 @@
-name: 'Related Content Block'
-type: module
-description: 'Displays a block of related content nodes with proper cache metadata.'
-package: Custom
-core_version_requirement: ^10 || ^11

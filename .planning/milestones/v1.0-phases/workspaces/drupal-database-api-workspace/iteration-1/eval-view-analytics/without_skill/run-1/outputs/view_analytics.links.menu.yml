@@ -1,6 +1,0 @@
-view_analytics.report:
-  title: 'View Analytics'
-  description: 'Top 10 most viewed nodes.'
-  route_name: view_analytics.report
-  parent: system.admin_reports
-  weight: 10

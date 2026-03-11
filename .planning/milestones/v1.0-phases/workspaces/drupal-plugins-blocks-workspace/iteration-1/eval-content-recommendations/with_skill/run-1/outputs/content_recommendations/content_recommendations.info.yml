@@ -1,5 +1,0 @@
-name: Content Recommendations
-type: module
-description: Displays recommended content items in a configurable block.
-core_version_requirement: ^10 || ^11
-package: Custom

@@ -1,7 +1,0 @@
-view_analytics.report:
-  path: '/admin/reports/view-analytics'
-  defaults:
-    _controller: '\Drupal\view_analytics\Controller\ViewAnalyticsController::report'
-    _title: 'View Analytics'
-  requirements:
-    _permission: 'access site reports'

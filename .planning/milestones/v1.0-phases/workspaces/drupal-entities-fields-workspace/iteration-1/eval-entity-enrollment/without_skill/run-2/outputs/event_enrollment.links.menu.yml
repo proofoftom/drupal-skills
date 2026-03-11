@@ -1,6 +1,0 @@
-entity.event_enrollment.collection:
-  title: 'Event Enrollments'
-  route_name: entity.event_enrollment.collection
-  parent: system.admin_content
-  description: 'List of Event Enrollment entities.'
-  weight: 10
