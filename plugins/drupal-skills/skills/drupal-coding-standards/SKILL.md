@@ -123,6 +123,41 @@ Every class, method, function, and constant MUST have a docblock.
 >  */
 > ```
 
+## Inline `@var` type hints
+
+When a variable's type is not self-evident from the code, add an inline `@var` docblock using the **fully qualified class name** and the **variable name at the end**. Reference: [Drupal PHP docs standards — in-line code comments](https://project.pages.drupalcode.org/coding_standards/php/documentation/#in-line-code-comments).
+
+> WRONG: Polymorphic return type with no inline hint:
+> ```php
+> $node = $this->entityTypeManager->getStorage('node')->load(123);
+> $title = $node->getTitle();  // IDE/static-analysis can't know $node is NodeInterface
+> ```
+
+> RIGHT: FQCN `@var` placed AFTER null guards so narrowing is accurate:
+> ```php
+> $node = $this->entityTypeManager->getStorage('node')->load(123);
+> if (!$node) {
+>   return [];
+> }
+> /** @var \Drupal\node\NodeInterface $node */
+> $title = $node->getTitle();
+> ```
+
+**Trigger list** — required when you see any of these:
+
+- `->load()` / `->loadMultiple()` / `->loadByProperties()` on entity storage
+- `->getStorage('entity_type')` when the handle is used as a specific subtype
+- `\Drupal::service('id')` or `$container->get('id')` where the return is polymorphic
+- `foreach ($entities as $entity)` where `$entity` is used as a specific entity subtype
+- Any assignment from a factory, decorator, or lazy resolver
+
+**Rules:**
+
+- **Always FQCN.** Do NOT add a `use` import solely to shorten the `@var` docblock — in procedural scripts the `use` will show as "unused" by static analyzers. Use the fully qualified name inside the `@var` instead.
+- **After null guards, not before.** A `@var NodeInterface` placed before the null check lies about the variable's actual type at that point (it might be `NULL`). Place it after the guard so narrowing is accurate.
+- **Variable name at the end.** `/** @var \Drupal\node\NodeInterface $node */` — not `/** @var $node \Drupal\node\NodeInterface */`.
+- **Double opening asterisk** (`/**`) — single-asterisk comments (`/*`) are NOT parsed by IDEs or static analyzers.
+
 ## Nullable parameter types
 
 When a typed parameter defaults to `NULL`, the type MUST use `?` nullable syntax.

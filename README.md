@@ -1,15 +1,17 @@
 # Drupal Skills for Claude
 
-14 Claude Code skills for generating correct, production-ready Drupal 10/11 module code.
+15 Claude Code skills for generating correct, production-ready Drupal 10/11 module code.
 
 ## Quick Start
 
-```bash
-git clone https://github.com/proofoftom/drupal-skills.git
-claude --plugin-dir /path/to/drupal-skills
+In Claude Code, add this marketplace and install the plugin:
+
+```
+/plugin marketplace add proofoftom/drupal-skills
+/plugin install drupal-skills@drupal-skills
 ```
 
-That's it. Skills activate automatically when you ask Claude Code to work on Drupal projects.
+That's it. Skills activate automatically when you ask Claude Code to work on Drupal projects. To update later: `/plugin marketplace update drupal-skills`.
 
 ## What's Included
 
@@ -72,7 +74,7 @@ git clone https://github.com/proofoftom/drupal-skills.git
 claude --plugin-dir /path/to/drupal-skills
 ```
 
-The plugin system auto-discovers all 14 skills. No configuration needed.
+The plugin system auto-discovers all 15 skills. No configuration needed.
 
 ### Legacy Installation (deprecated)
 
