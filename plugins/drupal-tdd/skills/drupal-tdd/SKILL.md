@@ -1,15 +1,11 @@
 ---
 name: drupal-tdd
 description: |
-  Drive Drupal module development with tests — red/green/refactor cadence, outside-in
-  test ordering, and test-first discipline. Use whenever the user wants to do test-driven
-  development on a Drupal module, write a failing test before implementation, refactor
-  under test coverage, or build a feature "test-first." Pairs with the drupal-testing skill
-  (which covers base classes and boilerplate): drupal-testing answers "which test type
-  should I write and what's the skeleton?", drupal-tdd answers "in what order, and how do
-  I grow the code from the tests?" Also triggers on phrases like "TDD this", "write the
-  test first", "red-green-refactor", "test-drive this feature", or when the user is
-  mid-feature and wants to add a failing test next rather than code next.
+  Test-driven development for Drupal modules: red/green/refactor cadence, outside-in
+  test ordering, test-first feature growth. Use when the user says "TDD this",
+  "write the test first", "red-green-refactor", or wants a failing test next rather
+  than code next. Pairs with drupal-testing (which covers base classes and boilerplate)
+  -- this skill answers "in what order do I grow the code?".
 ---
 
 # Drupal TDD
