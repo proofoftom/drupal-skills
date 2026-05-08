@@ -1,0 +1,11 @@
+{
+  "name": "drupal-tdd",
+  "description": "Test-driven development discipline for Drupal modules: red/green/refactor cadence, outside-in test ordering, and test-first feature growth. Companion to drupal-skills' drupal-testing (which covers base classes and boilerplate).",
+  "version": "0.1.0",
+  "author": {
+    "name": "proofoftom"
+  },
+  "repository": "https://github.com/proofoftom/drupal-skills",
+  "license": "MIT",
+  "keywords": ["drupal", "drupal-10", "drupal-11", "tdd", "testing", "phpunit"]
+}

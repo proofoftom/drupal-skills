@@ -14,6 +14,17 @@
       },
       "license": "MIT",
       "keywords": ["drupal", "drupal-10", "drupal-11", "module-development", "php"]
+    },
+    {
+      "name": "drupal-tdd",
+      "source": "./plugins/drupal-tdd",
+      "description": "Test-driven development discipline for Drupal modules: red/green/refactor cadence, outside-in test ordering, and test-first feature growth. Pairs with drupal-skills' drupal-testing.",
+      "version": "0.1.0",
+      "author": {
+        "name": "proofoftom"
+      },
+      "license": "MIT",
+      "keywords": ["drupal", "drupal-10", "drupal-11", "tdd", "testing", "phpunit"]
     }
   ]
 }
