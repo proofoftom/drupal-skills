@@ -1,15 +1,23 @@
 # Drupal Skills for Claude
 
-14 Claude Code skills for generating correct, production-ready Drupal 10/11 module code.
+A Claude Code plugin marketplace bundling Drupal-development skills. Two plugins ship today:
+
+- **drupal-skills** -- 15 skills for generating correct, production-ready Drupal 10/11 module code. Distilled from Daniel Sipos's *Drupal 10 Module Development*.
+- **drupal-tdd** -- test-driven development discipline (red/green/refactor, outside-in test ordering). Distilled from Oliver Davies's *Test-Driven Drupal*.
+
+The two are versioned independently because the source material (and so the skills' evolution) is independent.
 
 ## Quick Start
 
-```bash
-git clone https://github.com/proofoftom/drupal-skills.git
-claude --plugin-dir /path/to/drupal-skills
+In Claude Code, add this marketplace and install whichever plugin you want:
+
+```
+/plugin marketplace add proofoftom/drupal-skills
+/plugin install drupal-skills@drupal-skills    # the 15-skill core
+/plugin install drupal-tdd@drupal-skills       # optional TDD discipline
 ```
 
-That's it. Skills activate automatically when you ask Claude Code to work on Drupal projects.
+Skills activate automatically when you ask Claude Code to work on Drupal projects. To update later: `/plugin marketplace update drupal-skills`.
 
 ## What's Included
 
@@ -52,6 +60,14 @@ That's it. Skills activate automatically when you ask Claude Code to work on Dru
 |-------|-------------|
 | drupal-coding-standards | phpcs compliance for Drupal/DrupalPractice coding standards |
 
+### Optional companion plugin: drupal-tdd
+
+| Skill | What It Does |
+|-------|-------------|
+| drupal-tdd | Red/green/refactor cadence, outside-in test ordering, test-first feature growth. Pairs with `drupal-testing` (which covers base classes and assertion APIs) -- `drupal-testing` answers "which test type and skeleton?", `drupal-tdd` answers "in what order, and how do I grow the code from the tests?" |
+
+Install separately: `/plugin install drupal-tdd@drupal-skills`.
+
 ## Usage
 
 Skills activate automatically based on your prompt content. You don't need to reference them directly. Just describe what you want to build:
@@ -72,7 +88,7 @@ git clone https://github.com/proofoftom/drupal-skills.git
 claude --plugin-dir /path/to/drupal-skills
 ```
 
-The plugin system auto-discovers all 14 skills. No configuration needed.
+The plugin system auto-discovers all 15 skills. No configuration needed.
 
 ### Legacy Installation (deprecated)
 
