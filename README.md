@@ -1,11 +1,13 @@
 # Drupal Skills for Claude
 
-A Claude Code plugin marketplace bundling Drupal-development skills. Two plugins ship today:
+![Drupal Skills for Claude](assets/hero.png)
+
+A Claude Code plugin marketplace for Drupal development. Includes:
 
 - **drupal-skills** -- 15 skills for generating correct, production-ready Drupal 10/11 module code. Distilled from Drupal core documentation, community publications, and refined through eval-driven iteration.
 - **drupal-tdd** -- test-driven development discipline (red/green/refactor, outside-in test ordering). Built on patterns established by the Drupal TDD community.
 
-The two are versioned independently because they evolve on different cycles.
+Each plugin is versioned independently.
 
 ## Quick Start
 
