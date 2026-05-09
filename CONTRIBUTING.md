@@ -40,21 +40,24 @@ Each plugin versions independently:
 4. `git tag <plugin>-vX.Y.Z && git push --tags`
 5. Optional: GitHub release with notes
 
-## Sources and attribution
+## How skills are built
 
-Skills are distilled from Drupal core documentation, publicly available community knowledge, and refined through eval-driven iteration. The eval rounds are where skill quality actually comes from -- a pattern from any single source is just a starting point.
+Each skill goes through the same pipeline: draft from publicly available Drupal documentation and community knowledge, then refine through eval rounds against representative prompts until auto-trigger and output quality both clear the bar. The eval rounds are where the actual quality comes from -- a draft is just a starting point.
 
-Do not name specific copyrighted books, courses, or paid resources in published skill content, README, or marketplace descriptions. The skills describe Drupal APIs (factual, public information); naming a paid source in our marketing copy implies a derivative-work relationship we don't have permission to claim. Use neutral framing: "Drupal community publications," "test-first patterns established by the Drupal TDD community," etc.
+Sources we draw on regularly:
+- [drupal.org API documentation](https://api.drupal.org/api/drupal/) -- the canonical reference
+- [drupal.org Documentation](https://www.drupal.org/docs) -- handbook-style guides
+- Public Drupal community blogs, talks, and screencasts
 
-When a skill genuinely originates from a specific public, free resource (e.g. a drupal.org documentation page), attribute it inline near the relevant pattern with a link -- this is "further reading," not "this is derived from."
+If a skill captures a specific public Drupal pattern that has a clear canonical write-up online, link it inline as "further reading" near the relevant pattern.
 
 ## Capturing ideas
 
 File a GitHub issue immediately when you spot a candidate skill, gap, or refinement during real project work. Don't trust "I'll remember" -- a fresh session reads the issue cold, no context needed.
 
-The distillation pipeline this repo uses:
-- **Documentation distillation**: skills derived from publicly available Drupal core docs and community resources
-- **Project observation**: when a homunculus-evolved project skill contains a universal subset, file an issue to lift the universal portion into the published plugin (see issue #2 for an example)
+Two ways skill candidates surface:
+- **Documentation distillation**: pattern that's clearly documented but Claude keeps getting wrong without the skill loaded
+- **Project observation**: a project-scoped skill (or a homunculus-evolved one) contains a universal Drupal subset worth lifting into the public plugin -- see issue #2 for an example
 
 Don't republish project-specific noise; do mine project work for generalizable rules.
 
