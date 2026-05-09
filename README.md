@@ -79,70 +79,14 @@ Skills activate automatically based on your prompt content. You don't need to re
 
 Multi-skill prompts work naturally. Ask Claude to "create a block plugin with a settings form and cache tags" and the relevant skills activate together.
 
-## Installation
-
-### Plugin (recommended)
-
-```bash
-git clone https://github.com/proofoftom/drupal-skills.git
-claude --plugin-dir /path/to/drupal-skills
-```
-
-The plugin system auto-discovers all 15 skills. No configuration needed.
-
-### Legacy Installation (deprecated)
-
-> **Deprecated:** The install.sh method copies skills to `~/.claude/skills/` and requires manual re-runs to update. Use the plugin method above instead.
-
-#### Default (copy)
-
-```bash
-./install.sh
-```
-
-Copies all skill directories to `~/.claude/skills/`. Re-run the installer to pick up updates after `git pull`.
-
-#### Symlink (live updates)
-
-```bash
-./install.sh --symlink
-```
-
-Creates symlinks from `~/.claude/skills/` to the repo. Skills update automatically when you `git pull`. However, skills break if you move or delete the repo directory.
-
-## Migration from install.sh
-
-If you previously installed skills using `install.sh`, migrate to the plugin system:
-
-1. Remove previously installed skills:
-   ```bash
-   ./install.sh --uninstall
-   ```
-
-2. Use the plugin system going forward:
-   ```bash
-   claude --plugin-dir /path/to/drupal-skills
-   ```
-
-The `--uninstall` flag removes all `drupal-*` directories from `~/.claude/skills/`. The plugin loads skills directly from the repository, so there is nothing to install or keep in sync.
-
 ## Uninstall
 
-### Plugin
-
-Stop passing `--plugin-dir` when launching Claude Code. No files to clean up.
-
-### Legacy
-
-```bash
-./install.sh --uninstall
+```
+/plugin uninstall drupal-skills@drupal-skills
+/plugin uninstall drupal-tdd@drupal-skills
 ```
 
-Or manually:
-
-```bash
-rm -rf ~/.claude/skills/drupal-*
-```
+To remove the marketplace itself: `/plugin marketplace remove drupal-skills`.
 
 ## Drupal Version Support
 
