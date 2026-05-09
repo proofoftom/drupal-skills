@@ -1,6 +1,6 @@
 # Worked Example: TDD a Blog Module
 
-End-to-end walkthrough adapted from Oliver Davies' "Test-Driven Drupal." Each step is one red-green-refactor cycle that ends in a commit.
+End-to-end walkthrough of test-driving a Drupal blog module. Each step is one red-green-refactor cycle that ends in a commit.
 
 The module is `atdc` (Automated Testing in Drupal Course) inside `web/modules/custom/atdc`. Tests live in `tests/src/`.
 

@@ -138,7 +138,7 @@ if ($this->created !== NULL) {
 
 ## Adding a method by TDD
 
-The Oliver Davies pattern: don't add a builder method until a test demands it.
+Don't add a builder method until a test demands it.
 
 1. Test calls `->isPublished()`. Error: method doesn't exist.
 2. Add the emptiest possible method: `public function isPublished(): self { return $this; }`.

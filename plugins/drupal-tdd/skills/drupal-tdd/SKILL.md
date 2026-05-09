@@ -14,7 +14,7 @@ Test-driven development in Drupal. You write a failing test, watch it fail for t
 
 This skill covers the *cadence* and *discipline*. For base-class reference (UnitTestCase vs KernelTestBase vs BrowserTestBase, assertion API, setUp patterns), use the companion **drupal-testing** skill.
 
-Based on Oliver Davies' "Test-Driven Drupal" book — an outside-in approach where you start with a Functional test for user-visible behavior, drop to Kernel tests when the thing you need to assert is awkward to express through a browser, and reach for Unit tests only at the edges.
+Outside-in approach: start with a Functional test for user-visible behavior, drop to Kernel tests when the thing you need to assert is awkward to express through a browser, and reach for Unit tests only at the edges.
 
 ## What this skill is non-negotiable about
 
@@ -207,7 +207,7 @@ If the project has no `phpunit.xml.dist`, see `references/phpunit-setup.md` for 
 
 ## Worked example
 
-For a full walkthrough — from empty project to a blog module with Functional, Kernel, and Unit tests, driven test-first — see `references/worked-example-blog.md`. It mirrors Oliver Davies' book step by step: 200-on-/blog, posts-visible, ordering, published-only, bundle-filter, tags-with-test-config, Unit + mocks.
+For a full walkthrough — from empty project to a blog module with Functional, Kernel, and Unit tests, driven test-first — see `references/worked-example-blog.md`. It progresses through a representative sequence: 200-on-/blog, posts-visible, ordering, published-only, bundle-filter, tags-with-test-config, Unit + mocks.
 
 ## References index
 
