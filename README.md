@@ -90,6 +90,13 @@ Multi-skill prompts work naturally. Ask Claude to "create a block plugin with a 
 
 To remove the marketplace itself: `/plugin marketplace remove drupal-skills`.
 
+## Repo layout
+
+- `plugins/` — the Claude Code plugins you install
+- `modules/group_ai_pm/` — a Drupal 10/11 module used as the eval test bed for these skills (Group + AI project management; tasks, projects, kanban). See [CONTRIBUTING.md](CONTRIBUTING.md#eval-test-bed-modulesgroup_ai_pm) for context.
+- `eval/` — eval harness and historical results
+- `assets/` — README assets
+
 ## Drupal Version Support
 
 These skills cover Drupal 10 patterns with Drupal 11 PHP attribute syntax shown alongside D10 annotations where applicable. Both annotation and attribute styles are valid in Drupal 11; annotations remain supported in Drupal 10.

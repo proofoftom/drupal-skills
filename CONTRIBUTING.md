@@ -30,6 +30,12 @@ Trigger the skill in a representative prompt, observe whether auto-trigger fires
 
 For non-trivial changes, run the eval suite for the affected skill (`eval/`) before opening a PR. Auto-trigger and output quality regress silently otherwise — evals are the only signal.
 
+## Eval test bed: `modules/group_ai_pm`
+
+`modules/group_ai_pm` is a Drupal 10/11 module that combines Group, custom entities, dashboard views, kanban templates, queue workers, block plugins with DI, settings forms, and a JS (Vite) bundle. It exercises essentially every skill in this marketplace at once, which makes it the natural test target for evals — if a change to a skill regresses, this module is where the regression surfaces first.
+
+Outside of evals it's a small project-management add-on for Group: tasks, projects, kanban board, AI-assisted summaries. It will eventually be extracted to its own repo so it can carry its own issue queue and release cadence; until then it lives here to keep the eval surface area honest.
+
 ## Versioning + release
 
 Each plugin versions independently:
@@ -57,7 +63,7 @@ File a GitHub issue immediately when you spot a candidate skill, gap, or refinem
 
 Two ways skill candidates surface:
 - **Documentation distillation**: pattern that's clearly documented but Claude keeps getting wrong without the skill loaded
-- **Project observation**: a project-scoped skill (or a homunculus-evolved one) contains a universal Drupal subset worth lifting into the public plugin -- see issue #2 for an example
+- **Project observation**: a project-scoped skill in your own repo contains a universal Drupal subset worth lifting into the public plugin — see issue #2 for an example
 
 Don't republish project-specific noise; do mine project work for generalizable rules.
 
